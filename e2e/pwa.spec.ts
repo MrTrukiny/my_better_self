@@ -1,9 +1,12 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures";
 
-test("home page renders the app shell", async ({ page }) => {
+test("home page renders the app shell", async ({ page, signedInUser }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   await expect(page.getByRole("button", { name: "Toggle color theme" })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: `Account menu for ${signedInUser.name}` }),
+  ).toBeVisible();
 });
 
 test("serves a valid web app manifest", async ({ page, request }) => {
