@@ -1,9 +1,9 @@
 "use client";
 
 import { LoaderCircle } from "lucide-react";
-import { useOffline } from "next/offline";
 import { useEffect, useId, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { useIsOffline } from "@/hooks/use-is-offline";
 import { authClient } from "@/lib/auth-client";
 import { GENERIC_SIGN_IN_ERROR } from "@/lib/auth-errors";
 import { SIGN_IN_PATH } from "@/lib/callback-url";
@@ -17,7 +17,7 @@ export function SignInForm({
   callbackURL: string;
   errorMessage?: string;
 }) {
-  const isOffline = useOffline();
+  const isOffline = useIsOffline();
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState(errorMessage);
   const buttonRef = useRef<HTMLButtonElement>(null);

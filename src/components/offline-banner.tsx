@@ -1,9 +1,9 @@
 "use client";
 
-import { useOffline } from "next/offline";
+import { useIsOffline } from "@/hooks/use-is-offline";
 
 export function OfflineBanner() {
-  const isOffline = useOffline();
+  const isOffline = useIsOffline();
 
   if (!isOffline) {
     return null;
@@ -11,7 +11,7 @@ export function OfflineBanner() {
 
   return (
     <div role="status" className="bg-muted text-muted-foreground px-4 py-2 text-center text-sm">
-      You are offline. Pending changes will sync when you reconnect.
+      You are offline. You're seeing what was saved on this device.
     </div>
   );
 }

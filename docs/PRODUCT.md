@@ -56,21 +56,28 @@ See [`ROADMAP.md`](ROADMAP.md): richer item attributes (size, material), time ca
 
 ## Glossary
 
-| Term                  | Meaning                                                                                                                                     |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Home**              | The place being managed. One per user for now.                                                                                              |
-| **Room**              | A space in the home (kitchen, bedroom, bathroom, hallway...).                                                                               |
-| **Item**              | Something in a room that needs cleaning (window, closet, shelf, desk, mirror, floor...). Has a type, a name, a count, and an optional note. |
-| **Task**              | A cleaning action on an item, such as "Dust bedroom shelves". Has estimated minutes and a frequency.                                        |
-| **Frequency**         | How often a task should be done, in days (for example every 7 or every 30 days).                                                            |
-| **Due date**          | Last completion date plus frequency. It moves forward from when the task was actually done, not from a fixed calendar.                      |
-| **Overdue ratio**     | Days past due divided by frequency. The scheduler's priority signal.                                                                        |
-| **Proposal**          | An AI-generated set of tasks awaiting user review.                                                                                          |
-| **Occurrence**        | One instance of a task assigned to a specific day. Status: scheduled, done, or skipped.                                                     |
-| **Session**           | The set of occurrences for one day, within the daily budget. Maps to one calendar event.                                                    |
-| **Daily budget**      | Maximum minutes of cleaning per day (default 30).                                                                                           |
-| **Scheduling window** | Hours in which the session may be placed, per weekday.                                                                                      |
-| **Streak**            | Consecutive days with the session completed.                                                                                                |
+| Term                  | Meaning                                                                                                                                                                |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Home**              | The place being managed. One per user for now.                                                                                                                         |
+| **Room**              | A space in the home (kitchen, bedroom, bathroom, hallway...).                                                                                                          |
+| **Item**              | Something in a room that needs cleaning (window, closet, shelf, desk, mirror, floor...). Has a type, a name, a count, and an optional note. See the item fields below. |
+| **Task**              | A cleaning action on an item, such as "Dust bedroom shelves". Has estimated minutes and a frequency.                                                                   |
+| **Frequency**         | How often a task should be done, in days (for example every 7 or every 30 days).                                                                                       |
+| **Due date**          | Last completion date plus frequency. It moves forward from when the task was actually done, not from a fixed calendar.                                                 |
+| **Overdue ratio**     | Days past due divided by frequency. The scheduler's priority signal.                                                                                                   |
+| **Proposal**          | An AI-generated set of tasks awaiting user review.                                                                                                                     |
+| **Occurrence**        | One instance of a task assigned to a specific day. Status: scheduled, done, or skipped.                                                                                |
+| **Session**           | The set of occurrences for one day, within the daily budget. Maps to one calendar event.                                                                               |
+| **Daily budget**      | Maximum minutes of cleaning per day (default 30).                                                                                                                      |
+| **Scheduling window** | Hours in which the session may be placed, per weekday.                                                                                                                 |
+| **Streak**            | Consecutive days with the session completed.                                                                                                                           |
+
+**Item fields.**
+
+- **Type**: one of a fixed list (window, door, mirror, floor, rug, light fixture, shelf, desk, table, sofa, bed, closet, cabinet, countertop, appliance, sink, toilet, shower, bathtub, other). It drives the icon now and the AI prompt later.
+- **Name**: defaults to the type's label, up to 60 characters.
+- **Count**: a whole number from 1 to 99. It is shown as "Window x3".
+- **Note**: optional, up to 200 characters.
 
 ## Open questions
 
