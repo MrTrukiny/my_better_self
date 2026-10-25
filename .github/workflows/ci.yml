@@ -13,6 +13,28 @@ jobs:
   check:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          # Throwaway container reachable only from this job, so no password is needed.
+          POSTGRES_HOST_AUTH_METHOD: trust
+          POSTGRES_DB: my_better_self
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      # Test-only values; real secrets live in Vercel and .env.local.
+      DATABASE_URL: postgres://postgres@localhost:5432/my_better_self
+      BETTER_AUTH_SECRET: ci-only-secret-not-used-anywhere-else-0123456789
+      BETTER_AUTH_URL: http://localhost:3100
+      GOOGLE_CLIENT_ID: ci-google-client-id
+      GOOGLE_CLIENT_SECRET: ci-google-client-secret
+      ALLOWED_EMAILS: owner@example.com
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6

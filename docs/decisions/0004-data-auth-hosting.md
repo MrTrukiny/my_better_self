@@ -1,6 +1,6 @@
 # 0004: Data, auth, and hosting
 
-- **Status**: Proposed (confirm when spec 001, sign-in and data, is planned)
+- **Status**: Accepted (amended when spec 001 was planned; see "Amendments")
 - **Date**: 2026-10-25
 
 ## Context
@@ -27,14 +27,22 @@ It is a personal app, so cost and operational effort should be close to zero.
 ## Consequences
 
 - Free tiers of Neon and Vercel are enough for one user. Vercel Hobby cron runs at most once per day, which matches the need.
-- Server-side code needs a database driver that works in serverless functions (the Neon serverless driver).
+- Server-side code connects through a small `pg` pool using Neon's pooled connection string (see "Amendments").
 - New environment variables, documented in `.env.example` when introduced:
   - `DATABASE_URL`
   - `BETTER_AUTH_SECRET`
   - `BETTER_AUTH_URL`
+  - `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`
   - `ALLOWED_EMAILS`
   - `CRON_SECRET`
 - Moving off Vercel later requires replacing the cron trigger; the job itself is a plain route handler.
+
+## Amendments (spec 001)
+
+- **Driver: `pg` (node-postgres) instead of the Neon serverless driver.** The same code then runs against Neon, a plain local Postgres, and the Postgres service in CI. With the Neon driver, CI would need a real Neon database.
+- **Allowlist enforcement** lives in Better Auth database hooks. Two hooks check it: `user.create.before` refuses new accounts, and `session.create.before` refuses existing users who were later removed from the list. Both throw `APIError` with the code `email_not_allowed`, which Better Auth forwards to the sign-in page as `?error=`.
+- **Timestamps** are `timestamptz`, so the scheduler (spec 004) can reason about local days without ambiguity.
+- **E2E tests don't go through Google.** A test-only Better Auth instance with the `testUtils` plugin (`e2e/support/auth.ts`) creates users and session cookies directly. The production config never includes the plugin. The real Google redirect is checked manually during review.
 
 ## Alternatives considered
 

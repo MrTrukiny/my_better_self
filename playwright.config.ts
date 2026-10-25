@@ -1,4 +1,9 @@
+import { existsSync } from "node:fs";
 import { defineConfig, devices } from "@playwright/test";
+
+if (!process.env.CI && existsSync(".env.local")) {
+  process.loadEnvFile(".env.local");
+}
 
 const PORT = 3100;
 const baseURL = `http://localhost:${PORT}`;
@@ -19,9 +24,11 @@ export default defineConfig({
   ],
   webServer: {
     // Service workers and offline behavior are only reliable in a production build.
-    command: `pnpm build && pnpm start --port ${PORT}`,
+    command: `pnpm db:migrate && pnpm build && pnpm start --port ${PORT}`,
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
+    // Sessions created by the e2e auth instance are bound to this origin.
+    env: { BETTER_AUTH_URL: baseURL },
   },
 });
