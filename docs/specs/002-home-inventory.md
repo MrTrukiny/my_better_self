@@ -89,7 +89,7 @@ Builds on spec 001 (Drizzle, Better Auth, `getCurrentUser()`).
 ### Tasks
 
 - [x] T1: Inventory schema, migration, and item types. Files: `src/db/schema/inventory.ts`, `src/db/schema/index.ts`, `drizzle/0001_inventory.sql`, `src/lib/inventory/item-types.ts`, `src/lib/inventory/item-types.test.ts`. Covers: AC3.
-- [ ] T2: Validation schemas and error mapping, including the duplicate-name database error. Files: `src/lib/inventory/schemas.ts`, `src/lib/inventory/schemas.test.ts`. Covers: AC6.
+- [x] T2: Validation schemas and error mapping, including the duplicate-name database error. Files: `src/lib/inventory/schemas.ts`, `src/lib/inventory/schemas.test.ts`. Covers: AC6.
 - [ ] T3: Cached, user-scoped queries: room list with item counts, and a room with its items. Files: `src/lib/inventory/queries.ts`. Covers: AC1, AC2, AC3.
 - [ ] T4: Server Actions for rooms and items with typed results and tag invalidation. Files: `src/app/(app)/rooms/actions.ts`. Covers: AC2 to AC6.
 - [ ] T5: UI building blocks: shadcn components, `ResponsiveDialog`, `useMediaQuery`, `CountStepper`, and `InventoryEditGuard`. Files: `src/components/ui/*` (generated), `src/components/responsive-dialog.tsx`, `src/hooks/use-media-query.ts`, `src/components/inventory/count-stepper.tsx`, `src/components/inventory/count-stepper.test.tsx`, `src/components/inventory/edit-guard.tsx`, `src/components/inventory/edit-guard.test.tsx`. Covers: AC6, AC7, AC8.
