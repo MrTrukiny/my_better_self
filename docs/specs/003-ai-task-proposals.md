@@ -61,6 +61,7 @@ Each criterion is testable and maps to at least one test.
 - Re-proposing or changing tasks automatically when the inventory changes; proposing again is always the owner's action.
 - Size, material, or dirtiness attributes of items (phase 2), and photos or video (phase 3).
 - Choosing the AI model or provider from the UI (ADR 0003 sets it by configuration).
+- A deterministic task catalog (rules per item type, room type, and helper) that could replace most AI calls. It will be revisited once real proposals show which patterns are stable.
 
 ## Open questions
 
