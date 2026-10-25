@@ -8,7 +8,7 @@ The user talks in **Spanish**; reply in chat in Spanish. Everything written to t
 
 ## Product
 
-**Better Myself** is a responsive, installable PWA. Product context: [`docs/PRODUCT.md`](docs/PRODUCT.md). Architecture: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). Decisions: [`docs/decisions/`](docs/decisions/).
+**My Better Self** is a personal, installable PWA that plans household cleaning with AI: it maps the home, proposes tasks, and schedules daily 30-minute sessions in Google Calendar. Product context: [`docs/PRODUCT.md`](docs/PRODUCT.md). Architecture: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). Decisions: [`docs/decisions/`](docs/decisions/).
 
 ## Stack
 
