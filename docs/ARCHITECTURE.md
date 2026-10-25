@@ -90,15 +90,25 @@ flowchart TD
 
 See ADRs [0002](decisions/0002-google-calendar.md), [0003](decisions/0003-ai-provider-gemini.md), and [0004](decisions/0004-data-auth-hosting.md). In short:
 
-- **Database:** Postgres (Neon), accessed through Drizzle. The schema lives in `src/db/` and migrations in `drizzle/`.
-- **Auth:** Better Auth with Google sign-in, restricted to an email allowlist. It stores the refresh token for calendar access.
+- **Database:** Postgres (Neon), accessed through Drizzle over a `pg` pool (`src/db/index.ts`). The schema lives in `src/db/schema/` and migrations in `drizzle/`. Environment variables are validated in `src/lib/env.ts`.
+- **Auth:** Better Auth with Google sign-in (`src/lib/auth.ts`, mounted at `/api/auth/*`), restricted to an email allowlist. Later it also stores the refresh token for calendar access.
 - **AI:** Gemini through the Vercel AI SDK, server-only. Prompts and schemas live in `src/lib/ai/`.
 - **Calendar:** Google Calendar API with the `calendar.app.created` and `calendar.freebusy` scopes. The app writes only to its own calendar.
 - **Hosting:** Vercel, with Vercel Cron for the daily job.
 
-These paths are planned; they are created by the specs that introduce them (see [`ROADMAP.md`](ROADMAP.md)).
+The AI, calendar, and cron paths are planned; they are created by the specs that introduce them (see [`ROADMAP.md`](ROADMAP.md)).
+
+### Route protection
+
+| Layer             | Where                             | What it does                                                                                                                                 |
+| ----------------- | --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Optimistic check  | `src/proxy.ts`                    | Redirects requests without a session cookie to `/sign-in?callbackURL=...`. It does not validate the cookie.                                  |
+| Data access layer | `src/lib/session.ts`              | `getCurrentUser()` validates the session (`"use cache: private"`) and redirects when it is missing. Every protected page and action uses it. |
+| Route groups      | `src/app/(app)`, `(public)`       | `(app)` renders the app shell and account menu; `(public)` holds `/sign-in` and `/~offline` with a minimal layout.                           |
+| Sign-out          | `src/components/account-menu.tsx` | Ends the session, deletes the service worker's runtime caches, and replaces the history entry, so cached pages can't show signed-in content. |
 
 ## Testing
 
 - Unit and component tests: Vitest + Testing Library + jsdom, colocated as `*.test.ts(x)`.
-- End-to-end: Playwright against a production build on desktop and mobile (Pixel 7) projects. Covers the manifest, service worker registration, and offline fallback.
+- End-to-end: Playwright against a production build on desktop and mobile (Pixel 7) projects. Covers the manifest, service worker registration, offline fallback, and auth flows.
+- E2E needs a Postgres database (`DATABASE_URL`). The `signedInUser` fixture in `e2e/fixtures.ts` creates a user and session cookies through a test-only auth instance, so tests never go through Google. CI runs a Postgres service container.

@@ -30,20 +30,27 @@ The user talks in **Spanish**; reply in chat in Spanish. Everything written to t
 | `pnpm test`                 | Vitest unit tests                                                               |
 | `pnpm test:e2e`             | Playwright against a prod build, desktop + mobile viewports                     |
 | `pnpm check:fast`           | typecheck + lint + unit tests (run often)                                       |
-| `pnpm check`                | `check:fast` + e2e (run before declaring a task done)                           |
+| `pnpm check`                | `check:fast` + e2e (run before declaring a task done; needs `DATABASE_URL`)     |
+| `pnpm db:generate`          | Generate a SQL migration in `drizzle/` from `src/db/schema/`                    |
+| `pnpm db:migrate`           | Apply pending migrations to `DATABASE_URL`                                      |
 
 ## Layout
 
 ```
 src/
   app/                 Routes (App Router). sw.ts = service worker source.
+    (app)/             Signed-in routes, rendered inside the app shell
+    (public)/          sign-in and ~offline (precached fallback), minimal layout
+    api/auth/          Better Auth route handler
     serwist/[path]/    Route handler that builds and serves /serwist/sw.js
-    ~offline/          Offline fallback page (precached)
     manifest.ts        Web app manifest
-  components/          App components (app-shell, theme, offline banner)
+  proxy.ts             Optimistic auth redirect (cookie check only)
+  components/          App components (app-shell, account menu, sign-in form, theme, offline banner)
     ui/                shadcn/ui components (generated; edit sparingly)
-  lib/                 Utilities and app config
-e2e/                   Playwright specs
+  db/                  Drizzle client and schema (schema/)
+  lib/                 Utilities, app config, env, auth, session (data access layer)
+drizzle/               SQL migrations (generated, committed)
+e2e/                   Playwright specs, fixtures, test-only auth
 docs/                  Product, architecture, specs, ADRs
 .cursor/rules/         Scoped agent rules
 .cursor/skills/        Workflow skills (spec -> plan -> implement -> review)
@@ -79,6 +86,7 @@ Skills live in `.cursor/skills/<name>/SKILL.md`. Small fixes can skip straight t
 - Default to Server Components; add `"use client"` only for interactivity, and push it to the leaves.
 - Use existing shadcn/ui components before writing new primitives (`pnpm dlx shadcn@latest add <name>`).
 - Keep app-wide constants in `src/lib/app-config.ts`.
+- Resolve the user with `getCurrentUser()` from `src/lib/session.ts` in every protected page, Server Action, and route handler; the proxy is not an authorization check.
 - Write tests next to the code (`*.test.ts(x)`); e2e flows go in `e2e/`.
 - Record significant decisions as an ADR in `docs/decisions/`.
 
