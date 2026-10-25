@@ -1,19 +1,19 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
+import { InventoryLink } from "./inventory-link";
 
 export function RoomNavLink({ href, children }: { href: string; children: ReactNode }) {
   const isCurrent = usePathname() === href;
   return (
-    <Link
+    <InventoryLink
       href={href}
       aria-current={isCurrent ? "page" : undefined}
       className="hover:bg-muted/60 focus-visible:ring-ring aria-[current=page]:bg-muted flex min-h-14 items-center justify-between gap-4 px-4 outline-none focus-visible:ring-2 focus-visible:ring-inset"
     >
       {children}
-    </Link>
+    </InventoryLink>
   );
 }
 

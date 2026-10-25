@@ -1,5 +1,5 @@
-import { render, screen } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { act, render, screen } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { EditNotice, useEditsDisabled } from "./edit-guard";
 
 const { offline } = vi.hoisted(() => ({ offline: { value: false } }));
@@ -19,6 +19,10 @@ function AddButton() {
 
 beforeEach(() => {
   offline.value = false;
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
 });
 
 describe("edit guard", () => {
@@ -45,5 +49,17 @@ describe("edit guard", () => {
     expect(screen.getByRole("status")).toHaveTextContent(
       "You're offline. You can browse your inventory, but changes need a connection.",
     );
+  });
+
+  it("AC7: treats a page loaded while offline as offline, and re-enables edits online", () => {
+    const onLine = vi.spyOn(navigator, "onLine", "get").mockReturnValue(false);
+    render(<AddButton />);
+    expect(screen.getByRole("button", { name: "Add room" })).toBeDisabled();
+
+    onLine.mockReturnValue(true);
+    act(() => {
+      window.dispatchEvent(new Event("online"));
+    });
+    expect(screen.getByRole("button", { name: "Add room" })).toBeEnabled();
   });
 });

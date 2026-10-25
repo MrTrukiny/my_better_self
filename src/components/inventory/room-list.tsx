@@ -1,22 +1,24 @@
 import { DoorOpen } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { itemCountLabel } from "@/lib/inventory/format";
 import { getRooms } from "@/lib/inventory/queries";
+import { OfflineCacheWarmer } from "./offline-cache-warmer";
 import { AddRoomButton } from "./room-form";
 import { RoomNavLink } from "./room-nav-link";
 
-export function itemCountLabel(count: number): string {
-  if (count === 0) {
-    return "No items";
-  }
-  return count === 1 ? "1 item" : `${count} items`;
-}
-
 export async function RoomList() {
   const rooms = await getRooms();
+  const warmer = (
+    <OfflineCacheWarmer
+      urls={["/rooms", ...rooms.map((room) => `/rooms/${room.id}`)]}
+      version={JSON.stringify(rooms)}
+    />
+  );
 
   if (rooms.length === 0) {
     return (
       <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed px-4 py-10 text-center">
+        {warmer}
         <DoorOpen aria-hidden className="text-muted-foreground size-8" />
         <h2 className="font-heading text-lg font-semibold">No rooms yet</h2>
         <p className="text-muted-foreground max-w-sm text-sm">
@@ -30,6 +32,7 @@ export async function RoomList() {
 
   return (
     <div className="flex flex-col gap-4">
+      {warmer}
       <ul aria-label="Rooms" className="flex flex-col divide-y overflow-hidden rounded-xl border">
         {rooms.map((room) => (
           <li key={room.id}>

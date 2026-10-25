@@ -1,18 +1,18 @@
 "use client";
 
 import { WifiOff } from "lucide-react";
-import { useOffline } from "next/offline";
+import { useIsOffline } from "@/hooks/use-is-offline";
 
 /**
  * Inventory edits are disabled offline: with `experimental.useOffline`, Next would otherwise
  * hold a Server Action and replay it on reconnect, and spec 002 says nothing is queued.
  */
 export function useEditsDisabled(): boolean {
-  return useOffline();
+  return useIsOffline();
 }
 
 export function EditNotice() {
-  const isOffline = useOffline();
+  const isOffline = useIsOffline();
   if (!isOffline) {
     return null;
   }
