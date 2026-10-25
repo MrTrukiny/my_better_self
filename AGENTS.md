@@ -62,6 +62,8 @@ docs/                  Product, architecture, specs, ADRs
 - **playwright**: drive a real browser to check UI at 360px and desktop widths, and to inspect console errors.
 - **next-devtools**: inspect Next.js runtime errors, routes, and build state of the running dev server.
 
+Vendored skill: `.agents/skills/neon-postgres/` (pinned in `skills-lock.json`; update with `npx neon@latest skills -s neon-postgres -y`). Use it for connections, branches, migrations, and database inspection. Neon is only the Postgres host: auth is Better Auth ([ADR 0004](docs/decisions/0004-data-auth-hosting.md)) and AI is Gemini through the AI SDK ([ADR 0003](docs/decisions/0003-ai-provider-gemini.md)). Don't adopt Neon Auth, Functions, or the AI Gateway without a new ADR.
+
 ## Workflow
 
 Non-trivial work follows spec-driven development, with a human checkpoint after each step:
