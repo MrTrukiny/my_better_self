@@ -1,0 +1,31 @@
+---
+description: UI conventions — shadcn/ui, Tailwind v4, mobile-first, accessibility
+globs: src/components/**/*.tsx,src/app/**/*.tsx,src/app/globals.css
+alwaysApply: false
+---
+
+# UI conventions
+
+## Components
+
+- Reach for shadcn/ui first: `pnpm dlx shadcn@latest add <component>`. Generated files go to `src/components/ui/`; treat them as owned code but change them sparingly.
+- The style is `base-nova` (Base UI primitives). Use the `render` prop for polymorphism, not Radix's `asChild`.
+- Merge classes with `cn()` from `@/lib/utils`. Use `cva` for variants.
+- Icons come from `lucide-react`.
+
+## Styling
+
+- Tailwind v4 with design tokens in `src/app/globals.css`. Use semantic tokens (`bg-background`, `text-muted-foreground`, `border`), never raw hex colors.
+- Every screen must work in light and dark mode (`dark:` variant, `.dark` class).
+- **Mobile-first**: write base styles for 360px wide, then add `sm:`, `md:`, `lg:`. Use `min-h-dvh`, not `h-screen`.
+- Touch targets are at least 44x44 px on mobile.
+- Respect safe areas in standalone mode with `env(safe-area-inset-*)`. The app shell already handles the top and bottom insets.
+
+## Accessibility (WCAG 2.2 AA)
+
+- Use semantic HTML first (`button`, `nav`, `main`, headings in order, one `h1` per page).
+- Every interactive element has an accessible name. Icon-only buttons need `aria-label`.
+- Keep the visible focus ring (`focus-visible:`), and don't remove outlines without a replacement.
+- Color contrast is at least 4.5:1 for text. Don't convey meaning with color alone.
+- Respect `prefers-reduced-motion` for non-essential animation (`motion-safe:`).
+- Status changes are announced (`role="status"`, toasts via `sonner`).

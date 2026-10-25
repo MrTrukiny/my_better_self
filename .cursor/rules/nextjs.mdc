@@ -1,0 +1,19 @@
+---
+description: Next.js 16 App Router conventions (Cache Components, Server Components, Server Actions)
+globs: src/app/**/*.ts,src/app/**/*.tsx
+alwaysApply: false
+---
+
+# Next.js conventions
+
+- This is Next.js 16 with breaking changes. Before using an API you are unsure about, read the matching guide under `node_modules/next/dist/docs/01-app/`.
+- **Server Components by default.** Add `"use client"` only for state, effects, event handlers, or browser APIs, and keep client components small and close to the leaves.
+- **Cache Components is on.** Do not export `dynamic`, `revalidate`, `dynamicParams`, or `fetchCache` from routes. Instead:
+  - Put uncached or per-request data behind `<Suspense>` with a meaningful fallback.
+  - Mark cacheable functions or components with `"use cache"` and tag them (`cacheTag`) when they need invalidation.
+- **Params and searchParams are async.** Use `await params`, and type pages with the generated `PageProps<"/route">` and `LayoutProps<"/route">` helpers.
+- **Mutations** go through Server Actions (`"use server"`) in an `actions.ts` next to the route. Validate input on the server. Return typed results instead of throwing for expected errors.
+- **Offline-aware UI**: for pending states in Suspense fallbacks or transitions, use `useOffline()` from `next/offline` to tell "slow" apart from "offline".
+- Use `<Link>` for internal navigation so the route shell is prefetched.
+- Use `metadata` / `generateMetadata` for titles. The root layout sets the title template.
+- Keep route files thin: page = composition; logic lives in `src/lib/` or in feature components.

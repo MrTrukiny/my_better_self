@@ -1,0 +1,14 @@
+---
+description: Language policy — Spanish in chat, English in every artifact
+alwaysApply: true
+---
+
+# Language policy
+
+- The user writes in **Spanish**. Reply to the user in chat in **Spanish**.
+- Everything that lands in the repo or on a remote is written in **English**:
+  - Code: identifiers, comments, log and error messages.
+  - UI copy and user-facing strings.
+  - Docs, specs, plans, ADRs, rules, skills, and `AGENTS.md`.
+  - Git: branch names, commit messages, PR titles and descriptions, review comments.
+- If the user dictates content in Spanish that will end up in an artifact (a spec, a commit message, UI text), translate it to natural English before writing it.

@@ -1,0 +1,31 @@
+---
+description: PWA rules — service worker, manifest, caching, offline behavior
+globs: src/app/sw.ts,src/app/serwist/**,src/app/manifest.ts,src/app/~offline/**,src/components/offline-banner.tsx,public/icons/**,next.config.ts
+alwaysApply: false
+---
+
+# PWA rules
+
+## Pieces and where they live
+
+- Manifest: `src/app/manifest.ts`. App name, colors, and description come from `src/lib/app-config.ts`.
+- Service worker source: `src/app/sw.ts` (Serwist). Built and served by `src/app/serwist/[path]/route.ts` at `/serwist/sw.js`.
+- Registration: `SerwistProvider` in the root layout.
+- Offline fallback document: `/~offline`, precached through `additionalPrecacheEntries`.
+- In-app connectivity: `experimental.useOffline` plus `useOffline()` (`OfflineBanner`).
+
+## Rules
+
+- Don't add route segment config to the Serwist route handler; it conflicts with Cache Components.
+- Keep `esbuild` and `serwist` in `dependencies`: the worker is bundled at request time in production.
+- Caching strategy defaults come from `defaultCache`. When adding custom `runtimeCaching`:
+  - Static, hashed assets: `CacheFirst`.
+  - Pages and RSC payloads: `NetworkFirst` with a short network timeout.
+  - API data: `NetworkFirst` or `StaleWhileRevalidate`, depending on freshness needs. Never cache authenticated responses in a shared cache.
+- Every new page that should open offline must be reachable from a `<Link>` (prefetch) or added to the precache list.
+- Changing icons: update `public/icons/` and keep the 192px, 512px, and maskable variants.
+- **Verify PWA changes against a production build** (`pnpm build && pnpm start`, or `pnpm test:e2e`). `next dev` does not reflect service worker behavior.
+
+## Testing offline in Playwright
+
+Use `context.setOffline(true)` and then open a **new page** for cold-load scenarios. An already-open page keeps Next's in-app offline handling active, which retries the navigation instead of loading the fallback document.

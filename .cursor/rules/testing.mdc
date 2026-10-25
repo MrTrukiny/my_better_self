@@ -1,0 +1,28 @@
+---
+description: Testing conventions — Vitest + Testing Library for units, Playwright for e2e
+globs: **/*.test.ts,**/*.test.tsx,e2e/**,vitest.config.mts,vitest.setup.ts,playwright.config.ts
+alwaysApply: false
+---
+
+# Testing conventions
+
+## What goes where
+
+- **Unit and component tests** (Vitest + Testing Library + jsdom): colocated as `name.test.ts(x)` next to the code. Use them for pure logic, hooks, and client components.
+- **E2E tests** (Playwright): `e2e/*.spec.ts`. Use them for user flows, routing, Server Components, Server Actions, and PWA behavior. They run against a production build on the `desktop` and `mobile` projects.
+- Async Server Components are not unit-testable with Testing Library. Cover them with e2e tests.
+
+## How to write them
+
+- Every acceptance criterion in a spec maps to at least one test. Reference it in the test name when helpful (`"AC2: shows an empty state"`).
+- Query by role and accessible name (`getByRole("button", { name: ... })`). Use `getByTestId` only as a last resort.
+- Use `userEvent` instead of `fireEvent`.
+- Mock at the boundary (network, `next-themes`, `next/navigation`), not internal modules.
+- Don't use fixed sleeps. Use `await expect(...).toBeVisible()` and `waitForFunction` instead.
+- Tests must be deterministic and independent. Don't share state between tests.
+
+## Workflow
+
+- Write or update the failing test first, then the implementation.
+- Run `pnpm test` (or `pnpm test:watch`) while iterating, `pnpm check:fast` after each task, and `pnpm check` before declaring done.
+- Never delete or weaken a test to make it pass. If a test is wrong, explain why in the commit message.
