@@ -16,6 +16,14 @@ export function AppShell({ children }: { children: ReactNode }) {
             {APP_NAME}
           </Link>
           <div className="flex items-center gap-1">
+            <nav aria-label="Main">
+              <Link
+                href="/rooms"
+                className="hover:bg-muted focus-visible:ring-ring inline-flex h-9 items-center rounded-md px-3 text-sm font-medium outline-none focus-visible:ring-2"
+              >
+                Rooms
+              </Link>
+            </nav>
             <ThemeToggle />
             <Suspense fallback={<div aria-hidden className="bg-muted size-8 rounded-full" />}>
               <CurrentAccountMenu />
