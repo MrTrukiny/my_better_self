@@ -2,6 +2,7 @@ import "server-only";
 import { and, asc, count, eq } from "drizzle-orm";
 import { cacheTag } from "next/cache";
 import { notFound } from "next/navigation";
+import { z } from "zod";
 import { db } from "@/db";
 import { item, room } from "@/db/schema";
 import { getCurrentUser } from "@/lib/session";
@@ -30,6 +31,9 @@ export async function getRooms(): Promise<RoomSummary[]> {
 
 export async function getRoom(roomId: string): Promise<RoomDetail> {
   const user = await getCurrentUser();
+  if (!z.uuid().safeParse(roomId).success) {
+    notFound();
+  }
   const found = await roomForUser(user.id, roomId);
   if (!found) {
     notFound();
