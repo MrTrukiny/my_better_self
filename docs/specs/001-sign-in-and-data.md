@@ -1,6 +1,6 @@
 # 001: Sign-in and data
 
-- **Status**: Draft
+- **Status**: Approved
 - **Owner**: @mrtrukiny
 - **Created**: 2026-10-25
 
