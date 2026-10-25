@@ -1,6 +1,6 @@
 # 003: AI task proposals
 
-- **Status**: Draft
+- **Status**: Approved
 - **Owner**: @mrtrukiny
 - **Created**: 2026-10-25
 
@@ -71,4 +71,73 @@ Each criterion is testable and maps to at least one test.
 
 ## Technical plan
 
-_Filled in by the `plan-feature` skill after the spec is approved._
+### Approach
+
+Builds on specs 001 and 002 and on ADR 0003 (Gemini through the AI SDK).
+
+- **Dependencies:** `ai` (v7) and `@ai-sdk/google`, as decided in ADR 0003. No other new packages.
+- **Data model** (`src/db/schema/tasks.ts`). An ADR records the task scope and routine decision:
+  - `home_profile`: one row per user, with `helpers` (a text array validated against a fixed list in code) and `note`.
+  - `task`: `userId`, optional `roomId`, optional `itemId`, `kind` (`cleaning` or `routine`), `name`, `minutes`, `frequencyDays`, and timestamps.
+    - The scope is derived from the links: an item task has an `itemId`, a room task only a `roomId`, and a home task neither.
+    - Deleting a room or an item cascades to its tasks.
+    - Scheduling fields such as `lastDoneAt` arrive with specs 004 and 006.
+  - `task_proposal`: pending proposals, with the same shape as `task` plus the scope it was generated for.
+    - Accepting one inserts a `task` and deletes the proposal; discarding deletes it.
+    - Generating again for a scope replaces the pending proposals of that scope.
+- **AI module** (`src/lib/ai/`):
+  - `model.ts` picks the model from `AI_MODEL`, with a Flash-tier default confirmed against the live model list during T4.
+  - `task-proposals.ts`:
+    - Builds the input: rooms and items under short references such as `r1` and `r1.i2`, plus the helpers, the note, and the existing tasks.
+    - Calls `generateText` with `Output.object()`, a 45-second timeout, and one retry.
+    - Post-validates in code. It drops unknown references and out-of-range minutes or frequencies (cleaning tasks 1 to 30 minutes, frequencies 1 to 365 days). It also drops duplicates of existing tasks or other proposals, by normalized name and target.
+  - The prompt asks for small, specific item tasks, room passes at two depths, and home-wide routines, and explains how each helper changes the work (AC4).
+  - When `AI_FAKE=1` (only in e2e and CI), a deterministic fake builds proposals from the same input, so no live calls happen in tests. A note containing `[fail]` makes the fake fail, to test AC8.
+  - `pnpm ai:try` runs the live prompt against a sample home and prints the proposals, for tuning.
+- **Mutations** (`src/app/(app)/tasks/actions.ts`): `saveHomeProfile`, `generateProposals(scope)`, `updateProposal`, `acceptProposal`, `acceptAllProposals`, `discardProposal`, `updateTask`, and `deleteTask`. Each resolves the user, validates with Zod, scopes queries by `userId`, and updates the `tasks:<userId>` tag.
+- **Reads** (`src/lib/tasks/queries.ts`): `"use cache"` functions keyed and tagged by user, the same pattern as the inventory.
+- **Routes:**
+  - `/tasks` is the task list, with a banner when proposals are pending.
+  - `/tasks/review` shows the scope picker ("Whole home" or a room), "Propose tasks", and the pending proposals.
+  - `/home-profile` is the helpers and note form.
+  - The room list and room pages link to `/tasks/review?room=<id>`, and the header gets a "Tasks" link.
+  - Pages are Server Components with Suspense around per-user data. The proposal cards, the edit forms, the generate button, and the "Accept all" bar are client leaves.
+- **Generation UX:** the generate button runs the Server Action in a transition. While it runs, the button shows timed progress text. When it finishes, a polite live region announces "N tasks proposed" or the error with "Try again".
+- **Offline (AC8):** the ADR 0005 pattern is generalized. `InventoryLink` becomes `OfflineAwareLink`. The service worker's `NetworkOnly` RSC rule and the document warmer cover `/tasks`, `/tasks/review`, and `/home-profile`. `useEditsDisabled()` guards generation and every edit.
+
+### Tasks
+
+- [ ] T1: Foundations: add the AI dependencies, make `GOOGLE_GENERATIVE_AI_API_KEY`, `AI_MODEL`, and `AI_FAKE` optional in env validation, write an ADR for task scopes and routines, and update the glossary (Task scope, Routine, Helper, Home profile, Proposal). Files: `package.json`, `pnpm-lock.yaml`, `src/lib/env.ts`, `src/lib/env.test.ts`, `.env.example`, `docs/decisions/0006-task-scopes-and-routines.md`, `docs/PRODUCT.md`. Covers: groundwork for AC2 and AC3.
+- [ ] T2: Schema and migration for `home_profile`, `task`, and `task_proposal`, plus the helper list. Files: `src/db/schema/tasks.ts`, `src/db/schema/index.ts`, `drizzle/0002_tasks.sql`, `src/lib/tasks/helpers.ts`, `src/lib/tasks/helpers.test.ts`. Covers: AC1, AC5, AC7.
+- [ ] T3: Home profile: Zod schema, query, the `saveHomeProfile` action, and the `/home-profile` page and form. Files: `src/lib/tasks/schemas.ts`, `src/lib/tasks/schemas.test.ts`, `src/lib/tasks/queries.ts`, `src/app/(app)/tasks/actions.ts`, `src/app/(app)/home-profile/page.tsx`, `src/components/tasks/home-profile-form.tsx`, `src/components/tasks/home-profile-form.test.tsx`. Covers: AC1, AC9.
+- [ ] T4: AI proposal module: input with references, prompt, output schema, post-validation and deduplication, model selection, the fake provider, and `pnpm ai:try`. Files: `src/lib/ai/model.ts`, `src/lib/ai/task-proposals.ts`, `src/lib/ai/task-proposals.test.ts`, `src/lib/ai/fake-proposals.ts`, `scripts/ai-try.ts`, `package.json`. Covers: AC2, AC3, AC4, AC6, AC8.
+- [ ] T5: Proposal and task actions and queries: generate per scope (replacing pending proposals of that scope), update, accept, accept all, and discard proposals; update and delete tasks. Files: `src/app/(app)/tasks/actions.ts`, `src/lib/tasks/queries.ts`, `src/lib/tasks/schemas.ts`, `src/lib/tasks/schemas.test.ts`. Covers: AC2, AC5, AC6, AC7, AC8.
+- [ ] T6: Review screen: `/tasks/review` with the scope picker, the generate button with progress and live announcements, grouped proposal cards, the edit sheet, and the "Accept all" bar. Also the entry points from the room list and room pages. Files: `src/app/(app)/tasks/review/page.tsx`, `src/components/tasks/generate-button.tsx`, `src/components/tasks/generate-button.test.tsx`, `src/components/tasks/proposal-list.tsx`, `src/components/tasks/proposal-card.tsx`, `src/components/tasks/task-form.tsx`, `src/components/tasks/task-form.test.tsx`, `src/components/inventory/room-list.tsx`, `src/app/(app)/rooms/[roomId]/page.tsx`. Covers: AC2, AC5, AC8, AC9.
+- [ ] T7: Task list: `/tasks` grouped by room and "Whole home", a routines section, edit and delete with confirmation, the pending-proposals banner, and the header "Tasks" link. Files: `src/app/(app)/tasks/page.tsx`, `src/components/tasks/task-list.tsx`, `src/components/app-shell.tsx`. Covers: AC7, AC9.
+- [ ] T8: Offline: generalize `InventoryLink` into `OfflineAwareLink`, extend the service worker rule and the document warmer to the task routes, and amend ADR 0005. Files: `src/components/offline-aware-link.tsx` (moved from `src/components/inventory/inventory-link.tsx`), `src/app/sw.ts`, `src/components/inventory/offline-cache-warmer.tsx` (moved to `src/components/offline-cache-warmer.tsx`), the pages above, `docs/decisions/0005-offline-inventory-reading.md`. Covers: AC8.
+- [ ] T9: E2E flows with the fake AI, and docs (domain model and AI flow in `ARCHITECTURE.md`, AI variables in the README). Files: `e2e/tasks.spec.ts`, `e2e/tasks-offline.spec.ts`, `playwright.config.ts` (`AI_FAKE=1`), `.github/workflows/ci.yml`, `docs/ARCHITECTURE.md`, `README.md`. Covers: AC1 to AC9.
+
+### Test plan
+
+- Unit (Vitest):
+  - Helper list and home profile schema: known helpers only, note of 500 characters accepted and 501 rejected (AC1).
+  - AI module with `MockLanguageModelV4` and recorded fixtures:
+    - The input maps rooms and items to references and back (AC2).
+    - Proposals with unknown references, minutes outside 1 to 30 for cleaning tasks, or frequencies outside 1 to 365 are dropped (AC3).
+    - Duplicates of existing tasks are dropped (AC6).
+    - Invalid output and timeouts become a typed failure (AC8).
+    - The prompt includes the helper guidance and the note (AC4).
+  - Task and proposal edit schemas, at the boundaries (AC5, AC7).
+- Component (Testing Library):
+  - Home profile form (AC1).
+  - Generate button: busy state, no double submit, progress text, live announcement, and error with "Try again" (AC2, AC8).
+  - Task form: field messages linked to their inputs (AC5, AC9).
+- E2E (Playwright, desktop and mobile, `AI_FAKE=1`):
+  - AC1: save helpers and a note, then reload to see them.
+  - AC2 and AC3: the empty inventory blocks generation; with rooms, proposals appear grouped with every field.
+  - AC4: with a robot vacuum marked, the fake proposes the "corners and edges" floor task. This checks that the profile reaches the generator. Prompt quality itself is checked with `pnpm ai:try`.
+  - AC5: accept, edit, discard, and "Accept all"; pending proposals survive a reload.
+  - AC6: proposing again for a room doesn't duplicate accepted tasks.
+  - AC7: the task list groups and routines; edit and delete with confirmation.
+  - AC8: the `[fail]` note shows the error with "Try again" and saves nothing. Offline, generation and edits are disabled and the lists stay readable.
+  - AC9: the review flow with the keyboard only, in dark mode.
