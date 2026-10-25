@@ -1,6 +1,6 @@
 # 003: AI task proposals
 
-- **Status**: Approved
+- **Status**: In progress
 - **Owner**: @mrtrukiny
 - **Created**: 2026-10-25
 
@@ -107,7 +107,7 @@ Builds on specs 001 and 002 and on ADR 0003 (Gemini through the AI SDK).
 
 ### Tasks
 
-- [ ] T1: Foundations: add the AI dependencies, make `GOOGLE_GENERATIVE_AI_API_KEY`, `AI_MODEL`, and `AI_FAKE` optional in env validation, write an ADR for task scopes and routines, and update the glossary (Task scope, Routine, Helper, Home profile, Proposal). Files: `package.json`, `pnpm-lock.yaml`, `src/lib/env.ts`, `src/lib/env.test.ts`, `.env.example`, `docs/decisions/0006-task-scopes-and-routines.md`, `docs/PRODUCT.md`. Covers: groundwork for AC2 and AC3.
+- [x] T1: Foundations: add the AI dependencies, make `GOOGLE_GENERATIVE_AI_API_KEY`, `AI_MODEL`, and `AI_FAKE` optional in env validation, write an ADR for task scopes and routines, and update the glossary (Task scope, Routine, Helper, Home profile, Proposal). Files: `package.json`, `pnpm-lock.yaml`, `src/lib/env.ts`, `src/lib/env.test.ts`, `.env.example`, `docs/decisions/0006-task-scopes-and-routines.md`, `docs/PRODUCT.md`. Covers: groundwork for AC2 and AC3.
 - [ ] T2: Schema and migration for `home_profile`, `task`, and `task_proposal`, plus the helper list. Files: `src/db/schema/tasks.ts`, `src/db/schema/index.ts`, `drizzle/0002_tasks.sql`, `src/lib/tasks/helpers.ts`, `src/lib/tasks/helpers.test.ts`. Covers: AC1, AC5, AC7.
 - [ ] T3: Home profile: Zod schema, query, the `saveHomeProfile` action, and the `/home-profile` page and form. Files: `src/lib/tasks/schemas.ts`, `src/lib/tasks/schemas.test.ts`, `src/lib/tasks/queries.ts`, `src/app/(app)/tasks/actions.ts`, `src/app/(app)/home-profile/page.tsx`, `src/components/tasks/home-profile-form.tsx`, `src/components/tasks/home-profile-form.test.tsx`. Covers: AC1, AC9.
 - [ ] T4: AI proposal module: input with references, prompt, output schema, post-validation and deduplication, model selection, the fake provider, and `pnpm ai:try`. Files: `src/lib/ai/model.ts`, `src/lib/ai/task-proposals.ts`, `src/lib/ai/task-proposals.test.ts`, `src/lib/ai/fake-proposals.ts`, `scripts/ai-try.ts`, `package.json`. Covers: AC2, AC3, AC4, AC6, AC8.
