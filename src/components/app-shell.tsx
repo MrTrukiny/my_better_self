@@ -1,8 +1,10 @@
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { type ReactNode, Suspense } from "react";
+import { AccountMenu } from "@/components/account-menu";
 import { OfflineBanner } from "@/components/offline-banner";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { APP_NAME } from "@/lib/app-config";
+import { getCurrentUser } from "@/lib/session";
 
 export function AppShell({ children }: { children: ReactNode }) {
   return (
@@ -13,10 +15,20 @@ export function AppShell({ children }: { children: ReactNode }) {
           <Link href="/" className="font-heading text-base font-semibold">
             {APP_NAME}
           </Link>
-          <ThemeToggle />
+          <div className="flex items-center gap-1">
+            <ThemeToggle />
+            <Suspense fallback={<div aria-hidden className="bg-muted size-8 rounded-full" />}>
+              <CurrentAccountMenu />
+            </Suspense>
+          </div>
         </div>
       </header>
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6 sm:py-10">{children}</main>
     </div>
   );
+}
+
+async function CurrentAccountMenu() {
+  const { name, email, image } = await getCurrentUser();
+  return <AccountMenu user={{ name, email, image }} />;
 }
