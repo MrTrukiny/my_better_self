@@ -57,18 +57,62 @@ Each criterion is testable and maps to at least one test.
 
 ## Technical plan
 
-_Filled in by the `plan-feature` skill after the spec is approved._
-
 ### Approach
 
-Short description of the design and any trade-offs. Link to an ADR if a significant decision was made.
+Builds on spec 001 (Drizzle, Better Auth, `getCurrentUser()`).
+
+- **Data model** (`src/db/schema/inventory.ts`):
+  - `room` table: `id`, `userId`, `name`, `createdAt`, `updatedAt`. A unique index on `(user_id, lower(name))` enforces "no duplicate room names" case-insensitively.
+  - `item` table: `id`, `userId`, `roomId` (cascade delete), `type`, `name`, `count`, `note`, `createdAt`, `updatedAt`.
+  - There is no `home` table yet: with one home per user, the user is the home. A `home` table can be introduced with sharing (phase 3) without moving data, because every row already carries `userId`.
+  - `type` is `text` validated against a TypeScript list, not a Postgres enum, so adding a type later doesn't need a migration.
+- **Item types** live in `src/lib/inventory/item-types.ts`. Each entry has an id, an English label, and a lucide icon. The same list feeds the picker, validation, and (later) the AI prompt.
+- **Validation:** Zod schemas in `src/lib/inventory/schemas.ts` are shared by the forms and the Server Actions. Limits: name 1 to 60 characters after trimming, count an integer from 1 to 99, note up to 200 characters. Duplicate room names are caught by the unique index and returned as a field error.
+- **Reads** (`src/lib/inventory/queries.ts`): exported getters resolve the user with `getCurrentUser()`. They then call unexported `"use cache"` functions keyed by `userId` and tagged `inventory:<userId>`, following the Next.js Cache Components auth guide. A room that doesn't belong to the user is a `notFound()`.
+- **Mutations** (`src/app/(app)/rooms/actions.ts`): `createRoom`, `renameRoom`, `deleteRoom`, `createItem`, `updateItem`, and `deleteItem`. Each re-reads the user, validates with Zod, scopes every query by `userId`, and calls `updateTag("inventory:<userId>")`. Each returns `{ ok: true } | { ok: false, fieldErrors, formError }` instead of throwing.
+- **Routes:**
+  - `/rooms` is the room list.
+  - `/rooms/[roomId]` is the room detail.
+  - The home page (`/`) gets a card linking to `/rooms` until the Today view (spec 006) takes it over. The header gets a "Rooms" link.
+  - Pages are Server Components. Per-user data streams behind `<Suspense>` with skeleton rows (Cache Components forbids reading it in the static shell).
+  - On desktop the room list and the detail sit side by side through a layout at `src/app/(app)/rooms/layout.tsx`. On mobile they are separate screens with a back link.
+- **Client components** (leaves only): the room and item forms, the delete confirmation, and the count stepper. They use `useActionState` for pending and error states.
+  - A `ResponsiveDialog` wrapper renders a shadcn `Sheet` below the `sm` breakpoint and a `Dialog` above it, using a small `useMediaQuery` hook.
+  - "Add another" keeps the item form open and resets it with focus back on the type picker.
+- **Offline (AC7):** an `InventoryEditGuard` client component wraps every edit control.
+  - When `useOffline()` is true, it disables them and shows "Changes need a connection".
+  - This matters because, with `experimental.useOffline`, Next would otherwise queue a Server Action and replay it on reconnect, and the spec says nothing is queued.
+  - Reading offline relies on the service worker's existing runtime cache for pages and RSC payloads that were opened before.
+  - T8 verifies this first with an e2e test. If the default cache doesn't cover `/rooms` RSC requests, T8 adds a `NetworkFirst` rule for `/rooms` in `src/app/sw.ts`. Sign-out already clears these caches.
+- **New shadcn components:** `sheet`, `alert-dialog`, `select`, `label`, `textarea`, and `skeleton`. There are no new npm dependencies.
 
 ### Tasks
 
-- [ ] T1: _description_. Files: `path/to/file.ts`. Covers: AC1.
-- [ ] T2: ...
+- [ ] T1: Inventory schema, migration, and item types. Files: `src/db/schema/inventory.ts`, `src/db/schema/index.ts`, `drizzle/0001_inventory.sql`, `src/lib/inventory/item-types.ts`, `src/lib/inventory/item-types.test.ts`. Covers: AC3.
+- [ ] T2: Validation schemas and error mapping, including the duplicate-name database error. Files: `src/lib/inventory/schemas.ts`, `src/lib/inventory/schemas.test.ts`. Covers: AC6.
+- [ ] T3: Cached, user-scoped queries: room list with item counts, and a room with its items. Files: `src/lib/inventory/queries.ts`. Covers: AC1, AC2, AC3.
+- [ ] T4: Server Actions for rooms and items with typed results and tag invalidation. Files: `src/app/(app)/rooms/actions.ts`. Covers: AC2 to AC6.
+- [ ] T5: UI building blocks: shadcn components, `ResponsiveDialog`, `useMediaQuery`, `CountStepper`, and `InventoryEditGuard`. Files: `src/components/ui/*` (generated), `src/components/responsive-dialog.tsx`, `src/hooks/use-media-query.ts`, `src/components/inventory/count-stepper.tsx`, `src/components/inventory/count-stepper.test.tsx`, `src/components/inventory/edit-guard.tsx`, `src/components/inventory/edit-guard.test.tsx`. Covers: AC6, AC7, AC8.
+- [ ] T6: Room list: page, empty state, skeleton, add and rename form, and delete confirmation with the item count. Also the header link and the home card. Files: `src/app/(app)/rooms/layout.tsx`, `src/app/(app)/rooms/page.tsx`, `src/components/inventory/room-list.tsx`, `src/components/inventory/room-form.tsx`, `src/components/inventory/room-form.test.tsx`, `src/components/inventory/delete-confirm.tsx`, `src/components/app-shell.tsx`, `src/app/(app)/page.tsx`. Covers: AC1, AC2, AC5, AC6, AC8.
+- [ ] T7: Room detail: item list ("Window x3"), add and edit item form with the type picker and "Add another", and item delete. Files: `src/app/(app)/rooms/[roomId]/page.tsx`, `src/components/inventory/item-list.tsx`, `src/components/inventory/item-form.tsx`, `src/components/inventory/item-form.test.tsx`. Covers: AC1, AC3, AC4, AC5, AC6, AC8.
+- [ ] T8: Offline reading and disabled edits, verified end to end; add a service worker rule only if needed. Files: `e2e/inventory-offline.spec.ts`, `src/app/sw.ts` (only if needed). Covers: AC7.
+- [ ] T9: E2E flows for the inventory, and docs (domain model in `ARCHITECTURE.md`, glossary note on item fields). Files: `e2e/inventory.spec.ts`, `docs/ARCHITECTURE.md`, `docs/PRODUCT.md`. Covers: AC1 to AC6, AC8.
 
 ### Test plan
 
-- Unit: ...
-- E2E: ...
+- Unit (Vitest):
+  - Item type list: unique ids, every type has a label and icon (AC3).
+  - Zod schemas at every boundary (empty, 60/61 characters, count 0/1/99/100/1.5, note 200/201), and mapping a unique violation to "A room with this name already exists" (AC6).
+- Component (Testing Library):
+  - Room form and item form: validation messages linked to fields with `aria-describedby`, busy submit, and "Add another" resetting with focus on the type picker (AC3, AC6, AC8).
+  - Count stepper: keyboard and the min/max limits (AC3, AC6).
+  - Edit guard: disabled with a reason when offline (AC7).
+- E2E (Playwright, desktop and mobile, using the `signedInUser` fixture):
+  - AC1: empty states for a new home and an empty room.
+  - AC2: add and rename a room; the list shows the item count.
+  - AC3 and AC4: add an item with the defaults, then edit every field.
+  - AC5: delete a room with items after confirming; cancelling keeps it.
+  - AC6: a duplicate room name and an invalid count show field messages.
+  - AC7: after visiting, go offline, reload, and navigate between rooms; the data is visible and edit controls are disabled with the notice.
+  - AC8: the add-room and add-item flows with the keyboard only, in dark mode.
+- Data isolation: an e2e test with two signed-in users checks that one can't open the other's room URL (it shows a not-found page).
