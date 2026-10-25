@@ -2,7 +2,7 @@
 
 ## Overview
 
-A single Next.js 16 App Router application, rendered with Cache Components and Partial Prefetching, installable as a PWA.
+A single Next.js 16 App Router application, rendered with Cache Components and Partial Prefetching, installable as a PWA. It plans household cleaning: AI proposes tasks, a deterministic scheduler packs them into daily sessions, and the sessions are synced to Google Calendar.
 
 ```mermaid
 flowchart LR
@@ -43,9 +43,60 @@ There are two layers of offline behavior:
 - Theme via `next-themes` (`class` strategy, system default).
 - Layout shell in `src/components/app-shell.tsx`, which handles safe-area insets for standalone mode.
 
-## Data
+## Domain model
 
-_Not decided yet. Record the choice (database, auth, sync strategy) as an ADR when the product is defined._
+Terms are defined in the glossary in [`PRODUCT.md`](PRODUCT.md#glossary).
+
+```mermaid
+flowchart LR
+  User --> Home
+  Home --> Room
+  Room --> Item["Item (window, closet, shelf...)"]
+  Item --> Task["Task (action, minutes, frequency, lastDoneAt)"]
+  Task --> Occurrence["Occurrence (date, status)"]
+  Session["Session (date, budget, calendarEventId)"] --> Occurrence
+  Proposal["Proposal (AI output, pending review)"] -->|approved| Task
+```
+
+- Every user-owned record carries a `userId`, so sharing can be added later.
+- **Due date = `lastDoneAt` + frequency.** A task's schedule moves with actual completion rather than following a fixed recurrence.
+- **Priority = overdue ratio** (days past due divided by frequency), so a weekly task 3 days late outranks a monthly task 3 days late.
+
+## Responsibilities: AI vs code
+
+| Concern | Owner | Why |
+| --- | --- | --- |
+| Propose tasks, minutes, frequency, splits | Gemini (structured output, Zod-validated) | Needs world knowledge about cleaning |
+| Approve or edit proposals | User | Trust and control |
+| Pack tasks into daily sessions, rebalance | Deterministic scheduler (`src/lib/scheduler/`) | Predictable, testable, free, explainable |
+| Place the session in a free slot | Calendar sync via FreeBusy | Respects the user's real availability |
+
+## Daily flow
+
+```mermaid
+flowchart TD
+  Cron["Vercel Cron, daily"] --> Due["Compute due and overdue tasks"]
+  Due --> Pack["Scheduler packs sessions for the next days within the budget"]
+  Pack --> FreeBusy["FreeBusy query in the day's scheduling window"]
+  FreeBusy --> Upsert["Create or update the day's event in the Cleaning calendar"]
+  CheckOff["User checks off tasks in the PWA"] --> Update["Mark occurrence done, set lastDoneAt"]
+  Update --> Due
+```
+
+- The scheduler plans a rolling horizon (for example 7 days) and is re-run after every check-off and by the daily job, so missed work is redistributed automatically without exceeding the daily budget.
+- Calendar writes are idempotent: each session stores its `calendarEventId` and is updated in place.
+
+## Data, auth, and integrations
+
+See ADRs [0002](decisions/0002-google-calendar.md), [0003](decisions/0003-ai-provider-gemini.md), and [0004](decisions/0004-data-auth-hosting.md). In short:
+
+- **Database:** Postgres (Neon), accessed through Drizzle. The schema lives in `src/db/` and migrations in `drizzle/`.
+- **Auth:** Better Auth with Google sign-in, restricted to an email allowlist. It stores the refresh token for calendar access.
+- **AI:** Gemini through the Vercel AI SDK, server-only. Prompts and schemas live in `src/lib/ai/`.
+- **Calendar:** Google Calendar API with the `calendar.app.created` and `calendar.freebusy` scopes. The app writes only to its own calendar.
+- **Hosting:** Vercel, with Vercel Cron for the daily job.
+
+These paths are planned; they are created by the specs that introduce them (see [`ROADMAP.md`](ROADMAP.md)).
 
 ## Testing
 
