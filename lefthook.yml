@@ -2,7 +2,7 @@ pre-commit:
   parallel: true
   jobs:
     - name: biome
-      glob: "*.{js,jsx,ts,tsx,mjs,mts,json,jsonc,css}"
+      glob: "*.{js,jsx,ts,tsx,mjs,mts,json,jsonc,css,md}"
       run: pnpm exec biome check --write --no-errors-on-unmatched {staged_files}
       stage_fixed: true
     - name: typecheck

@@ -64,12 +64,12 @@ flowchart LR
 
 ## Responsibilities: AI vs code
 
-| Concern | Owner | Why |
-| --- | --- | --- |
-| Propose tasks, minutes, frequency, splits | Gemini (structured output, Zod-validated) | Needs world knowledge about cleaning |
-| Approve or edit proposals | User | Trust and control |
+| Concern                                   | Owner                                          | Why                                      |
+| ----------------------------------------- | ---------------------------------------------- | ---------------------------------------- |
+| Propose tasks, minutes, frequency, splits | Gemini (structured output, Zod-validated)      | Needs world knowledge about cleaning     |
+| Approve or edit proposals                 | User                                           | Trust and control                        |
 | Pack tasks into daily sessions, rebalance | Deterministic scheduler (`src/lib/scheduler/`) | Predictable, testable, free, explainable |
-| Place the session in a free slot | Calendar sync via FreeBusy | Respects the user's real availability |
+| Place the session in a free slot          | Calendar sync via FreeBusy                     | Respects the user's real availability    |
 
 ## Daily flow
 
