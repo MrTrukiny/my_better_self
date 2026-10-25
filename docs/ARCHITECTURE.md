@@ -29,12 +29,14 @@ flowchart LR
 | Service worker build and serving | `src/app/serwist/[path]/route.ts` (esbuild at request time, served at `/serwist/sw.js`) |
 | Registration                     | `SerwistProvider` in `src/app/layout.tsx`                                               |
 | Offline document fallback        | `src/app/~offline/page.tsx` (precached)                                                 |
-| In-app connectivity state        | `experimental.useOffline` + `useOffline()` in `src/components/offline-banner.tsx`       |
+| In-app connectivity state        | `experimental.useOffline` + `useIsOffline()` in `src/hooks/use-is-offline.ts`           |
+| Offline inventory reading        | [ADR 0005](decisions/0005-offline-inventory-reading.md)                                 |
 
-There are two layers of offline behavior:
+There are three layers of offline behavior:
 
-1. **Inside a running app**: Next's `useOffline` keeps failed soft navigations and Server Actions pending and retries them when the connection returns. The offline banner tells the user.
+1. **Inside a running app**: Next's `useOffline` keeps failed soft navigations and Server Actions pending and retries them when the connection returns. `useIsOffline()` adds `navigator.onLine`, so a page loaded from the cache while offline also knows it is offline. The offline banner tells the user.
 2. **Cold loads without network**: the service worker serves precached assets and runtime-cached pages; uncached documents get the `/~offline` fallback.
+3. **Inventory** (`/rooms`): read-only offline. Inventory RSC payloads are not cached, because their cache keys depend on the router state and go stale. Instead, `OfflineCacheWarmer` refreshes the cached documents whenever the data changes online, and `InventoryLink` does full page loads while offline. Edit controls are disabled offline (`useEditsDisabled()`), so no Server Action is ever queued.
 
 ## UI
 
@@ -59,6 +61,18 @@ flowchart LR
 ```
 
 - Every user-owned record carries a `userId`, so sharing can be added later.
+- **Home is implicit for now**: with one home per user, the user is the home. A `home` table can be added with sharing without moving data.
+
+### Inventory (spec 002)
+
+| Concern    | Where                             | Notes                                                                                                                    |
+| ---------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Tables     | `src/db/schema/inventory.ts`      | `room` (unique `(user_id, lower(name))`) and `item` (`type`, `name`, `count`, `note`), cascade-deleted with their owner. |
+| Item types | `src/lib/inventory/item-types.ts` | A fixed list with labels and icons. Stored as `text` and validated in code, so adding a type needs no migration.         |
+| Validation | `src/lib/inventory/schemas.ts`    | Zod schemas shared by forms and actions; duplicate room names map to a field error.                                      |
+| Reads      | `src/lib/inventory/queries.ts`    | Getters resolve the user, then call `"use cache"` functions keyed by `userId` and tagged `inventory:<userId>`.           |
+| Writes     | `src/app/(app)/rooms/actions.ts`  | Server Actions scope every query by `userId`, return typed results, and call `updateTag` on the user's inventory tag.    |
+| UI         | `src/components/inventory/`       | Forms use a sheet on mobile and a dialog on desktop (`src/components/responsive-dialog.tsx`).                            |
 - **Due date = `lastDoneAt` + frequency.** A task's schedule moves with actual completion rather than following a fixed recurrence.
 - **Priority = overdue ratio** (days past due divided by frequency), so a weekly task 3 days late outranks a monthly task 3 days late.
 
@@ -110,5 +124,5 @@ The AI, calendar, and cron paths are planned; they are created by the specs that
 ## Testing
 
 - Unit and component tests: Vitest + Testing Library + jsdom, colocated as `*.test.ts(x)`.
-- End-to-end: Playwright against a production build on desktop and mobile (Pixel 7) projects. Covers the manifest, service worker registration, offline fallback, and auth flows.
+- End-to-end: Playwright against a production build on desktop and mobile (Pixel 7) projects. Covers the manifest, service worker registration, offline fallback, auth flows, and the inventory (including offline reading and data isolation between owners).
 - E2E needs a Postgres database (`DATABASE_URL`). The `signedInUser` fixture in `e2e/fixtures.ts` creates a user and session cookies through a test-only auth instance, so tests never go through Google. CI runs a Postgres service container.

@@ -19,14 +19,14 @@ Let the owner describe their home once: the rooms and the things in each room th
 
 Each criterion is testable and maps to at least one test.
 
-- [ ] AC1: Given I have no rooms, when I open the inventory, then I see an empty state that explains what rooms are and offers "Add room"; given a room has no items, when I open it, then I see an empty state that offers "Add item".
-- [ ] AC2: Given I am on the inventory, when I add a room with a name, then it appears in the room list; when I rename it, the new name shows everywhere; the list shows each room's name and item count.
-- [ ] AC3: Given I am in a room, when I add an item by choosing a type from the item type list, then the item is saved with that type, a name (defaulting to the type's label, editable), a count (default 1), and an optional note, and it appears in the room's item list.
-- [ ] AC4: Given an existing item, when I edit its type, name, count, or note and save, then the item list shows the new values.
-- [ ] AC5: Given a room or an item, when I choose "Delete", then I am asked to confirm, and the confirmation for a room says how many items will be deleted with it; cancelling changes nothing.
-- [ ] AC6: Given a form, when I submit an empty name, a name over 60 characters, a count that is not a whole number from 1 to 99, a note over 200 characters, or a room name already used in my home, then the form is not saved and the field shows a specific message.
-- [ ] AC7: Given I have opened the inventory before and I am now offline, when I open it, then I can see my rooms and items; the add, edit, and delete controls are disabled and a notice says changes need a connection. When the connection returns, the controls are enabled again without reloading.
-- [ ] AC8: The inventory works at 360px wide and on desktop, in light and dark mode, using only the keyboard; forms and dialogs move focus correctly, and every control and list has an accessible name.
+- [x] AC1: Given I have no rooms, when I open the inventory, then I see an empty state that explains what rooms are and offers "Add room"; given a room has no items, when I open it, then I see an empty state that offers "Add item".
+- [x] AC2: Given I am on the inventory, when I add a room with a name, then it appears in the room list; when I rename it, the new name shows everywhere; the list shows each room's name and item count.
+- [x] AC3: Given I am in a room, when I add an item by choosing a type from the item type list, then the item is saved with that type, a name (defaulting to the type's label, editable), a count (default 1), and an optional note, and it appears in the room's item list.
+- [x] AC4: Given an existing item, when I edit its type, name, count, or note and save, then the item list shows the new values.
+- [x] AC5: Given a room or an item, when I choose "Delete", then I am asked to confirm, and the confirmation for a room says how many items will be deleted with it; cancelling changes nothing.
+- [x] AC6: Given a form, when I submit an empty name, a name over 60 characters, a count that is not a whole number from 1 to 99, a note over 200 characters, or a room name already used in my home, then the form is not saved and the field shows a specific message.
+- [x] AC7: Given I have opened the inventory before and I am now offline, when I open it, then I can see my rooms and items; the add, edit, and delete controls are disabled and a notice says changes need a connection. When the connection returns, the controls are enabled again without reloading.
+- [x] AC8: The inventory works at 360px wide and on desktop, in light and dark mode, using only the keyboard; forms and dialogs move focus correctly, and every control and list has an accessible name.
 
 ## UX notes
 
@@ -96,7 +96,7 @@ Builds on spec 001 (Drizzle, Better Auth, `getCurrentUser()`).
 - [x] T6: Room list: page, empty state, skeleton, add and rename form, and delete confirmation with the item count. Also the header link and the home card. Files: `src/app/(app)/rooms/layout.tsx`, `src/app/(app)/rooms/page.tsx`, `src/components/inventory/room-list.tsx`, `src/components/inventory/room-form.tsx`, `src/components/inventory/room-form.test.tsx`, `src/components/inventory/room-nav-link.tsx`, `src/components/inventory/form-messages.tsx`, `src/components/inventory/delete-confirm.tsx`, `src/components/app-shell.tsx`, `src/app/(app)/page.tsx`. Covers: AC1, AC2, AC5, AC6, AC8.
 - [x] T7: Room detail: item list ("Window x3"), add and edit item form with the type picker and "Add another", and item delete. Files: `src/app/(app)/rooms/[roomId]/page.tsx`, `src/lib/inventory/queries.ts` (not-found for malformed ids), `src/components/inventory/item-list.tsx`, `src/components/inventory/item-form.tsx`, `src/components/inventory/item-form.test.tsx`. Covers: AC1, AC3, AC4, AC5, AC6, AC8.
 - [x] T8: Offline reading and disabled edits, verified end to end; add a service worker rule only if needed. The e2e showed that cached RSC payloads go stale, so inventory is read offline from cached documents instead (ADR 0005). Files: `e2e/inventory-offline.spec.ts`, `src/app/sw.ts`, `src/hooks/use-is-offline.ts`, `src/components/inventory/offline-cache-warmer.tsx`, `src/components/inventory/offline-cache-warmer.test.tsx`, `src/components/inventory/inventory-link.tsx`, `src/components/offline-banner.tsx`, `docs/decisions/0005-offline-inventory-reading.md`. Covers: AC7.
-- [ ] T9: E2E flows for the inventory, and docs (domain model in `ARCHITECTURE.md`, glossary note on item fields). Files: `e2e/inventory.spec.ts`, `docs/ARCHITECTURE.md`, `docs/PRODUCT.md`. Covers: AC1 to AC6, AC8.
+- [x] T9: E2E flows for the inventory, and docs (domain model in `ARCHITECTURE.md`, glossary note on item fields). Files: `e2e/inventory.spec.ts`, `e2e/support/inventory.ts`, `docs/ARCHITECTURE.md`, `docs/PRODUCT.md`. Covers: AC1 to AC6, AC8.
 
 ### Test plan
 
