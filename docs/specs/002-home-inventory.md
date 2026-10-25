@@ -1,6 +1,6 @@
 # 002: Home inventory
 
-- **Status**: In progress
+- **Status**: Done
 - **Owner**: @mrtrukiny
 - **Created**: 2026-10-25
 
