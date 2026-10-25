@@ -25,7 +25,7 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
 
 let cached: Env | undefined;
 
-/** Parsed lazily so builds and tests that never touch the server don't need secrets. */
+/** Parsed on first use, so unit tests can import this module without real secrets. */
 export function getEnv(): Env {
   cached ??= parseEnv(process.env);
   return cached;

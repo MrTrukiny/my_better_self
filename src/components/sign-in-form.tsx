@@ -5,7 +5,7 @@ import { useOffline } from "next/offline";
 import { useEffect, useId, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
-import { signInErrorMessage } from "@/lib/auth-errors";
+import { GENERIC_SIGN_IN_ERROR } from "@/lib/auth-errors";
 import { SIGN_IN_PATH } from "@/lib/callback-url";
 
 const OFFLINE_REASON = "You're offline. Connect to the internet to sign in.";
@@ -46,7 +46,7 @@ export function SignInForm({
     });
     // On success the browser is already leaving for Google; only failures return here.
     if (result?.error) {
-      setError(signInErrorMessage("redirect_failed"));
+      setError(GENERIC_SIGN_IN_ERROR);
       setIsPending(false);
     }
   }

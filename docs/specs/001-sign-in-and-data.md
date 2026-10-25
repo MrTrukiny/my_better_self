@@ -1,6 +1,6 @@
 # 001: Sign-in and data
 
-- **Status**: In progress
+- **Status**: Done
 - **Owner**: @mrtrukiny
 - **Created**: 2026-10-25
 
@@ -19,14 +19,14 @@ Give the app an owner and a place to keep data. Every later feature (inventory, 
 
 Each criterion is testable and maps to at least one test.
 
-- [ ] AC1: Given I am signed out, when I open any app page, then I am taken to the sign-in screen, and after signing in I land on the page I first asked for.
-- [ ] AC2: Given my Google email is on the allowlist, when I choose "Continue with Google" and approve, then I land in the app and see my name or avatar in the app header.
-- [ ] AC3: Given a Google email that is not on the allowlist, when that account completes Google sign-in, then no session is created and the sign-in screen shows "This account doesn't have access."
-- [ ] AC4: Given I am signed in, when I close and reopen the app (browser or installed PWA) within the session lifetime, then I am still signed in.
-- [ ] AC5: Given I am signed in, when I choose "Sign out" from the account menu, then my session ends and I am back on the sign-in screen; pressing Back does not show app content.
-- [ ] AC6: Given sign-in is in progress, when I wait, then the button shows a busy state and cannot be pressed twice; given Google returns an error or I cancel, then I see a short message and can try again.
-- [ ] AC7: Given I am offline on the sign-in screen, when I look at it, then the Google button is disabled and a message says a connection is needed to sign in.
-- [ ] AC8: The sign-in screen and the account menu work at 360px wide and on desktop, in light and dark mode, using only the keyboard, and their controls have accessible names.
+- [x] AC1: Given I am signed out, when I open any app page, then I am taken to the sign-in screen, and after signing in I land on the page I first asked for.
+- [x] AC2: Given my Google email is on the allowlist, when I choose "Continue with Google" and approve, then I land in the app and see my name or avatar in the app header.
+- [x] AC3: Given a Google email that is not on the allowlist, when that account completes Google sign-in, then no session is created and the sign-in screen shows "This account doesn't have access."
+- [x] AC4: Given I am signed in, when I close and reopen the app (browser or installed PWA) within the session lifetime, then I am still signed in.
+- [x] AC5: Given I am signed in, when I choose "Sign out" from the account menu, then my session ends and I am back on the sign-in screen; pressing Back does not show app content.
+- [x] AC6: Given sign-in is in progress, when I wait, then the button shows a busy state and cannot be pressed twice; given Google returns an error or I cancel, then I see a short message and can try again.
+- [x] AC7: Given I am offline on the sign-in screen, when I look at it, then the Google button is disabled and a message says a connection is needed to sign in.
+- [x] AC8: The sign-in screen and the account menu work at 360px wide and on desktop, in light and dark mode, using only the keyboard, and their controls have accessible names.
 
 ## UX notes
 

@@ -4,6 +4,8 @@ export const EMAIL_NOT_ALLOWED = "email_not_allowed";
 /** Sent by Google when the user cancels on the consent screen. */
 const GOOGLE_ACCESS_DENIED = "access_denied";
 
+export const GENERIC_SIGN_IN_ERROR = "Something went wrong while signing in. Try again.";
+
 export function signInErrorMessage(code: string | null | undefined): string | undefined {
   if (!code) {
     return undefined;
@@ -14,6 +16,6 @@ export function signInErrorMessage(code: string | null | undefined): string | un
     case GOOGLE_ACCESS_DENIED:
       return "Sign-in was cancelled. Try again.";
     default:
-      return "Something went wrong while signing in. Try again.";
+      return GENERIC_SIGN_IN_ERROR;
   }
 }
