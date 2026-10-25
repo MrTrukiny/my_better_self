@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { type ActionState, IDLE } from "@/lib/inventory/action-state";
+import { itemLabel } from "@/lib/inventory/format";
 import { getItemType, ITEM_TYPES } from "@/lib/inventory/item-types";
 import type { InventoryItem } from "@/lib/inventory/queries";
 import { NOTE_MAX } from "@/lib/inventory/schemas";
@@ -35,10 +36,6 @@ type ItemAction = (prev: ActionState, formData: FormData) => Promise<ActionState
 type ItemDefaults = Omit<InventoryItem, "id">;
 
 const TYPE_LABELS = Object.fromEntries(ITEM_TYPES.map((type) => [type.id, type.label]));
-
-export function itemLabel(item: { name: string; count: number }): string {
-  return item.count > 1 ? `${item.name} x${item.count}` : item.name;
-}
 
 export function ItemForm({
   action,
