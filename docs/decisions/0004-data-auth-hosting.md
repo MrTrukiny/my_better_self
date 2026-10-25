@@ -1,6 +1,6 @@
 # 0004: Data, auth, and hosting
 
-- **Status**: Proposed (confirm when spec 001 is planned)
+- **Status**: Proposed (confirm when spec 001, sign-in and data, is planned)
 - **Date**: 2026-10-25
 
 ## Context
@@ -18,7 +18,7 @@ It is a personal app, so cost and operational effort should be close to zero.
 - **Database: Postgres on Neon** (serverless, free tier, branching for previews).
 - **ORM: Drizzle** with SQL migrations committed to the repo (`drizzle/`). Schema in TypeScript under `src/db/`.
 - **Auth: Better Auth** with the Google social provider and the Drizzle adapter:
-  - It requests the calendar scopes with offline access and stores the access and refresh tokens in the database.
+  - It requests the calendar scopes with offline access and stores the access and refresh tokens in the database. Sign-in (spec 001) asks only for basic profile scopes; the calendar scopes are added later through incremental authorization when calendar sync is enabled (spec 005).
   - Sign-in is restricted to an **allowlist** of email addresses (`ALLOWED_EMAILS`), which is just the owner for now.
 - **Hosting: Vercel**, the native platform for Next.js 16 features (Cache Components, Partial Prefetching).
 - **Daily job: Vercel Cron** calls a protected route handler (`CRON_SECRET`) that recomputes upcoming sessions and syncs the calendar.
