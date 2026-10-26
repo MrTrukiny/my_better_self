@@ -18,7 +18,7 @@ afterEach(() => {
 });
 
 describe("OfflineCacheWarmer", () => {
-  it("AC7: fetches each inventory page so the service worker keeps a fresh copy", () => {
+  it("fetches each page so the service worker keeps a fresh copy", () => {
     render(<OfflineCacheWarmer urls={["/rooms", "/rooms/a"]} version="v1" />);
     expect(fetchMock.mock.calls.map(([url]) => url)).toEqual(["/rooms", "/rooms/a"]);
   });

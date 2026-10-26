@@ -1,13 +1,15 @@
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Sparkles } from "lucide-react";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { deleteRoom } from "@/app/(app)/rooms/actions";
 import { DeleteConfirm } from "@/components/inventory/delete-confirm";
 import { EditNotice } from "@/components/inventory/edit-guard";
-import { InventoryLink } from "@/components/inventory/inventory-link";
 import { ItemList, RoomDetailSkeleton } from "@/components/inventory/item-list";
-import { OfflineCacheWarmer } from "@/components/inventory/offline-cache-warmer";
 import { RenameRoomButton } from "@/components/inventory/room-form";
+import { OfflineAwareLink } from "@/components/offline-aware-link";
+import { OfflineCacheWarmer } from "@/components/offline-cache-warmer";
+import { buttonVariants } from "@/components/ui/button";
+import { cacheVersion } from "@/lib/cache-version";
 import { itemCountLabel } from "@/lib/inventory/format";
 import { getRoom } from "@/lib/inventory/queries";
 
@@ -16,13 +18,13 @@ export const metadata: Metadata = { title: "Room" };
 export default function RoomPage({ params }: PageProps<"/rooms/[roomId]">) {
   return (
     <div className="flex flex-col gap-4">
-      <InventoryLink
+      <OfflineAwareLink
         href="/rooms"
         className="text-muted-foreground hover:text-foreground focus-visible:ring-ring -ml-1 inline-flex h-11 w-fit items-center gap-1 rounded-md px-1 text-sm outline-none focus-visible:ring-2 lg:hidden"
       >
         <ChevronLeft aria-hidden className="size-4" />
         All rooms
-      </InventoryLink>
+      </OfflineAwareLink>
       <Suspense fallback={<RoomDetailSkeleton />}>
         <RoomDetailSection params={params} />
       </Suspense>
@@ -49,7 +51,14 @@ async function RoomDetailSection({ params }: Pick<PageProps<"/rooms/[roomId]">, 
           </h1>
           <p className="text-muted-foreground text-sm">{itemCountLabel(itemCount)}</p>
         </div>
-        <div className="flex shrink-0 gap-2">
+        <div className="flex shrink-0 flex-wrap gap-2">
+          <OfflineAwareLink
+            href={`/tasks/review?room=${room.id}`}
+            className={buttonVariants({ size: "lg", className: "h-11" })}
+          >
+            <Sparkles aria-hidden />
+            Propose tasks
+          </OfflineAwareLink>
           <RenameRoomButton room={{ id: room.id, name: room.name }} />
           <DeleteConfirm
             title={`Delete ${room.name}?`}
@@ -61,7 +70,7 @@ async function RoomDetailSection({ params }: Pick<PageProps<"/rooms/[roomId]">, 
       </div>
       <EditNotice />
       <ItemList room={room} />
-      <OfflineCacheWarmer urls={["/rooms", `/rooms/${room.id}`]} version={JSON.stringify(room)} />
+      <OfflineCacheWarmer urls={["/rooms", `/rooms/${room.id}`]} version={cacheVersion(room)} />
     </section>
   );
 }

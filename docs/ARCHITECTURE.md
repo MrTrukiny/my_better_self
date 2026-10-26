@@ -36,7 +36,7 @@ There are three layers of offline behavior:
 
 1. **Inside a running app**: Next's `useOffline` keeps failed soft navigations and Server Actions pending and retries them when the connection returns. `useIsOffline()` adds `navigator.onLine`, so a page loaded from the cache while offline also knows it is offline. The offline banner tells the user.
 2. **Cold loads without network**: the service worker serves precached assets and runtime-cached pages; uncached documents get the `/~offline` fallback.
-3. **Inventory** (`/rooms`): read-only offline. Inventory RSC payloads are not cached, because their cache keys depend on the router state and go stale. Instead, `OfflineCacheWarmer` refreshes the cached documents whenever the data changes online, and `InventoryLink` does full page loads while offline. Edit controls are disabled offline (`useEditsDisabled()`), so no Server Action is ever queued.
+3. **Inventory** (`/rooms`): read-only offline. Inventory RSC payloads are not cached, because their cache keys depend on the router state and go stale. Instead, `OfflineCacheWarmer` refreshes the cached documents whenever the data changes online, and `OfflineAwareLink` does full page loads while offline. Task pages (`/tasks`, `/tasks/review`, `/home-profile`) follow the same pattern (ADR 0005 amendment). Edit controls are disabled offline (`useEditsDisabled()`), so no Server Action is ever queued.
 
 ## UI
 
@@ -73,6 +73,19 @@ flowchart LR
 | Reads      | `src/lib/inventory/queries.ts`    | Getters resolve the user, then call `"use cache"` functions keyed by `userId` and tagged `inventory:<userId>`.           |
 | Writes     | `src/app/(app)/rooms/actions.ts`  | Server Actions scope every query by `userId`, return typed results, and call `updateTag` on the user's inventory tag.    |
 | UI         | `src/components/inventory/`       | Forms use a sheet on mobile and a dialog on desktop (`src/components/responsive-dialog.tsx`).                            |
+
+### Tasks and AI proposals (spec 003)
+
+| Concern      | Where                                           | Notes                                                                                                                                                                    |
+| ------------ | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Tables       | `src/db/schema/tasks.ts`                        | `home_profile` (helpers, note), `task_proposal` (pending, with the `scope_room_id` it was generated for), and `task`. A task targets an item, a room, or the whole home. |
+| Domain rules | `src/lib/tasks/`                                | Limits, helper list, per-type cleaning guide, Zod schemas, and formatting. The cleaning guide and helper guidance are the prompt's domain knowledge.                     |
+| AI           | `src/lib/ai/`                                   | `proposeTasks` builds the prompt from the inventory, profile, and existing tasks, calls Gemini with a Zod output schema, then validates and dedupes.                     |
+| Reads        | `src/lib/tasks/queries.ts`                      | Cached per user and tagged with both the tasks and the inventory tags.                                                                                                   |
+| Writes       | `src/app/(app)/tasks/actions.ts`                | Generating replaces the scope's pending proposals in one transaction. Accepting moves proposals into `task`; nothing is accepted by default.                             |
+| UI           | `src/components/tasks/`, `src/app/(app)/tasks/` | Review screen (`/tasks/review`), task list (`/tasks`), and home profile (`/home-profile`). All three stay readable offline (ADR 0005).                                   |
+
+Proposal flow: the user picks a scope (whole home or one room) and asks for proposals. The server reads the inventory, home profile, existing tasks, and pending proposals of other scopes, so the AI doesn't repeat them. Gemini returns structured proposals with references (`r1`, `r1.i1`, `home`) that the code maps back to rows and rejects if invalid. A failure, timeout, or invalid output saves nothing. With `AI_FAKE=1`, a deterministic fake (`src/lib/ai/fake-proposals.ts`) replaces Gemini for e2e and CI.
 - **Due date = `lastDoneAt` + frequency.** A task's schedule moves with actual completion rather than following a fixed recurrence.
 - **Priority = overdue ratio** (days past due divided by frequency), so a weekly task 3 days late outranks a monthly task 3 days late.
 
@@ -110,7 +123,7 @@ See ADRs [0002](decisions/0002-google-calendar.md), [0003](decisions/0003-ai-pro
 - **Calendar:** Google Calendar API with the `calendar.app.created` and `calendar.freebusy` scopes. The app writes only to its own calendar.
 - **Hosting:** Vercel, with Vercel Cron for the daily job.
 
-The AI, calendar, and cron paths are planned; they are created by the specs that introduce them (see [`ROADMAP.md`](ROADMAP.md)).
+The calendar and cron paths are planned; they are created by the specs that introduce them (see [`ROADMAP.md`](ROADMAP.md)).
 
 ### Route protection
 

@@ -28,7 +28,8 @@ export default defineConfig({
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
-    // Sessions created by the e2e auth instance are bound to this origin.
-    env: { BETTER_AUTH_URL: baseURL },
+    // Sessions created by the e2e auth instance are bound to this origin. AI_FAKE swaps Gemini
+    // for deterministic proposals, so e2e never makes live AI calls.
+    env: { BETTER_AUTH_URL: baseURL, AI_FAKE: "1" },
   },
 });

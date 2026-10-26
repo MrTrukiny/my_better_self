@@ -86,7 +86,7 @@ describe("ItemForm", () => {
     await userEvent.type(count, "3");
     await userEvent.click(screen.getByRole("button", { name: "Add item" }));
 
-    expect(await screen.findByRole("status")).toHaveTextContent("Added Shelf x3.");
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("Added Shelf x3."));
     await userEvent.click(screen.getByRole("button", { name: "Add another" }));
 
     const type = await screen.findByRole("combobox", { name: "Type" });

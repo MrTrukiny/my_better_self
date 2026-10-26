@@ -1,8 +1,11 @@
-import { DoorOpen } from "lucide-react";
+import { DoorOpen, Sparkles } from "lucide-react";
+import { OfflineAwareLink } from "@/components/offline-aware-link";
+import { OfflineCacheWarmer } from "@/components/offline-cache-warmer";
+import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cacheVersion } from "@/lib/cache-version";
 import { itemCountLabel } from "@/lib/inventory/format";
 import { getRooms } from "@/lib/inventory/queries";
-import { OfflineCacheWarmer } from "./offline-cache-warmer";
 import { AddRoomButton } from "./room-form";
 import { RoomNavLink } from "./room-nav-link";
 
@@ -11,7 +14,7 @@ export async function RoomList() {
   const warmer = (
     <OfflineCacheWarmer
       urls={["/rooms", ...rooms.map((room) => `/rooms/${room.id}`)]}
-      version={JSON.stringify(rooms)}
+      version={cacheVersion(rooms)}
     />
   );
 
@@ -45,7 +48,16 @@ export async function RoomList() {
           </li>
         ))}
       </ul>
-      <AddRoomButton variant="outline" />
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <AddRoomButton variant="outline" />
+        <OfflineAwareLink
+          href="/tasks/review"
+          className={buttonVariants({ size: "lg", className: "h-11" })}
+        >
+          <Sparkles aria-hidden />
+          Propose tasks
+        </OfflineAwareLink>
+      </div>
     </div>
   );
 }
