@@ -108,7 +108,7 @@ export function ScheduleForm({
                     defaultValue={settings.startTimes[day] ?? DEFAULT_START_TIME}
                     disabled={!on[day] || editsDisabled}
                     required
-                    className="h-11 w-32 text-base"
+                    className="h-11 w-36 shrink-0 text-base"
                     aria-invalid={startError ? true : undefined}
                     aria-describedby={startError ? startErrorId : undefined}
                   />

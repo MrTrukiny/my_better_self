@@ -12,23 +12,32 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="flex min-h-dvh flex-col pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
       <OfflineBanner />
       <header className="sticky top-0 z-10 border-b bg-background/80 backdrop-blur">
-        <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between px-4 pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))]">
-          <Link href="/" className="font-heading text-base font-semibold">
+        <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between gap-2 px-4 pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))]">
+          <Link
+            href="/"
+            className="font-heading min-w-0 truncate text-sm font-semibold sm:text-base"
+          >
             {APP_NAME}
           </Link>
-          <div className="flex items-center gap-1">
-            <nav aria-label="Main">
+          <div className="flex shrink-0 items-center gap-1">
+            <nav aria-label="Main" className="flex">
               <OfflineAwareLink
                 href="/rooms"
-                className="hover:bg-muted focus-visible:ring-ring inline-flex h-9 items-center rounded-md px-2 text-sm font-medium sm:px-3 outline-none focus-visible:ring-2"
+                className="hover:bg-muted focus-visible:ring-ring inline-flex h-9 items-center rounded-md px-1.5 text-sm font-medium sm:px-3 outline-none focus-visible:ring-2"
               >
                 Rooms
               </OfflineAwareLink>
               <OfflineAwareLink
                 href="/tasks"
-                className="hover:bg-muted focus-visible:ring-ring inline-flex h-9 items-center rounded-md px-2 text-sm font-medium sm:px-3 outline-none focus-visible:ring-2"
+                className="hover:bg-muted focus-visible:ring-ring inline-flex h-9 items-center rounded-md px-1.5 text-sm font-medium sm:px-3 outline-none focus-visible:ring-2"
               >
                 Tasks
+              </OfflineAwareLink>
+              <OfflineAwareLink
+                href="/plan"
+                className="hover:bg-muted focus-visible:ring-ring inline-flex h-9 items-center rounded-md px-1.5 text-sm font-medium sm:px-3 outline-none focus-visible:ring-2"
+              >
+                Plan
               </OfflineAwareLink>
             </nav>
             <ThemeToggle />
