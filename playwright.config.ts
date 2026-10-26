@@ -16,6 +16,9 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   reporter: process.env.CI ? "github" : "list",
+  // Local runs use the Neon dev branch over the internet, so every render and Server Action pays
+  // several network round trips; CI talks to Postgres on the same machine.
+  expect: { timeout: process.env.CI ? 5_000 : 10_000 },
   use: {
     baseURL,
     trace: "on-first-retry",
