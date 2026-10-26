@@ -37,6 +37,7 @@ There are three layers of offline behavior:
 1. **Inside a running app**: Next's `useOffline` keeps failed soft navigations and Server Actions pending and retries them when the connection returns. `useIsOffline()` adds `navigator.onLine`, so a page loaded from the cache while offline also knows it is offline. The offline banner tells the user.
 2. **Cold loads without network**: the service worker serves precached assets and runtime-cached pages; uncached documents get the `/~offline` fallback.
 3. **Inventory** (`/rooms`): read-only offline. Inventory RSC payloads are not cached, because their cache keys depend on the router state and go stale. Instead, `OfflineCacheWarmer` refreshes the cached documents whenever the data changes online, and `OfflineAwareLink` does full page loads while offline. Task pages (`/tasks`, `/tasks/review`, `/home-profile`) follow the same pattern (ADR 0005 amendment). Edit controls are disabled offline (`useEditsDisabled()`), so no Server Action is ever queued.
+4. **Today** (`/`): the one page that accepts changes offline. Check-offs go to a device queue and are sent when the connection returns (ADR 0008).
 
 ## UI
 
@@ -93,15 +94,25 @@ Proposal flow: the user picks a scope (whole home or one room) and asks for prop
 
 See [ADR 0007](decisions/0007-persisted-plan-and-replanning.md).
 
-| Concern   | Where                                                                    | Notes                                                                                                                                                                        |
-| --------- | ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Tables    | `src/db/schema/schedule.ts`                                              | `schedule_settings` (a start time per weekday or null for off, weekday and weekend budgets, time zone, `planned_through`) and `occurrence` (task and date, unique together). |
-| Algorithm | `src/lib/scheduler/schedule.ts`                                          | Pure and deterministic, in whole-day numbers. Packs must-do work by overdue ratio, pulls work forward when a coming day would overflow, and staggers new tasks.              |
-| Replans   | `src/lib/scheduler/plan.ts`, `replan-start.ts`                           | `replan` after task, inventory, or settings changes; `ensureHorizon` when the plan page is read. Both lock the settings row and only replace days from the start date on.    |
-| Reads     | `src/lib/scheduler/queries.ts`                                           | Settings are cached per user (`schedule:<userId>`). The week is read uncached after `io()`, since it depends on the date.                                                    |
-| UI        | `src/app/(app)/plan/`, `src/app/(app)/schedule/`, `src/components/plan/` | Weekly plan (`/plan`) and settings (`/schedule`). Both stay readable offline (ADR 0005).                                                                                     |
+| Concern   | Where                                                                    | Notes                                                                                                                                                                                                                                              |
+| --------- | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Tables    | `src/db/schema/schedule.ts`                                              | `schedule_settings` (a start time per weekday or null for off, weekday and weekend budgets, time zone, `planned_through`, `replanned_on`) and `occurrence` (task and date, unique together, with a status).                                        |
+| Algorithm | `src/lib/scheduler/schedule.ts`                                          | Pure and deterministic, in whole-day numbers. Packs must-do work by overdue ratio, pulls work forward when a coming day would overflow, and staggers new tasks.                                                                                    |
+| Replans   | `src/lib/scheduler/plan.ts`, `replan-start.ts`                           | `replan` after task, inventory, or settings changes; `ensurePlan` when the plan or Today page is read (a full replan on a new day, otherwise the missing days). Both lock the settings row and only replace scheduled days from the start date on. |
+| Reads     | `src/lib/scheduler/queries.ts`                                           | Settings are cached per user (`schedule:<userId>`). The week is read uncached after `io()`, since it depends on the date.                                                                                                                          |
+| UI        | `src/app/(app)/plan/`, `src/app/(app)/schedule/`, `src/components/plan/` | Weekly plan (`/plan`) and settings (`/schedule`). Both stay readable offline (ADR 0005).                                                                                                                                                           |
 
-Until check-off exists (spec 006), each past occurrence counts as done, so a task's last completion is its latest occurrence before the replanning date.
+A task's last completion is its latest done or skipped occurrence before the replanning date; a task that was planned but never handled is due on its first missed day, and a new task keeps the first due day the scheduler picked (`task.first_due`). See [ADR 0008](decisions/0008-check-off-and-offline-queue.md).
+
+### Today and habit (spec 006)
+
+| Concern   | Where                                                  | Notes                                                                                                                                 |
+| --------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Rules     | `src/lib/today/progress.ts`, `streak.ts`               | Pure: progress leaves skipped tasks out; a cleaning day is complete when all its tasks are done or skipped and at least one is done.  |
+| Reads     | `src/lib/today/queries.ts`                             | Today's occurrences with status, and per-day cleaning counts for the streak, uncached after `io()`.                                   |
+| Check-off | `src/app/(app)/actions.ts`, `src/lib/today/schemas.ts` | `setOccurrenceStatus` sets a status on one of today's occurrences; it doesn't replan.                                                 |
+| Offline   | `src/lib/today/queue.ts`, `src/components/today/`      | A `localStorage` queue per user, flushed in order on load, `online`, and visibility. The page overlays queued states on the server's. |
+| UI        | `src/app/(app)/page.tsx`, `src/components/today/`      | The home page (`/`). Readable and checkable offline (ADR 0005 amendment, ADR 0008).                                                   |
 
 ## Responsibilities: AI vs code
 
@@ -120,11 +131,11 @@ flowchart TD
   Due --> Pack["Scheduler packs sessions for the next days within the budget"]
   Pack --> FreeBusy["FreeBusy query in the day's scheduling window"]
   FreeBusy --> Upsert["Create or update the day's event in the Cleaning calendar"]
-  CheckOff["User checks off tasks in the PWA"] --> Update["Mark occurrence done, set lastDoneAt"]
+  CheckOff["User checks off or skips tasks in the PWA"] --> Update["Set the occurrence's status"]
   Update --> Due
 ```
 
-- The scheduler plans a rolling horizon (for example 7 days) and is re-run after every check-off and by the daily job, so missed work is redistributed automatically without exceeding the daily budget.
+- The scheduler plans a rolling 7-day horizon and replans from today on the first visit of each day (and in the daily job), so missed work is redistributed automatically without exceeding the daily budget.
 - Calendar writes are idempotent: each session stores its `calendarEventId` and is updated in place.
 
 ## Data, auth, and integrations
@@ -151,5 +162,5 @@ The calendar and cron paths are planned; they are created by the specs that intr
 ## Testing
 
 - Unit and component tests: Vitest + Testing Library + jsdom, colocated as `*.test.ts(x)`.
-- End-to-end: Playwright against a production build on desktop and mobile (Pixel 7) projects. Covers the manifest, service worker registration, offline fallback, auth flows, and the inventory (including offline reading and data isolation between owners).
+- End-to-end: Playwright against a production build on desktop and mobile (Pixel 7) projects. Covers the manifest, service worker registration, offline fallback, auth flows, the inventory (including offline reading and data isolation between owners), tasks, the plan, and Today (including offline check-off). `E2E_PORT` overrides the server port so several checkouts can run the suite at once.
 - E2E needs a Postgres database (`DATABASE_URL`). The `signedInUser` fixture in `e2e/fixtures.ts` creates a user and session cookies through a test-only auth instance, so tests never go through Google. CI runs a Postgres service container.

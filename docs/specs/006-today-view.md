@@ -76,7 +76,7 @@ Each criterion is testable and maps to at least one test.
 - [x] T6: Check-off action with input schema and result codes. Files: `src/app/(app)/actions.ts`, `src/lib/today/schemas.ts`, `src/lib/today/schemas.test.ts`. Covers: AC2, AC3, AC4, AC7.
 - [x] T7: Today page: session list with checkboxes, skip and undo, progress bar, streak line, completed-day line, routines, day off and empty states, skeleton and load error. Files: `src/app/(app)/page.tsx`, `src/components/today/today-session.tsx`, `src/components/today/task-row.tsx`, `src/components/today/today-session.test.tsx`, `src/components/today/today-summary.tsx`. Covers: AC1, AC2, AC3, AC5, AC7, AC8.
 - [x] T8: Offline queue: queue module, flush hook with retry and notices, pending indicator, `/` as an offline document route, cache warming. Files: `src/lib/today/queue.ts`, `src/lib/today/queue.test.ts`, `src/components/today/use-check-off-queue.ts`, `src/components/today/today-session.tsx`, `src/app/sw.ts`. Covers: AC6, AC7.
-- [ ] T9: E2E and docs: today flows and offline check-off; update specs that opened the inventory from the home page; architecture notes; spec status. Files: `e2e/today.spec.ts`, `e2e/today-offline.spec.ts`, `e2e/support/today.ts`, `e2e/inventory.spec.ts`, `docs/ARCHITECTURE.md`, this spec. Covers: AC1, AC2, AC3, AC5, AC6, AC8.
+- [x] T9: E2E and docs: today flows and offline check-off; update specs that opened the inventory from the home page; architecture notes; spec status. Files: `e2e/today.spec.ts`, `e2e/today-offline.spec.ts`, `e2e/support/today.ts`, `e2e/inventory.spec.ts`, `docs/ARCHITECTURE.md`, this spec. Covers: AC1, AC2, AC3, AC5, AC6, AC8.
 
 ### Test plan
 

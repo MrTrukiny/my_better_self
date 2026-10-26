@@ -1,6 +1,6 @@
 "use client";
 
-import { Coffee, Flame, PartyPopper, Repeat } from "lucide-react";
+import { Coffee, Flame, PartyPopper, Repeat, WifiOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -116,6 +116,15 @@ export function TodaySession({
         </p>
       </div>
 
+      {isOffline && !stale ? (
+        <p
+          role="status"
+          className="bg-muted text-muted-foreground flex items-center gap-2 rounded-lg px-3 py-2 text-sm"
+        >
+          <WifiOff aria-hidden className="size-4 shrink-0" />
+          You're offline. What you check is saved on this device and syncs when you're back.
+        </p>
+      ) : null}
       {stale ? (
         <p role="status" className="bg-muted text-muted-foreground rounded-lg px-3 py-2 text-sm">
           This is the session saved for {dayLabel(date)}. Connect to see today's.
