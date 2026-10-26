@@ -6,7 +6,7 @@ import {
   goOffline,
   OFFLINE_NOTICE,
 } from "./support/offline";
-import { proposalGroup, proposeTasks } from "./support/tasks";
+import { proposalGroup, proposeTasks, REPLAN_TIMEOUT } from "./support/tasks";
 
 test("AC8: task pages stay readable offline with generation and edits disabled", async ({
   page,
@@ -24,7 +24,9 @@ test("AC8: task pages stay readable offline with generation and edits disabled",
   await proposalGroup(page, "Bathroom")
     .getByRole("button", { name: "Accept Clean Mirror" })
     .click();
-  await expect(proposalGroup(page, "Bathroom").getByText("Clean Mirror")).toBeHidden();
+  await expect(proposalGroup(page, "Bathroom").getByText("Clean Mirror")).toBeHidden({
+    timeout: REPLAN_TIMEOUT,
+  });
   await expectCachedPage(page, "/tasks", "3 proposals waiting for review");
   await expectCachedPage(page, "/tasks/review", "Bathroom deep clean");
 

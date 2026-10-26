@@ -36,3 +36,9 @@ The pattern now covers the task pages too, under generic names:
 - `InventoryLink` became `OfflineAwareLink` and `OfflineCacheWarmer` moved to `src/components/`, since they are no longer inventory-specific.
 - `TasksCacheWarmer` refreshes `/tasks`, `/tasks/review`, and `/home-profile` together whenever tasks, proposals, the home profile, or rooms change, because all three pages show that data.
 - The review page is cached for the whole-home scope only. A room scope (`/tasks/review?room=…`) opened offline for the first time falls back to `/~offline`. The scope picker is disabled offline, since nothing can be generated without a connection.
+
+## Amendment (spec 004)
+
+- `/plan` and `/schedule` join `OFFLINE_DOCUMENT_ROUTES`.
+- The plan page refreshes the copies of `/plan` and `/schedule` when the week or the settings it shows change, and the schedule page does the same for its settings. Task pages also refresh `/plan` once there is a schedule, since task changes replan.
+- An offline copy of the plan is the plan as of its last refresh: on a later day, "Today" still marks the day it was cached. Spec 006 (the Today view) should revisit this if the plan is used offline across days.

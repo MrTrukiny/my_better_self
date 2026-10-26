@@ -13,6 +13,7 @@ import {
   parseInput,
   roomInputSchema,
 } from "@/lib/inventory/schemas";
+import { replanAfterChange } from "@/lib/scheduler/plan";
 import { getCurrentUser } from "@/lib/session";
 
 const SAVE_FAILED = "Couldn't save your changes. Try again.";
@@ -73,6 +74,7 @@ export async function deleteRoom(roomId: string): Promise<ActionState> {
   const user = await getCurrentUser();
   try {
     await db.delete(room).where(and(eq(room.id, roomId), eq(room.userId, user.id)));
+    await replanAfterChange(user.id);
     updateTag(inventoryTag(user.id));
     return { status: "success" };
   } catch (error) {
@@ -146,6 +148,7 @@ export async function deleteItem(itemId: string): Promise<ActionState> {
   const user = await getCurrentUser();
   try {
     await db.delete(item).where(and(eq(item.id, itemId), eq(item.userId, user.id)));
+    await replanAfterChange(user.id);
     updateTag(inventoryTag(user.id));
     return { status: "success" };
   } catch (error) {

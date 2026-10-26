@@ -12,7 +12,7 @@ declare global {
 
 declare const self: ServiceWorkerGlobalScope;
 
-const OFFLINE_DOCUMENT_ROUTES = ["/rooms", "/tasks", "/home-profile"];
+const OFFLINE_DOCUMENT_ROUTES = ["/rooms", "/tasks", "/home-profile", "/plan", "/schedule"];
 
 const serwist = new Serwist({
   precacheEntries: self.__SW_MANIFEST,
@@ -20,7 +20,7 @@ const serwist = new Serwist({
   clientsClaim: true,
   navigationPreload: true,
   runtimeCaching: [
-    // Inventory and task RSC payloads are keyed by the router state they were fetched from, so a
+    // Inventory, task, and plan RSC payloads are keyed by the router state they were fetched from, so a
     // cached one can be stale offline. These pages are read offline from documents instead; see
     // docs/decisions/0005-offline-inventory-reading.md.
     {

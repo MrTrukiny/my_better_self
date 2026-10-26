@@ -29,8 +29,8 @@ The app is single-user for now. The data model keeps an owner on every record so
 
 - **Home inventory**: register rooms and the items in them (windows, closets, bathrooms, tables, shelves, desks...) Each item has a type, a name, a count, and an optional note.
 - **AI task proposals**: for each item, Gemini proposes cleaning tasks with an estimated duration and frequency. Big tasks are split per item so each fits in a session. The user reviews, edits, and approves; nothing is scheduled without approval.
-- **Scheduler**: a deterministic algorithm packs due tasks into a daily budget of 45 minutes, prioritizing the most overdue relative to their frequency. Missed work is rebalanced over the following days without exceeding the daily budget.
-- **Google Calendar sync**: one event per day ("Cleaning, 45 min") in a dedicated calendar the app creates, placed in a free slot within a user-defined window, with the task checklist in the description and a link to the app.
+- **Scheduler**: a deterministic algorithm packs due tasks into a daily budget (45 minutes on weekdays and 60 on weekends by default), prioritizing the most overdue relative to their frequency. Missed work is rebalanced over the following days without exceeding the daily budget.
+- **Google Calendar sync**: one event per day ("Cleaning, 45 min") in a dedicated calendar the app creates, placed at the start time the user picks for that day, with the task checklist in the description and a link to the app.
 - **Today view and habit**: see today's session, check tasks off (on the phone, even with a flaky connection), and keep a daily streak.
 
 ### Later
@@ -71,8 +71,9 @@ See [`ROADMAP.md`](ROADMAP.md): richer item attributes (size, material), time ca
 | **Helper**            | A device that does part of the cleaning, such as a robot vacuum or a dishwasher. Helpers change which tasks are proposed.                                                            |
 | **Occurrence**        | One instance of a task assigned to a specific day. Status: scheduled, done, or skipped.                                                                                              |
 | **Session**           | The set of occurrences for one day, within the daily budget. Maps to one calendar event.                                                                                             |
-| **Daily budget**      | Maximum minutes of cleaning per day (default 30).                                                                                                                                    |
-| **Scheduling window** | Hours in which the session may be placed, per weekday.                                                                                                                               |
+| **Daily budget**      | Maximum minutes of cleaning per day: one value for weekdays (default 45) and one for weekends (default 60).                                                                          |
+| **Start time**        | When the daily session begins, set per day of the week (default 06:30). Days can be turned off.                                                                                      |
+| **Scheduling window** | Later: hours in which the app may look for a free slot in the calendar, mornings first.                                                                                              |
 | **Streak**            | Consecutive days with the session completed.                                                                                                                                         |
 
 **Item fields.**
@@ -84,8 +85,6 @@ See [`ROADMAP.md`](ROADMAP.md): richer item attributes (size, material), time ca
 
 ## Open questions
 
-Answer these before the scheduler spec (004) is approved:
+Answer these before the Today view spec (006) is approved:
 
-- **Scheduling windows**: default hours per weekday (for example weekdays 18:00 to 21:00, weekends 9:00 to 13:00) and any days off.
-- **Rest days and weekends**: should there be rest days, or a different budget on weekends?
 - **"Completed" threshold for the streak**: does it require all of the day's tasks, or is a partial session enough?

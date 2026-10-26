@@ -2,7 +2,6 @@ import { ListChecks, Sparkles } from "lucide-react";
 import { OfflineAwareLink } from "@/components/offline-aware-link";
 import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { DAILY_CLEANING_MINUTES } from "@/lib/app-config";
 import { dailyMinutes, groupByTarget } from "@/lib/tasks/format";
 import type { TaskEntry } from "@/lib/tasks/queries";
 import { TaskRow } from "./task-row";
@@ -49,8 +48,14 @@ export function TaskList({ tasks, roomOrder }: { tasks: TaskEntry[]; roomOrder: 
   return (
     <div className="flex flex-col gap-8">
       <p className="text-muted-foreground text-sm">
-        About {cleaningPerDay} min of cleaning a day (budget {DAILY_CLEANING_MINUTES} min)
-        {routines.length > 0 ? ` and ${dailyMinutes(routines)} min of routines` : ""}, on average.
+        About {cleaningPerDay} min of cleaning a day
+        {routines.length > 0 ? ` and ${dailyMinutes(routines)} min of routines` : ""}, on average.{" "}
+        <OfflineAwareLink
+          href="/plan"
+          className="text-foreground focus-visible:ring-ring rounded-sm font-medium underline underline-offset-4 outline-none focus-visible:ring-2"
+        >
+          See your week
+        </OfflineAwareLink>
       </p>
       {cleaning.length > 0 ? (
         <section aria-labelledby="cleaning-heading" className="flex flex-col gap-4">
