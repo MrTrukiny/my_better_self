@@ -189,30 +189,27 @@ test.describe("home inventory", () => {
     await expect(page.getByRole("list", { name: "Items in Bedroom" })).toContainText("Bed");
   });
 
-  test("keeps each owner's rooms private", async ({ page, signedInUser: _, testAuth, browser }) => {
+  test("keeps each owner's rooms private", async ({
+    page,
+    signedInUser: _,
+    createOwner,
+    browser,
+  }) => {
     await page.goto("/rooms");
     await addRoom(page, "Private study");
     await openRoom(page, "Private study");
     const roomURL = page.url();
 
-    const { test: helpers } = await testAuth.$context;
-    const other = helpers.createUser({
-      name: "Other Owner",
-      email: `e2e-other-${test.info().testId}@example.com`.toLowerCase(),
-    });
-    await helpers.saveUser(other);
+    const { cookies } = await createOwner("Other Owner");
     const otherContext = await browser.newContext({ baseURL: test.info().project.use.baseURL });
     try {
-      await otherContext.addCookies(
-        await helpers.getCookies({ userId: other.id, domain: "localhost" }),
-      );
+      await otherContext.addCookies(cookies);
       const otherPage = await otherContext.newPage();
       await otherPage.goto(roomURL);
       await expect(otherPage.getByText("This page could not be found.")).toBeVisible();
       await expect(otherPage.getByText("Private study")).toHaveCount(0);
     } finally {
       await otherContext.close();
-      await helpers.deleteUser(other.id);
     }
   });
 });
