@@ -1,6 +1,6 @@
 # 006: Today view and habit
 
-- **Status**: Draft
+- **Status**: Approved
 - **Owner**: @mrtrukiny
 - **Created**: 2026-10-26
 
@@ -54,10 +54,38 @@ Each criterion is testable and maps to at least one test.
 
 ## Technical plan
 
-_Filled in by the `plan-feature` skill after the spec is approved._
-
 ### Approach
+
+- **History becomes real.** `occurrence` gets a `status` (`scheduled`, `done`, `skipped`) and a `completed_at`. A task's last completion is its latest `done` or `skipped` occurrence before the replanning date; a task with past occurrences but none handled is due on its first missed date. This replaces ADR 0007's "past days went as planned". Routines follow the same rule; they sit outside the budget, so a missed one just comes back the next day.
+- **The plan is rebuilt once a day.** `schedule_settings.replanned_on` records the owner's date of the last full replan. `ensurePlan` (replacing `ensureHorizon`) replans from today when that date is in the past, which redistributes yesterday's misses, and otherwise only extends the horizon. The day's first visit pays for it; spec 005's daily job calls the same function.
+- **Handled work is never rewritten.** Once any of today's occurrences is done or skipped, today counts as started and replans begin tomorrow (as after the start time). The replan deletes only `scheduled` rows, as a second guard.
+- **New tasks keep their first due date.** Today a task the scheduler hasn't placed yet is spread again on every replan; replanning daily would push infrequent tasks back forever. `task.first_due` stores the day the scheduler picked, and later replans treat it as fixed until the task is first done.
+- **Check-off is a Server Action that sets, not toggles**: `setOccurrenceStatus(occurrenceId, status)`. It resolves the user, accepts only the owner's occurrences dated today in their time zone (skip only for cleaning tasks), and returns `ok`, `gone` (no such occurrence), or `past`. Setting is idempotent, so a queued change sent twice is harmless. It doesn't replan: done or skipped matches what the plan already assumed, and an unchecked task is picked up by the next daily replan.
+- **Today at `/`** is a Server Component that reads settings (cached), then after `io()` calls `ensurePlan` and reads today's occurrences with their status and the streak window, inside `Suspense` with a skeleton. A client leaf (`TodaySession`) owns the list state: it applies each change at once, recomputes progress, and sends it through the queue. The progress and streak lines are `aria-live`.
+- **Streak and progress are pure functions** over per-day counts of cleaning occurrences (total, done, skipped) for the last 400 days, so they are unit tested without a database.
+- **Offline: a device queue** (ADR 0008, amending ADR 0005's "nothing is queued" for this page only). Changes go to a `localStorage` queue keyed by user, one entry per occurrence (a later change replaces an earlier one). The queue is flushed in order on load, on the `online` event, and when the page becomes visible; entries leave it only after the server answers `ok`, `gone` (shown as a notice), or `past`. While queued, the row shows "Saved on this device", and the page overlays queued states on the server's, so a reload, including from the offline copy, still shows them. `/` joins the offline document routes (exact match) and the Today page warms its own copy and `/plan` after each change.
+- **Home inventory** leaves the home page; the header already links to Rooms.
 
 ### Tasks
 
+- [ ] T1: ADR 0008 (check-off history, daily replan, offline queue; amends ADRs 0005 and 0007). Files: `docs/decisions/0008-check-off-and-offline-queue.md`, `docs/decisions/0005-offline-inventory-reading.md`, `docs/decisions/0007-persisted-plan-and-replanning.md`. Covers: AC4, AC6.
+- [ ] T2: Schema: `occurrence.status` (check constraint) and `completed_at`, `task.first_due`, `schedule_settings.replanned_on`; migration. Files: `src/db/schema/schedule.ts`, `src/db/schema/tasks.ts`, `drizzle/0004_check_off.sql`, `drizzle/meta/*`. Covers: AC2, AC3, AC4.
+- [ ] T3: Scheduler history: a pure `lastCompletions(rows, from)` that turns occurrences with status and first dues into the scheduler's input, and `schedule` reporting the first due it picks for new tasks. Files: `src/lib/scheduler/history.ts`, `src/lib/scheduler/history.test.ts`, `src/lib/scheduler/schedule.ts`, `src/lib/scheduler/schedule.test.ts`. Covers: AC3, AC4.
+- [ ] T4: Planning: `ensurePlan` (daily replan, then horizon), `replanStart` treating a handled today as started, replans delete only `scheduled` rows and save first dues; plan and schedule pages use `ensurePlan`. Files: `src/lib/scheduler/plan.ts`, `src/lib/scheduler/replan-start.ts`, `src/lib/scheduler/replan-start.test.ts`, `src/lib/scheduler/queries.ts`. Covers: AC4.
+- [ ] T5: Today data and rules: progress and streak functions, `getToday(settings, now)` (today's occurrences with status, plus streak counts). Files: `src/lib/today/progress.ts`, `src/lib/today/streak.ts`, their tests, `src/lib/today/queries.ts`. Covers: AC1, AC3, AC5.
+- [ ] T6: Check-off action with input schema and result codes. Files: `src/app/(app)/actions.ts`, `src/lib/today/schemas.ts`, `src/lib/today/schemas.test.ts`. Covers: AC2, AC3, AC4, AC7.
+- [ ] T7: Today page: session list with checkboxes, skip and undo, progress bar, streak line, completed-day line, routines, day off and empty states, skeleton and load error. Files: `src/app/(app)/page.tsx`, `src/components/today/today-session.tsx`, `src/components/today/task-row.tsx`, `src/components/today/today-session.test.tsx`, `src/components/today/today-summary.tsx`. Covers: AC1, AC2, AC3, AC5, AC7, AC8.
+- [ ] T8: Offline queue: queue module, flush hook with retry and notices, pending indicator, `/` as an offline document route, cache warming. Files: `src/lib/today/queue.ts`, `src/lib/today/queue.test.ts`, `src/components/today/use-check-off-queue.ts`, `src/components/today/today-session.tsx`, `src/app/sw.ts`. Covers: AC6, AC7.
+- [ ] T9: E2E and docs: today flows and offline check-off; update specs that opened the inventory from the home page; architecture notes; spec status. Files: `e2e/today.spec.ts`, `e2e/today-offline.spec.ts`, `e2e/support/today.ts`, `e2e/inventory.spec.ts`, `docs/ARCHITECTURE.md`, this spec. Covers: AC1, AC2, AC3, AC5, AC6, AC8.
+
 ### Test plan
+
+- **Unit (Vitest)**:
+  - AC3, AC4: `history.test.ts` (missed tasks due on their first missed date, skips count as done, routines, first dues kept) and `schedule.test.ts` (missed tasks come back most overdue first without exceeding budgets; an infrequent new task isn't postponed by daily replans).
+  - AC4: `replan-start.test.ts` (a handled today starts the replan tomorrow).
+  - AC1, AC3, AC5: `progress.test.ts` (skips leave the total) and `streak.test.ts` (days off neutral, all-skipped day doesn't count, today extends but doesn't break, gaps).
+  - AC2, AC3, AC7: `schemas.test.ts` and `today-session.test.tsx` (immediate update, undo, accessible names, retry notice).
+  - AC6: `queue.test.ts` (order, one entry per occurrence, survives reload, `gone` drops with a notice).
+- **E2E (Playwright, desktop and mobile)**:
+  - AC1, AC2, AC3, AC5, AC8: `today.spec.ts` (session shown, check and reload, skip and undo, streak goes from "Start a streak today" to "1-day streak" when all are done, keyboard, dark mode, no console errors).
+  - AC6: `today-offline.spec.ts` (check offline, reload offline, back online and the server has it).
