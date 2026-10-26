@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { type ReactNode, Suspense } from "react";
 import { AccountMenu } from "@/components/account-menu";
-import { InventoryLink } from "@/components/inventory/inventory-link";
+import { OfflineAwareLink } from "@/components/offline-aware-link";
 import { OfflineBanner } from "@/components/offline-banner";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { APP_NAME } from "@/lib/app-config";
@@ -18,18 +18,18 @@ export function AppShell({ children }: { children: ReactNode }) {
           </Link>
           <div className="flex items-center gap-1">
             <nav aria-label="Main">
-              <InventoryLink
+              <OfflineAwareLink
                 href="/rooms"
                 className="hover:bg-muted focus-visible:ring-ring inline-flex h-9 items-center rounded-md px-2 text-sm font-medium sm:px-3 outline-none focus-visible:ring-2"
               >
                 Rooms
-              </InventoryLink>
-              <InventoryLink
+              </OfflineAwareLink>
+              <OfflineAwareLink
                 href="/tasks"
                 className="hover:bg-muted focus-visible:ring-ring inline-flex h-9 items-center rounded-md px-2 text-sm font-medium sm:px-3 outline-none focus-visible:ring-2"
               >
                 Tasks
-              </InventoryLink>
+              </OfflineAwareLink>
             </nav>
             <ThemeToggle />
             <Suspense fallback={<div aria-hidden className="bg-muted size-8 rounded-full" />}>

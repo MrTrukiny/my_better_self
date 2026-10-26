@@ -27,3 +27,12 @@ The default Serwist runtime cache stores Next.js RSC payloads for in-app navigat
 - Each inventory change triggers a few extra page renders: `/rooms` plus one per room from the list, or two from a room page. That is cheap at personal scale. Revisit this if rooms grow into the dozens.
 - Pages never seen online fall back to `/~offline`, as before. Sign-out already clears these caches.
 - Future offline-readable areas (the Today view, spec 006) should follow the same pattern rather than relying on cached RSC payloads.
+
+## Amendment (spec 003)
+
+The pattern now covers the task pages too, under generic names:
+
+- The `NetworkOnly` RSC rule lists `/rooms`, `/tasks` (with `/tasks/review`), and `/home-profile` in `OFFLINE_DOCUMENT_ROUTES` in `src/app/sw.ts`.
+- `InventoryLink` became `OfflineAwareLink` and `OfflineCacheWarmer` moved to `src/components/`, since they are no longer inventory-specific.
+- `TasksCacheWarmer` refreshes `/tasks`, `/tasks/review`, and `/home-profile` together whenever tasks, proposals, the home profile, or rooms change, because all three pages show that data.
+- The review page is cached for the whole-home scope only. A room scope (`/tasks/review?room=…`) opened offline for the first time falls back to `/~offline`. The scope picker is disabled offline, since nothing can be generated without a connection.

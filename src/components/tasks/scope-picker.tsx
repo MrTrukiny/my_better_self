@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useId } from "react";
+import { useEditsDisabled } from "@/components/inventory/edit-guard";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -23,6 +24,7 @@ export function ScopePicker({
 }) {
   const router = useRouter();
   const id = useId();
+  const editsDisabled = useEditsDisabled();
   const items = { [HOME]: "Whole home", ...Object.fromEntries(rooms.map((r) => [r.id, r.name])) };
 
   return (
@@ -31,6 +33,7 @@ export function ScopePicker({
       <Select
         value={selectedRoomId ?? HOME}
         items={items}
+        disabled={editsDisabled}
         onValueChange={(value) => {
           const query = value && value !== HOME ? `?room=${value}` : "";
           router.replace(`/tasks/review${query}`, { scroll: false });

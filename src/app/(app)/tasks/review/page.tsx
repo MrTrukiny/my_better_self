@@ -1,12 +1,13 @@
 import { DoorOpen } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Suspense } from "react";
 import { generateProposals } from "@/app/(app)/tasks/actions";
 import { EditNotice } from "@/components/inventory/edit-guard";
+import { OfflineAwareLink } from "@/components/offline-aware-link";
 import { GenerateButton } from "@/components/tasks/generate-button";
 import { ProposalList } from "@/components/tasks/proposal-list";
 import { ScopePicker } from "@/components/tasks/scope-picker";
+import { TasksCacheWarmer } from "@/components/tasks/tasks-cache-warmer";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getRooms } from "@/lib/inventory/queries";
@@ -34,6 +35,9 @@ export default function ReviewPage({ searchParams }: PageProps<"/tasks/review">)
       <Suspense fallback={<ReviewSkeleton />}>
         <ReviewSection searchParams={searchParams} />
       </Suspense>
+      <Suspense>
+        <TasksCacheWarmer />
+      </Suspense>
     </section>
   );
 }
@@ -54,7 +58,12 @@ async function ReviewSection({ searchParams }: Pick<PageProps<"/tasks/review">, 
         <p className="text-muted-foreground max-w-sm text-sm">
           Add your rooms and what's in them that needs cleaning. Then the AI can propose tasks.
         </p>
-        <Button size="lg" className="h-11" render={<Link href="/rooms" />} nativeButton={false}>
+        <Button
+          size="lg"
+          className="h-11"
+          render={<OfflineAwareLink href="/rooms" />}
+          nativeButton={false}
+        >
           Go to rooms
         </Button>
       </div>
@@ -70,12 +79,12 @@ async function ReviewSection({ searchParams }: Pick<PageProps<"/tasks/review">, 
         <ScopePicker rooms={rooms} selectedRoomId={scope?.id ?? null} />
         <p className="text-muted-foreground text-sm">
           {helperLabels.length > 0 ? `Helpers: ${helperLabels.join(", ")}. ` : "No helpers yet. "}
-          <Link
+          <OfflineAwareLink
             href="/home-profile"
             className="text-foreground focus-visible:ring-ring rounded-sm font-medium underline underline-offset-4 outline-none focus-visible:ring-2"
           >
             Tell us about your home
-          </Link>
+          </OfflineAwareLink>
         </p>
         <GenerateButton
           key={scope?.id ?? "home"}

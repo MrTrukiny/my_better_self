@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { saveHomeProfile } from "@/app/(app)/tasks/actions";
 import { EditNotice } from "@/components/inventory/edit-guard";
 import { HomeProfileForm } from "@/components/tasks/home-profile-form";
+import { TasksCacheWarmer } from "@/components/tasks/tasks-cache-warmer";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getHomeProfile } from "@/lib/tasks/queries";
 
@@ -28,6 +29,9 @@ export default function HomeProfilePage() {
       <EditNotice />
       <Suspense fallback={<HomeProfileSkeleton />}>
         <HomeProfileSection />
+      </Suspense>
+      <Suspense>
+        <TasksCacheWarmer />
       </Suspense>
     </section>
   );

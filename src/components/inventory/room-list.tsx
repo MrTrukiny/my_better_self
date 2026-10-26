@@ -1,10 +1,10 @@
 import { DoorOpen, Sparkles } from "lucide-react";
-import Link from "next/link";
+import { OfflineAwareLink } from "@/components/offline-aware-link";
+import { OfflineCacheWarmer } from "@/components/offline-cache-warmer";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { itemCountLabel } from "@/lib/inventory/format";
 import { getRooms } from "@/lib/inventory/queries";
-import { OfflineCacheWarmer } from "./offline-cache-warmer";
 import { AddRoomButton } from "./room-form";
 import { RoomNavLink } from "./room-nav-link";
 
@@ -52,7 +52,7 @@ export async function RoomList() {
         <Button
           size="lg"
           className="h-11"
-          render={<Link href="/tasks/review" />}
+          render={<OfflineAwareLink href="/tasks/review" />}
           nativeButton={false}
         >
           <Sparkles aria-hidden />

@@ -5,11 +5,11 @@ import type { ComponentProps } from "react";
 import { useIsOffline } from "@/hooks/use-is-offline";
 
 /**
- * A `Link` that falls back to a full page load while offline. Inventory pages are read offline
- * from the service worker's document cache; in-app navigation would need RSC payloads, which
- * are not cached for inventory routes.
+ * A `Link` that falls back to a full page load while offline. Inventory and task pages are read
+ * offline from the service worker's document cache; in-app navigation would need RSC payloads,
+ * which are not cached for those routes. See docs/decisions/0005-offline-inventory-reading.md.
  */
-export function InventoryLink({ href, onClick, ...props }: ComponentProps<typeof Link>) {
+export function OfflineAwareLink({ href, onClick, ...props }: ComponentProps<typeof Link>) {
   const isOffline = useIsOffline();
   return (
     <Link

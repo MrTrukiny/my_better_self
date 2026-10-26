@@ -47,7 +47,7 @@ describe("edit guard", () => {
     );
     expect(screen.getByRole("button", { name: "Add room" })).toBeDisabled();
     expect(screen.getByRole("status")).toHaveTextContent(
-      "You're offline. You can browse your inventory, but changes need a connection.",
+      "You're offline. You can browse what's saved, but changes need a connection.",
     );
   });
 

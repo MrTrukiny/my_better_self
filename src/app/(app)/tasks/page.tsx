@@ -1,9 +1,10 @@
 import { ChevronRight, Sparkles } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Suspense } from "react";
 import { EditNotice } from "@/components/inventory/edit-guard";
+import { OfflineAwareLink } from "@/components/offline-aware-link";
 import { TaskList, TaskListSkeleton } from "@/components/tasks/task-list";
+import { TasksCacheWarmer } from "@/components/tasks/tasks-cache-warmer";
 import { Button } from "@/components/ui/button";
 import { getRooms } from "@/lib/inventory/queries";
 import { getProposals, getTasks } from "@/lib/tasks/queries";
@@ -23,19 +24,19 @@ export default function TasksPage() {
           </h1>
           <p className="text-muted-foreground text-sm">
             What gets cleaned, how long it takes, and how often.{" "}
-            <Link
+            <OfflineAwareLink
               href="/home-profile"
               className="text-foreground focus-visible:ring-ring rounded-sm font-medium underline underline-offset-4 outline-none focus-visible:ring-2"
             >
               Home profile
-            </Link>
+            </OfflineAwareLink>
           </p>
         </div>
         <Button
           variant="outline"
           size="lg"
           className="h-11 shrink-0"
-          render={<Link href="/tasks/review" />}
+          render={<OfflineAwareLink href="/tasks/review" />}
           nativeButton={false}
         >
           <Sparkles aria-hidden />
@@ -45,6 +46,9 @@ export default function TasksPage() {
       <EditNotice />
       <Suspense fallback={<TaskListSkeleton />}>
         <TasksSection />
+      </Suspense>
+      <Suspense>
+        <TasksCacheWarmer />
       </Suspense>
     </section>
   );
@@ -56,13 +60,13 @@ async function TasksSection() {
   return (
     <div className="flex flex-col gap-6">
       {pending > 0 ? (
-        <Link
+        <OfflineAwareLink
           href="/tasks/review"
           className="bg-muted hover:bg-muted/70 focus-visible:ring-ring flex min-h-11 items-center justify-between gap-3 rounded-lg px-4 py-3 text-sm font-medium outline-none focus-visible:ring-2"
         >
           {pending} {pending === 1 ? "proposal" : "proposals"} waiting for review
           <ChevronRight aria-hidden className="size-4 shrink-0" />
-        </Link>
+        </OfflineAwareLink>
       ) : null}
       <TaskList tasks={tasks} roomOrder={rooms.map((room) => room.id)} />
     </div>

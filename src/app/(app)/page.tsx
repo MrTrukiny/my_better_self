@@ -1,5 +1,5 @@
 import { ChevronRight } from "lucide-react";
-import { InventoryLink } from "@/components/inventory/inventory-link";
+import { OfflineAwareLink } from "@/components/offline-aware-link";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { APP_NAME } from "@/lib/app-config";
 
@@ -7,7 +7,7 @@ export default function HomePage() {
   return (
     <section className="flex flex-col gap-6">
       <h1 className="font-heading text-2xl font-semibold tracking-tight sm:text-3xl">{APP_NAME}</h1>
-      <InventoryLink
+      <OfflineAwareLink
         href="/rooms"
         className="focus-visible:ring-ring rounded-xl outline-none focus-visible:ring-2"
       >
@@ -22,7 +22,7 @@ export default function HomePage() {
             <ChevronRight aria-hidden className="text-muted-foreground size-5 shrink-0" />
           </CardHeader>
         </Card>
-      </InventoryLink>
+      </OfflineAwareLink>
     </section>
   );
 }

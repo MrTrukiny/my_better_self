@@ -2,7 +2,7 @@ import type { Page } from "@playwright/test";
 import { expect, test } from "./fixtures";
 import { addItem, addRoom, openRoom } from "./support/inventory";
 
-const NOTICE = "You're offline. You can browse your inventory, but changes need a connection.";
+const NOTICE = "You're offline. You can browse what's saved, but changes need a connection.";
 
 /** Waits until the service worker holds a copy of `path` that contains `text`. */
 async function expectCachedPage(page: Page, path: string, text: string) {

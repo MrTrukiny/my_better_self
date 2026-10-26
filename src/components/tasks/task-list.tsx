@@ -1,5 +1,5 @@
 import { ListChecks, Sparkles } from "lucide-react";
-import Link from "next/link";
+import { OfflineAwareLink } from "@/components/offline-aware-link";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DAILY_CLEANING_MINUTES } from "@/lib/app-config";
@@ -34,7 +34,7 @@ export function TaskList({ tasks, roomOrder }: { tasks: TaskEntry[]; roomOrder: 
         <Button
           size="lg"
           className="h-11"
-          render={<Link href="/tasks/review" />}
+          render={<OfflineAwareLink href="/tasks/review" />}
           nativeButton={false}
         >
           <Sparkles aria-hidden />
