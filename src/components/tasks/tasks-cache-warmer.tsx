@@ -8,7 +8,8 @@ const TASK_PAGES = ["/tasks", "/tasks/review", "/home-profile"];
 
 /**
  * Keeps the offline copies of every task page current; they all show the same data. The plan
- * is built from the tasks, so its copy is refreshed too once there is a schedule to plan with.
+ * and today's session are built from the tasks, so their copies are refreshed too once there is
+ * a schedule to plan with.
  */
 export async function TasksCacheWarmer() {
   const [tasks, proposals, profile, rooms, settings] = await Promise.all([
@@ -20,7 +21,7 @@ export async function TasksCacheWarmer() {
   ]);
   return (
     <OfflineCacheWarmer
-      urls={settings ? [...TASK_PAGES, "/plan"] : TASK_PAGES}
+      urls={settings ? [...TASK_PAGES, "/plan", "/"] : TASK_PAGES}
       version={cacheVersion([tasks, proposals, profile, rooms, settings])}
     />
   );

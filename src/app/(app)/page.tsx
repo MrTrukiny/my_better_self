@@ -1,28 +1,92 @@
-import { ChevronRight } from "lucide-react";
+import { io } from "next/cache";
+import { Suspense } from "react";
 import { OfflineAwareLink } from "@/components/offline-aware-link";
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { APP_NAME } from "@/lib/app-config";
+import { OfflineCacheWarmer } from "@/components/offline-cache-warmer";
+import { NoScheduleState, NoTasksState } from "@/components/plan/empty-state";
+import { TodaySession } from "@/components/today/today-session";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cacheVersion } from "@/lib/cache-version";
+import { toIsoDate } from "@/lib/scheduler/dates";
+import { getScheduleSettings } from "@/lib/scheduler/queries";
+import { startTimeFor } from "@/lib/scheduler/settings";
+import { getCurrentUser } from "@/lib/session";
+import { getTasks } from "@/lib/tasks/queries";
+import { getToday } from "@/lib/today/queries";
+import { streakOf } from "@/lib/today/streak";
+import { setOccurrenceStatus } from "./actions";
 
-export default function HomePage() {
+const NO_COUNTS = { total: 0, done: 0, skipped: 0 };
+
+const linkClass =
+  "text-foreground focus-visible:ring-ring rounded-sm font-medium underline underline-offset-4 outline-none focus-visible:ring-2";
+
+export default function TodayPage() {
   return (
-    <section className="flex flex-col gap-6">
-      <h1 className="font-heading text-2xl font-semibold tracking-tight sm:text-3xl">{APP_NAME}</h1>
-      <OfflineAwareLink
-        href="/rooms"
-        className="focus-visible:ring-ring rounded-xl outline-none focus-visible:ring-2"
-      >
-        <Card className="hover:bg-muted/40 transition-colors">
-          <CardHeader className="flex items-center justify-between gap-4">
-            <div className="flex flex-col gap-1">
-              <CardTitle>Home inventory</CardTitle>
-              <CardDescription>
-                Add the rooms of your home and what's in them that needs cleaning.
-              </CardDescription>
-            </div>
-            <ChevronRight aria-hidden className="text-muted-foreground size-5 shrink-0" />
-          </CardHeader>
-        </Card>
-      </OfflineAwareLink>
+    <section aria-labelledby="today-heading" className="mx-auto flex max-w-2xl flex-col gap-6">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+        <h1
+          id="today-heading"
+          className="font-heading text-2xl font-semibold tracking-tight sm:text-3xl"
+        >
+          Today
+        </h1>
+        <OfflineAwareLink href="/plan" className={`${linkClass} text-sm`}>
+          See your week
+        </OfflineAwareLink>
+      </div>
+      <Suspense fallback={<TodaySkeleton />}>
+        <TodaySection />
+      </Suspense>
     </section>
+  );
+}
+
+async function TodaySection() {
+  const [user, settings, tasks] = await Promise.all([
+    getCurrentUser(),
+    getScheduleSettings(),
+    getTasks(),
+  ]);
+  if (!settings) {
+    return (
+      <>
+        <NoScheduleState />
+        <OfflineCacheWarmer urls={["/"]} version={cacheVersion(["no-schedule", tasks])} />
+      </>
+    );
+  }
+  if (!tasks.some((t) => t.kind === "cleaning")) {
+    return (
+      <>
+        <NoTasksState />
+        <OfflineCacheWarmer urls={["/"]} version={cacheVersion([settings, tasks])} />
+      </>
+    );
+  }
+
+  await io();
+  const { today, tasks: todayTasks, history } = await getToday(settings, new Date());
+  return (
+    <TodaySession
+      userId={user.id}
+      date={toIsoDate(today)}
+      timeZone={settings.timeZone}
+      start={startTimeFor(settings, today)}
+      tasks={todayTasks}
+      pastStreak={streakOf(history, today, NO_COUNTS)}
+      version={cacheVersion([settings, todayTasks])}
+      send={setOccurrenceStatus}
+    />
+  );
+}
+
+function TodaySkeleton() {
+  return (
+    <div aria-hidden className="flex flex-col gap-4">
+      <Skeleton className="h-4 w-56" />
+      <Skeleton className="h-4 w-40" />
+      <Skeleton className="h-2 w-full" />
+      <Skeleton className="h-48 rounded-xl" />
+    </div>
   );
 }
