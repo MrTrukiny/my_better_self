@@ -1,5 +1,5 @@
 import { relations, sql } from "drizzle-orm";
-import { check, index, integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { check, date, index, integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { user } from "./auth";
 import { item, room } from "./inventory";
 
@@ -48,10 +48,18 @@ const taskColumns = () => ({
   ...timestamps,
 });
 
-export const task = pgTable("task", taskColumns(), (table) => [
-  index("task_user_id_idx").on(table.userId),
-  check("task_item_has_room", sql`${table.itemId} is null or ${table.roomId} is not null`),
-]);
+export const task = pgTable(
+  "task",
+  {
+    ...taskColumns(),
+    /** The first date the scheduler picked while the task was never done. See ADR 0008. */
+    firstDue: date("first_due", { mode: "string" }),
+  },
+  (table) => [
+    index("task_user_id_idx").on(table.userId),
+    check("task_item_has_room", sql`${table.itemId} is null or ${table.roomId} is not null`),
+  ],
+);
 
 export const taskProposal = pgTable(
   "task_proposal",
