@@ -37,6 +37,39 @@ test.describe("Scheduler", () => {
     await expect(page.getByRole("link", { name: "Propose tasks" })).toBeVisible();
   });
 
+  test("AC8: sets the schedule with the keyboard only, in dark mode, without console errors", async ({
+    page,
+    signedInUser: _,
+  }) => {
+    const errors: string[] = [];
+    page.on("console", (message) => {
+      if (message.type() === "error") errors.push(message.text());
+    });
+    await page.emulateMedia({ colorScheme: "dark" });
+    await page.goto("/schedule");
+
+    const sunday = page.getByRole("checkbox", { name: "Sunday", exact: true });
+    await sunday.focus();
+    await page.keyboard.press("Space");
+    await expect(sunday).not.toBeChecked();
+    await expect(page.getByLabel("Sunday start time")).toBeDisabled();
+    await page.keyboard.press("Tab");
+    await expect(page.getByLabel("Weekday minutes")).toBeFocused();
+    await page.keyboard.press("Tab");
+    await page.keyboard.press("Tab");
+    await expect(page.getByRole("button", { name: "Save" })).toBeFocused();
+    await page.keyboard.press("Enter");
+    await expect(page.getByRole("status").filter({ hasText: "Saved." })).toBeVisible({
+      timeout: REPLAN_TIMEOUT,
+    });
+
+    await page.getByRole("link", { name: "See your week" }).focus();
+    await page.keyboard.press("Enter");
+    await expect(page.getByRole("heading", { level: 1, name: "Your week" })).toBeVisible();
+    await expect(page.locator("html")).toHaveClass(/dark/);
+    expect(errors).toEqual([]);
+  });
+
   test("AC2, AC3, and AC6: plans the week within budget and replans when tasks change", async ({
     page,
     signedInUser: _,

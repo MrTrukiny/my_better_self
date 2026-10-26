@@ -1,5 +1,5 @@
 import type { TaskKind } from "@/lib/tasks/limits";
-import { type DayNumber, formatTime, isWeekend, parseTime, toIsoDate } from "./dates";
+import { type DayNumber, formatTime, parseTime, toIsoDate } from "./dates";
 import type { LoadSummary } from "./load";
 import { type Budgets, budgetFor, PLAN_DAYS, startTimeFor } from "./settings";
 
@@ -17,7 +17,6 @@ export type PlanOccurrence = { date: string; task: PlanTask };
 export type PlanDayView = {
   date: string;
   isToday: boolean;
-  isWeekend: boolean;
   off: boolean;
   start: string | null;
   end: string | null;
@@ -47,7 +46,6 @@ export function buildWeek(
     return {
       date,
       isToday: offset === 0,
-      isWeekend: isWeekend(day),
       off: start === null,
       start,
       end: startMinutes === null ? null : formatTime(startMinutes + total),

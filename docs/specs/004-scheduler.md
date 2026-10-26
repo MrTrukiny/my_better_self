@@ -1,6 +1,6 @@
 # 004: Scheduler
 
-- **Status**: In progress
+- **Status**: Done
 - **Owner**: @mrtrukiny
 - **Created**: 2026-10-25
 
@@ -20,18 +20,18 @@ Turn the approved tasks (spec 003) into a daily plan: one cleaning session per d
 
 Each criterion is testable and maps to at least one test.
 
-- [ ] AC1: Given I open the schedule settings, when I turn each day of the week on or off, set a start time for each day that is on, and set a weekday budget and a weekend budget (whole minutes from 30 to 120), then they are saved and used by the plan. The defaults are every day on, 06:30 on every day, 45 minutes on weekdays, and 60 minutes on weekends. The time zone is taken from my device and shown. At least one day must stay on. Invalid values show a field message and are not saved.
-- [ ] AC2: Given I have cleaning tasks, when I open the plan, then I see the next 7 days starting today. Each cleaning day shows its date, its start and end time (that day's start time plus its total minutes), its cleaning tasks with minutes and what each belongs to, and its total against the budget ("38 of 45 min"). A day that is off says so and has no cleaning tasks. The routines due each day, on or off, are listed apart and don't count toward the budget. Given I have no cleaning tasks, the plan explains that tasks come first and links to "Propose tasks".
-- [ ] AC3: Given any set of tasks and settings, then days that are off get no cleaning tasks, and no cleaning day's total exceeds its budget: the weekday budget from Monday to Friday and the weekend budget on Saturday and Sunday.
-- [ ] AC4: Given the average daily load (each task's minutes divided by its frequency, added up) fits the average time available per day (the budgets of the days that are on, added up over a week, divided by 7), then:
+- [x] AC1: Given I open the schedule settings, when I turn each day of the week on or off, set a start time for each day that is on, and set a weekday budget and a weekend budget (whole minutes from 30 to 120), then they are saved and used by the plan. The defaults are every day on, 06:30 on every day, 45 minutes on weekdays, and 60 minutes on weekends. The time zone is taken from my device and shown. At least one day must stay on. Invalid values show a field message and are not saved.
+- [x] AC2: Given I have cleaning tasks, when I open the plan, then I see the next 7 days starting today. Each cleaning day shows its date, its start and end time (that day's start time plus its total minutes), its cleaning tasks with minutes and what each belongs to, and its total against the budget ("38 of 45 min"). A day that is off says so and has no cleaning tasks. The routines due each day, on or off, are listed apart and don't count toward the budget. Given I have no cleaning tasks, the plan explains that tasks come first and links to "Propose tasks".
+- [x] AC3: Given any set of tasks and settings, then days that are off get no cleaning tasks, and no cleaning day's total exceeds its budget: the weekday budget from Monday to Friday and the weekend budget on Saturday and Sunday.
+- [x] AC4: Given the average daily load (each task's minutes divided by its frequency, added up) fits the average time available per day (the budgets of the days that are on, added up over a week, divided by 7), then:
   - Every task's first session falls within its first frequency period: a task every 10 days first appears within the first 10 days.
   - After that, every task comes back no later than its frequency and no earlier than three quarters of it (rounded down). When the day it is due is off, it moves to the closest earlier cleaning day, or to the next one if no earlier day fits in that range.
   - Daily tasks appear on every cleaning day.
   - Tasks are whole (up to 30 minutes each), so when several big ones collide, a repetition can run late. With the load at up to 60% of the time available, fewer than 1 in 1,000 repetitions run late, by at most a day, when every day is on. With days off, under 5% do, by at most 3 days, mostly frequent tasks around several days off in a row.
-- [ ] AC5: Given the average daily load exceeds the average time available, then the plan shows a notice with the minutes per day my tasks need and the minutes I have, and suggests raising a budget, turning on another day, or making tasks less frequent. Late tasks are scheduled by how overdue they are relative to their frequency, so a task every 3 days that is 2 days late goes before a task every 30 days that is 2 days late, and every task still appears within twice its frequency.
-- [ ] AC6: Given days pass, then each past day counts as done as planned, until check-off exists (spec 006). Given I add, edit, or delete a task, or change the settings, then the plan is recomputed from today if today's start time hasn't passed, or from tomorrow otherwise, and past days don't change. The same tasks and settings always produce the same plan.
-- [ ] AC7: Given I am offline, then the plan stays readable and the settings can't be changed, with a visible reason, consistent with specs 002 and 003.
-- [ ] AC8: The plan and the settings work at 360px wide and on desktop, in light and dark mode, and with the keyboard only. Each day is a labeled list, and every control has an accessible name.
+- [x] AC5: Given the average daily load exceeds the average time available, then the plan shows a notice with the minutes per day my tasks need and the minutes I have, and suggests raising a budget, turning on another day, or making tasks less frequent. Late tasks are scheduled by how overdue they are relative to their frequency, so a task every 3 days that is 2 days late goes before a task every 30 days that is 2 days late, and every task still appears within twice its frequency.
+- [x] AC6: Given days pass, then each past day counts as done as planned, until check-off exists (spec 006). Given I add, edit, or delete a task, or change the settings, then the plan is recomputed from today if today's start time hasn't passed, or from tomorrow otherwise, and past days don't change. The same tasks and settings always produce the same plan.
+- [x] AC7: Given I am offline, then the plan stays readable and the settings can't be changed, with a visible reason, consistent with specs 002 and 003.
+- [x] AC8: The plan and the settings work at 360px wide and on desktop, in light and dark mode, and with the keyboard only. Each day is a labeled list, and every control has an accessible name.
 
 ## UX notes
 

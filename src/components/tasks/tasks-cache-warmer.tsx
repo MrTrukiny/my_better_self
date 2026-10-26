@@ -1,22 +1,27 @@
 import { OfflineCacheWarmer } from "@/components/offline-cache-warmer";
 import { cacheVersion } from "@/lib/cache-version";
 import { getRooms } from "@/lib/inventory/queries";
+import { getScheduleSettings } from "@/lib/scheduler/queries";
 import { getHomeProfile, getProposals, getTasks } from "@/lib/tasks/queries";
 
-const TASK_PAGES = ["/tasks", "/tasks/review", "/home-profile", "/plan"];
+const TASK_PAGES = ["/tasks", "/tasks/review", "/home-profile"];
 
-/** Keeps the offline copies of every task page, and the plan built from them, current. */
+/**
+ * Keeps the offline copies of every task page current; they all show the same data. The plan
+ * is built from the tasks, so its copy is refreshed too once there is a schedule to plan with.
+ */
 export async function TasksCacheWarmer() {
-  const [tasks, proposals, profile, rooms] = await Promise.all([
+  const [tasks, proposals, profile, rooms, settings] = await Promise.all([
     getTasks(),
     getProposals(),
     getHomeProfile(),
     getRooms(),
+    getScheduleSettings(),
   ]);
   return (
     <OfflineCacheWarmer
-      urls={TASK_PAGES}
-      version={cacheVersion([tasks, proposals, profile, rooms])}
+      urls={settings ? [...TASK_PAGES, "/plan"] : TASK_PAGES}
+      version={cacheVersion([tasks, proposals, profile, rooms, settings])}
     />
   );
 }
