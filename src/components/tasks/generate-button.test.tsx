@@ -1,4 +1,4 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { GenerateState } from "@/lib/tasks/generate-state";
@@ -51,8 +51,8 @@ describe("GenerateButton", () => {
       />,
     );
     await user.click(screen.getByRole("button", { name: "Propose tasks" }));
-    expect(await screen.findByRole("status")).toHaveTextContent(
-      "No new tasks to propose for Kitchen.",
+    await waitFor(() =>
+      expect(screen.getByRole("status")).toHaveTextContent("No new tasks to propose for Kitchen."),
     );
   });
 
@@ -68,7 +68,9 @@ describe("GenerateButton", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("Couldn't propose tasks.");
     await user.click(screen.getByRole("button", { name: "Try again" }));
 
-    expect(await screen.findByRole("status")).toHaveTextContent("3 tasks proposed for Kitchen.");
+    await waitFor(() =>
+      expect(screen.getByRole("status")).toHaveTextContent("3 tasks proposed for Kitchen."),
+    );
     expect(action).toHaveBeenCalledTimes(2);
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });

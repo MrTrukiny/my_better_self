@@ -24,7 +24,7 @@ describe("HomeProfileForm", () => {
     await userEvent.click(screen.getByRole("checkbox", { name: "Dishwasher" }));
     await userEvent.click(screen.getByRole("button", { name: "Save" }));
 
-    expect(await screen.findByRole("status")).toHaveTextContent("Saved.");
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("Saved."));
     const formData = action.mock.calls[0]?.[1];
     expect(formData?.getAll("helpers")).toEqual(["robot-vacuum", "dishwasher"]);
     expect(formData?.get("note")).toBe("Two cats");
