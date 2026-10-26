@@ -13,7 +13,7 @@ export function OfflineCacheWarmer({ urls, version }: { urls: string[]; version:
   const urlKey = urls.join("\n");
 
   useEffect(() => {
-    if (isOffline || !version) {
+    if (isOffline || !navigator.onLine || !version) {
       return;
     }
     for (const url of urlKey.split("\n")) {
