@@ -35,6 +35,13 @@ const envSchema = z
         message: "is required in production",
       });
     }
+    if (env.VERCEL_ENV === "production" && env.CALENDAR_FAKE) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["CALENDAR_FAKE"],
+        message: "must not be set in production",
+      });
+    }
   });
 
 export type Env = z.infer<typeof envSchema>;

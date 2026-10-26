@@ -4,7 +4,7 @@ import { calendarConnection } from "@/db/schema";
 import { isAuthorizedCron } from "@/lib/calendar/cron-auth";
 import { syncCalendar } from "@/lib/calendar/sync";
 import { getEnv } from "@/lib/env";
-import { ensureHorizon } from "@/lib/scheduler/plan";
+import { ensurePlan } from "@/lib/scheduler/plan";
 
 /**
  * The daily job (Vercel Cron, see vercel.json): for each connected owner, one at a time, extend
@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
   let failed = 0;
   for (const { userId } of owners) {
     try {
-      await ensureHorizon(userId);
+      await ensurePlan(userId);
       const result = await syncCalendar(userId);
       if (result === "ok" || result === "skipped") {
         synced++;

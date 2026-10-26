@@ -39,6 +39,14 @@ describe("parseEnv", () => {
     ).toBe("s".repeat(32));
   });
 
+  it("rejects the fake calendar in Vercel production", () => {
+    const production = { ...valid, VERCEL_ENV: "production", CRON_SECRET: "s".repeat(32) };
+    expect(() => parseEnv({ ...production, CALENDAR_FAKE: "1" })).toThrow(/CALENDAR_FAKE/);
+    expect(parseEnv({ ...valid, VERCEL_ENV: "preview", CALENDAR_FAKE: "1" }).CALENDAR_FAKE).toBe(
+      true,
+    );
+  });
+
   it("keeps the AI settings optional, with a default model", () => {
     const parsed = parseEnv({ ...valid, GOOGLE_GENERATIVE_AI_API_KEY: "key", AI_MODEL: "m" });
     expect(parsed.GOOGLE_GENERATIVE_AI_API_KEY).toBe("key");
