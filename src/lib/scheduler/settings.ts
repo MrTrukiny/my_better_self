@@ -39,7 +39,10 @@ export function defaultSettings(timeZone: string): ScheduleSettings {
   };
 }
 
-export function startTimeFor(settings: Budgets, day: DayNumber): string | null {
+export function startTimeFor(
+  settings: Pick<ScheduleSettings, "startTimes">,
+  day: DayNumber,
+): string | null {
   return settings.startTimes[weekdayIndex(day)] ?? null;
 }
 

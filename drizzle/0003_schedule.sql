@@ -13,6 +13,7 @@ CREATE TABLE "schedule_settings" (
 	"weekday_minutes" integer NOT NULL,
 	"weekend_minutes" integer NOT NULL,
 	"time_zone" text NOT NULL,
+	"planned_through" date,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "schedule_settings_seven_days" CHECK (cardinality("schedule_settings"."start_times") = 7),

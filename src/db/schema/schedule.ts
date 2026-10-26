@@ -16,6 +16,8 @@ export const scheduleSettings = pgTable(
     weekendMinutes: integer("weekend_minutes").notNull(),
     /** IANA time zone reported by the device when the settings were saved. */
     timeZone: text("time_zone").notNull(),
+    /** Last date the plan covers; days off without routines leave no occurrences to tell. */
+    plannedThrough: date("planned_through", { mode: "string" }),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .defaultNow()

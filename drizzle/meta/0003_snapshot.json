@@ -1,5 +1,5 @@
 {
-  "id": "b3e2d23d-22d9-446d-9913-dd011d3f23c5",
+  "id": "df828c8f-7f36-416f-a4d4-eb6fc32f9d9c",
   "prevId": "6c5fe2ee-94e1-4418-888b-602f4d08dd98",
   "version": "7",
   "dialect": "postgresql",
@@ -718,6 +718,12 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true
+        },
+        "planned_through": {
+          "name": "planned_through",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
         },
         "created_at": {
           "name": "created_at",
