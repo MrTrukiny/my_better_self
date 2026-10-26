@@ -20,7 +20,7 @@ The proposals take the home's helpers into account. With a robot vacuum, for exa
 - As the owner, I want the AI to propose tasks for my items, my rooms, and my home as a whole, with minutes and a frequency, so that I don't have to plan them myself.
 - As the owner, I want a mix of small, specific tasks and broader ones (surface clean vs deep clean), so that work fits into short daily sessions.
 - As the owner, I want to accept, edit, or discard each proposal, so that I stay in control of what ends up in my routine.
-- As the owner, I want daily chores like making the bed kept as routines, separate from the 30-minute cleaning budget, so that they don't crowd out actual cleaning.
+- As the owner, I want daily chores like making the bed kept as routines, separate from the daily cleaning budget, so that they don't crowd out actual cleaning.
 - As the owner, I want to propose again after changing my inventory without getting duplicates of tasks I already have.
 
 ## Acceptance criteria
@@ -45,9 +45,10 @@ Each criterion is testable and maps to at least one test.
 - **Entry points:** the room list and each room page offer "Propose tasks", for the whole home or for that room. A "Tasks" link in the header opens the task list. The home profile is reachable from the task list and from the proposal screen ("Tell us about your home").
 - **Review screen:** proposals are grouped like the task list. Each one is a compact card with accept and discard buttons, plus an edit action that opens the same sheet or dialog pattern as the inventory forms. A sticky "Accept all" bar sits at the bottom on mobile.
 - **Granularity:** the prompt asks for a mix of tasks:
-  - Small, specific item tasks ("Wipe the bathroom mirror", 3 min, every 7 days).
-  - Room-level passes at two depths ("Bathroom surface clean", 10 min, every 3 days; "Bathroom deep clean", 30 min, every 30 days).
-  - Home-wide routines.
+  - One or more tasks per item, never combining items, following a per-type cleaning guide (`src/lib/tasks/cleaning-guide.ts`): for example "Light clean of the toilet", 5 min, every 3 days, and "Deep clean of the toilet", 15 min, every 10 days.
+  - Floors: with a robot vacuum, one manual touch-up for the whole home every 3 to 4 days (corners and tough stains). Room-level quick and deep passes only for rooms the robot can't reach, such as a balcony, or for every room when there is no robot vacuum.
+  - Routines, attached to an item when they belong to one (make a bed, scoop the litter box). Dishes are not proposed: they're washed right after use.
+  - Items used only occasionally (a guest bed, marked in the item note) get no use-based chores like making the bed or changing the sheets.
 - **Routines** are chores with their own frequency, from daily ("Make the bed") to every few days ("Do the laundry"). They are tracked outside the daily cleaning budget. This spec only proposes and stores them; showing and checking them off daily belongs to the Today view (spec 006).
 - **Loading:** generating can take several seconds. Show progress text ("Reading your inventory...", then "Proposing tasks...") rather than a bare spinner.
 - **Errors:** keep the user's context (selected scope, profile) and offer "Try again".

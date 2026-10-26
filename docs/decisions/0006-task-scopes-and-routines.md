@@ -9,7 +9,7 @@ The original domain model attached every task to an item. While specifying AI pr
 
 - **Room passes**, like a quick "Bathroom surface clean" and a monthly "Bathroom deep clean".
 - **Home-wide chores**, like doing the laundry or washing the dishes.
-- **Daily habits**, like making the bed, that shouldn't compete with cleaning for the 30-minute budget.
+- **Daily habits**, like making the bed, that shouldn't compete with cleaning for the daily cleaning budget.
 
 ## Decision
 

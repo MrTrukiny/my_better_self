@@ -15,7 +15,7 @@ export const CLEANING_GUIDE: Record<ItemTypeId, string> = {
   desk: "Dust and wipe the surface every 7 days.",
   table: "Wipe the surface after use (routine); clean the legs and underside every 30 days.",
   sofa: "Vacuum the seats, cushions, and crevices every 7 days; spot-clean the fabric every 90 days.",
-  bed: "Make it daily (routine); change the sheets every 7 days; vacuum under it every 14 days.",
+  bed: "Make it daily (routine) and change the sheets every 7 days, unless it is only used occasionally; vacuum under it every 14 days.",
   closet:
     "Dust the shelves, the rod, and the top every 14 days; empty and wipe the inside every 90 days.",
   cabinet: "Dust the outside every 7 days; empty and wipe the inside every 60 days.",

@@ -61,8 +61,8 @@ export function fakeProposalOutput(input: ProposalInput): ProposalOutput {
     tasks.push({
       target: "home",
       kind: "routine",
-      name: helpers.has("dishwasher") ? "Load and unload the dishwasher" : "Wash the dishes",
-      minutes: helpers.has("dishwasher") ? 10 : 15,
+      name: "Take out the trash",
+      minutes: 5,
       frequencyDays: 1,
     });
   }

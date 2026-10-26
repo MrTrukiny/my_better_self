@@ -29,7 +29,7 @@ const sampleHome: ProposalInput = {
     sampleRoom("Alcoba 2", [
       ["window", "Ventana Alcoba 2"],
       ["closet", "Closet Alcoba 2"],
-      ["bed", "Cama Social"],
+      ["bed", "Cama Social", "Solo se usa con visitas"],
     ]),
     sampleRoom("Alcoba 3 (Oficina)", [
       ["window", "Ventana Alcoba 3"],
@@ -81,7 +81,7 @@ const sampleHome: ProposalInput = {
 };
 
 describe.skipIf(!process.env.AI_TRY)("live task proposals", () => {
-  it("proposes tasks for the sample home", { timeout: 60_000 }, async () => {
+  it("proposes tasks for the sample home", { timeout: 90_000 }, async () => {
     console.log(buildProposalRequest(sampleHome).prompt);
     const started = Date.now();
     const result = await proposeTasks(sampleHome, getProposalOptions());

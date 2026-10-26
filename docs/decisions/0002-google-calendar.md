@@ -14,7 +14,7 @@ The user manages their time in Google Calendar. Cleaning sessions must appear th
   - `https://www.googleapis.com/auth/calendar.app.created`: create a secondary calendar and manage events only in calendars created by this app.
   - `https://www.googleapis.com/auth/calendar.freebusy`: read free/busy information across the user's calendars, without seeing event details.
 - **A dedicated secondary calendar** named "Cleaning" (the user can rename it). All events go there, so the user can hide, recolor, or delete everything at once.
-- **One event per day** ("Cleaning, 30 min"), with the day's task checklist in the description and a deep link to the app. The app stores the event ID per session and upserts it; it never creates duplicates.
+- **One event per day** ("Cleaning, 45 min"), with the day's task checklist in the description and a deep link to the app. The app stores the event ID per session and upserts it; it never creates duplicates.
 - **Slot search**: query the FreeBusy API for the user's scheduling window on that day and pick the earliest free interval that fits the session. If none fits, fall back to the start of the window and mark the session as "conflict" in the app.
 - **Offline access**: request a refresh token (`access_type=offline`) so a daily server job can update events without the user being present.
 

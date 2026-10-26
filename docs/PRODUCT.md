@@ -2,7 +2,7 @@
 
 ## Vision
 
-**My Better Self** turns keeping a home clean into a small daily habit. You describe your home once; AI proposes the cleaning tasks, how long each one takes, and how often it is needed. The app then spreads them into one 30-minute session per day, placed in a free slot of your Google Calendar, so cleaning never piles up.
+**My Better Self** turns keeping a home clean into a small daily habit. You describe your home once; AI proposes the cleaning tasks, how long each one takes, and how often it is needed. The app then spreads them into one 45-minute session per day, placed in a free slot of your Google Calendar, so cleaning never piles up.
 
 It starts as a cleaning planner and is meant to grow into a broader personal time and calendar manager.
 
@@ -29,8 +29,8 @@ The app is single-user for now. The data model keeps an owner on every record so
 
 - **Home inventory**: register rooms and the items in them (windows, closets, bathrooms, tables, shelves, desks...) Each item has a type, a name, a count, and an optional note.
 - **AI task proposals**: for each item, Gemini proposes cleaning tasks with an estimated duration and frequency. Big tasks are split per item so each fits in a session. The user reviews, edits, and approves; nothing is scheduled without approval.
-- **Scheduler**: a deterministic algorithm packs due tasks into a daily budget of 30 minutes, prioritizing the most overdue relative to their frequency. Missed work is rebalanced over the following days without exceeding the daily budget.
-- **Google Calendar sync**: one event per day ("Cleaning, 30 min") in a dedicated calendar the app creates, placed in a free slot within a user-defined window, with the task checklist in the description and a link to the app.
+- **Scheduler**: a deterministic algorithm packs due tasks into a daily budget of 45 minutes, prioritizing the most overdue relative to their frequency. Missed work is rebalanced over the following days without exceeding the daily budget.
+- **Google Calendar sync**: one event per day ("Cleaning, 45 min") in a dedicated calendar the app creates, placed in a free slot within a user-defined window, with the task checklist in the description and a link to the app.
 - **Today view and habit**: see today's session, check tasks off (on the phone, even with a flaky connection), and keep a daily streak.
 
 ### Later
@@ -48,7 +48,7 @@ See [`ROADMAP.md`](ROADMAP.md): richer item attributes (size, material), time ca
 ## Principles
 
 - **AI proposes, the user decides, code schedules.** AI output is a suggestion validated against a schema; scheduling is plain, testable code that can explain its choices.
-- **Small and steady beats big and rare.** The daily budget (30 minutes by default) is a hard limit.
+- **Small and steady beats big and rare.** The daily budget (45 minutes by default) is a hard limit.
 - **Forgiving by design.** Missing a day never creates a backlog spike; work is redistributed.
 - **Respect the calendar.** The app writes only to its own calendar and only reads free/busy information from the others.
 - Mobile-first and installable; works well on a 360px-wide screen and degrades gracefully offline.

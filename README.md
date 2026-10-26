@@ -1,6 +1,6 @@
 # My Better Self
 
-A personal, installable PWA that plans household cleaning with AI and schedules daily 30-minute sessions in Google Calendar. Built with Next.js 16.
+A personal, installable PWA that plans household cleaning with AI and schedules daily 45-minute sessions in Google Calendar. Built with Next.js 16.
 
 ## Getting started
 

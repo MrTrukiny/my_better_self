@@ -1,5 +1,6 @@
 import { generateText, type LanguageModel, Output } from "ai";
 import { z } from "zod";
+import { DAILY_CLEANING_MINUTES } from "@/lib/app-config";
 import { getItemType, ITEM_TYPE_IDS, type ItemTypeId } from "@/lib/inventory/item-types";
 import { CLEANING_GUIDE } from "@/lib/tasks/cleaning-guide";
 import { getHelper, type HelperId } from "@/lib/tasks/helpers";
@@ -13,7 +14,7 @@ export const ROUTINE_MINUTES_MAX = 120;
 export const FREQUENCY_DAYS_MAX = 365;
 export const TASK_NAME_MAX = 80;
 const PROPOSALS_MAX = 150;
-const TIMEOUT_MS = 45_000;
+const TIMEOUT_MS = 60_000;
 
 export type ProposalInput = {
   rooms: {
@@ -61,11 +62,13 @@ export const proposalOutputSchema = z.object({
 
 export type ProposalOutput = z.infer<typeof proposalOutputSchema>;
 
-const INSTRUCTIONS = `You plan household cleaning for one person who cleans in a single session of at most ${CLEANING_MINUTES_MAX} minutes per day.
+const INSTRUCTIONS = `You plan household cleaning for one person who cleans in one session of about ${DAILY_CLEANING_MINUTES} minutes per day.
 Propose tasks for the home described below:
 - Item tasks: every item in the list gets at least one cleaning task. Follow the cleaning guide for its type: when the guide names a light and a deep clean, propose both as separate tasks with their own frequencies.
-- Room tasks: for each room, the work that belongs to no listed item (floors not in the list, baseboards, switches, general surfaces), as a quick pass and a deep pass.
-- Routines: frequent upkeep that isn't cleaning, such as making a bed, washing dishes, laundry, taking out the trash, watering plants, or scooping a litter box. When the chore belongs to a listed item, target that item; otherwise, and only when proposing for the whole home, target "home". Never propose the same chore for both "home" and an item. When proposing for the whole home, always include washing the dishes and taking out the trash.
+- Room tasks: a quick pass and a deep pass for the work that belongs to no listed item (floors, baseboards, switches, general surfaces), unless a helper already covers it. Follow the helpers on this.
+- Routines: frequent upkeep that isn't cleaning, such as making a bed, laundry, taking out the trash, watering plants, or scooping a litter box. When the chore belongs to a listed item, target that item; otherwise, and only when proposing for the whole home, target "home". Never propose the same chore for both "home" and an item. When proposing for the whole home, include taking out the trash.
+- Never propose washing the dishes: they're washed right after each use.
+- Items used only occasionally (for example a guest bed, as its note says) get no use-based chores such as making the bed or changing the sheets, only their periodic cleaning.
 
 Rules:
 - Every task targets "home", a room reference, or an item reference from the list. Never invent references.
@@ -77,7 +80,7 @@ Rules:
 - Scale minutes with the item count, and use the notes.
 - Respect the helpers: don't propose work a helper already does, only what it leaves behind.
 - Don't repeat or rephrase the tasks that are already planned.
-- Write task names in the same language as the room and item names, phrased the way a native speaker would say them at home, not translated word for word. Keep them under ${TASK_NAME_MAX} characters.`;
+- Write task names in the same language as the room and item names, phrased the way a native speaker would say them at home, with everyday verbs, not translated word for word. Don't repeat the item's type when its name already says it ("Clean the main bathroom mirror", not "Clean mirror of Main Bathroom Mirror"). Keep them under ${TASK_NAME_MAX} characters.`;
 
 /** Builds the prompt and the reference map that turns model targets back into ids. */
 export function buildProposalRequest(input: ProposalInput) {
