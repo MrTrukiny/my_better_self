@@ -53,3 +53,8 @@ export function groupByTarget(entries: TaskEntry[], roomOrder: string[]): TaskGr
   const sortedRooms = [...rooms.values()].sort((a, b) => rank(a.id) - rank(b.id));
   return [home, ...sortedRooms].filter((group) => group.entries.length > 0);
 }
+
+/** Average minutes per day the tasks take, given how often each one comes back. */
+export function dailyMinutes(entries: TaskEntry[]): number {
+  return Math.round(entries.reduce((sum, entry) => sum + entry.minutes / entry.frequencyDays, 0));
+}

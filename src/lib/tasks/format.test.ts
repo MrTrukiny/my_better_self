@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatFrequency, groupByTarget, targetLabel } from "./format";
+import { dailyMinutes, formatFrequency, groupByTarget, targetLabel } from "./format";
 import type { TaskEntry } from "./queries";
 
 function entry(overrides: Partial<TaskEntry>): TaskEntry {
@@ -40,6 +40,19 @@ describe("targetLabel", () => {
     ).toBe("Mirror");
     expect(targetLabel(entry({ roomId: "r", roomName: "Bath" }))).toBe("Whole room");
     expect(targetLabel(entry({}))).toBe("Whole home");
+  });
+});
+
+describe("dailyMinutes", () => {
+  it("averages minutes per day over each task's frequency, rounded", () => {
+    expect(
+      dailyMinutes([
+        entry({ minutes: 5, frequencyDays: 1 }),
+        entry({ minutes: 14, frequencyDays: 7 }),
+        entry({ minutes: 10, frequencyDays: 4 }),
+      ]),
+    ).toBe(10);
+    expect(dailyMinutes([])).toBe(0);
   });
 });
 
