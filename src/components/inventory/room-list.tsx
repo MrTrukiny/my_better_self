@@ -1,4 +1,6 @@
-import { DoorOpen } from "lucide-react";
+import { DoorOpen, Sparkles } from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { itemCountLabel } from "@/lib/inventory/format";
 import { getRooms } from "@/lib/inventory/queries";
@@ -45,7 +47,18 @@ export async function RoomList() {
           </li>
         ))}
       </ul>
-      <AddRoomButton variant="outline" />
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <AddRoomButton variant="outline" />
+        <Button
+          size="lg"
+          className="h-11"
+          render={<Link href="/tasks/review" />}
+          nativeButton={false}
+        >
+          <Sparkles aria-hidden />
+          Propose tasks
+        </Button>
+      </div>
     </div>
   );
 }

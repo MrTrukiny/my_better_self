@@ -1,5 +1,6 @@
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Sparkles } from "lucide-react";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Suspense } from "react";
 import { deleteRoom } from "@/app/(app)/rooms/actions";
 import { DeleteConfirm } from "@/components/inventory/delete-confirm";
@@ -8,6 +9,7 @@ import { InventoryLink } from "@/components/inventory/inventory-link";
 import { ItemList, RoomDetailSkeleton } from "@/components/inventory/item-list";
 import { OfflineCacheWarmer } from "@/components/inventory/offline-cache-warmer";
 import { RenameRoomButton } from "@/components/inventory/room-form";
+import { Button } from "@/components/ui/button";
 import { itemCountLabel } from "@/lib/inventory/format";
 import { getRoom } from "@/lib/inventory/queries";
 
@@ -49,7 +51,16 @@ async function RoomDetailSection({ params }: Pick<PageProps<"/rooms/[roomId]">, 
           </h1>
           <p className="text-muted-foreground text-sm">{itemCountLabel(itemCount)}</p>
         </div>
-        <div className="flex shrink-0 gap-2">
+        <div className="flex shrink-0 flex-wrap gap-2">
+          <Button
+            size="lg"
+            className="h-11"
+            render={<Link href={`/tasks/review?room=${room.id}`} />}
+            nativeButton={false}
+          >
+            <Sparkles aria-hidden />
+            Propose tasks
+          </Button>
           <RenameRoomButton room={{ id: room.id, name: room.name }} />
           <DeleteConfirm
             title={`Delete ${room.name}?`}

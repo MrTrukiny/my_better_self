@@ -23,6 +23,7 @@ Specs 005 and 006 can be built in parallel once 004 is done.
 - **Time calibration**: log actual minutes on completion; adjust estimates.
 - **Room freshness**: per-room indicator that decays with time since cleaning.
 - **Natural-language adjustments**: "I'm traveling next week", "guests on Saturday, prioritize the living room".
+- **Occasional tasks and guest mode**: tasks that only run while something is active. Telling the app "guests are staying" turns on the guest bed's chores (making it, changing the sheets after they leave) until the visit ends.
 - **Web push notifications** in addition to calendar reminders.
 - **Seasonal or deep-cleaning tasks** with long frequencies.
 
