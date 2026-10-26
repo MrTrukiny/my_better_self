@@ -110,10 +110,12 @@ export function TodaySession({
             </span>
           ) : null}
         </p>
-        <p aria-live="polite" className="flex items-center gap-2 text-sm font-medium">
-          <Flame aria-hidden className="text-primary size-4 shrink-0" />
-          {streakLine(streak)}
-        </p>
+        {progress.complete ? null : (
+          <p className="flex items-center gap-2 text-sm font-medium">
+            <Flame aria-hidden className="text-primary size-4 shrink-0" />
+            {streakLine(streak)}
+          </p>
+        )}
       </div>
 
       {isOffline && !stale ? (
