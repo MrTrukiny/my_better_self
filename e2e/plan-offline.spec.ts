@@ -7,7 +7,7 @@ import {
   OFFLINE_NOTICE,
 } from "./support/offline";
 import { planDays, saveSchedule } from "./support/plan";
-import { proposalGroup, proposeTasks } from "./support/tasks";
+import { acceptAllProposals, proposeTasks } from "./support/tasks";
 
 test("AC7: the plan stays readable offline and the schedule can't be changed", async ({
   page,
@@ -22,8 +22,7 @@ test("AC7: the plan stays readable offline and the schedule can't be changed", a
   await addItem(page, { type: "Floor" });
   await page.goto("/tasks/review");
   await proposeTasks(page, /tasks proposed for the whole home/);
-  await page.getByRole("button", { name: /Accept all/ }).click();
-  await expect(proposalGroup(page, "Kitchen")).toBeHidden();
+  await acceptAllProposals(page);
   await saveSchedule(page);
 
   await page.goto("/plan");

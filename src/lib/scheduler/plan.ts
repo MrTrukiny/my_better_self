@@ -14,8 +14,11 @@ type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
  * seventh day. Call after any change to tasks or settings. Does nothing without settings.
  */
 export async function replan(userId: string, now: Date = new Date()): Promise<void> {
+  if (!(await readSettings(db, userId))) {
+    return;
+  }
   await db.transaction(async (tx) => {
-    const locked = await lockSettings(tx, userId);
+    const locked = await readSettings(tx, userId, { lock: true });
     if (!locked) {
       return;
     }
@@ -39,8 +42,12 @@ export async function replanAfterChange(userId: string): Promise<void> {
 
 /** Plans the days missing from the next week, so the plan keeps moving as days pass. */
 export async function ensureHorizon(userId: string, now: Date = new Date()): Promise<void> {
+  const current = await readSettings(db, userId);
+  if (!current || !horizonRange(current.settings, current.plannedThrough, now)) {
+    return;
+  }
   await db.transaction(async (tx) => {
-    const locked = await lockSettings(tx, userId);
+    const locked = await readSettings(tx, userId, { lock: true });
     if (!locked) {
       return;
     }
@@ -51,16 +58,17 @@ export async function ensureHorizon(userId: string, now: Date = new Date()): Pro
   });
 }
 
-/** Reads the settings row with a lock, so concurrent replans of one user run one at a time. */
-async function lockSettings(
-  tx: Transaction,
+/**
+ * Reads the settings row. Writers re-read it with `lock` inside their transaction, so
+ * concurrent replans of one user run one at a time; the unlocked read only skips needless work.
+ */
+async function readSettings(
+  executor: typeof db | Transaction,
   userId: string,
+  { lock = false }: { lock?: boolean } = {},
 ): Promise<{ settings: ScheduleSettings; plannedThrough: DayNumber | null } | null> {
-  const [row] = await tx
-    .select()
-    .from(scheduleSettings)
-    .where(eq(scheduleSettings.userId, userId))
-    .for("update");
+  const query = executor.select().from(scheduleSettings).where(eq(scheduleSettings.userId, userId));
+  const [row] = lock ? await query.for("update") : await query;
   if (!row) {
     return null;
   }

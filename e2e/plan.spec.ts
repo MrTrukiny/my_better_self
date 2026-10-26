@@ -1,7 +1,7 @@
 import { expect, test } from "./fixtures";
 import { addItem, addRoom, openRoom } from "./support/inventory";
 import { planDays, saveSchedule, weekdayFromToday } from "./support/plan";
-import { proposalGroup, proposeTasks } from "./support/tasks";
+import { acceptAllProposals, proposeTasks, REPLAN_TIMEOUT } from "./support/tasks";
 
 test.describe("Scheduler", () => {
   test("AC1: asks for a schedule first, then saves days, times, and budgets", async ({
@@ -48,8 +48,7 @@ test.describe("Scheduler", () => {
     await addItem(page, { type: "Floor" });
     await page.goto("/tasks/review");
     await proposeTasks(page, /tasks proposed for the whole home/);
-    await page.getByRole("button", { name: /Accept all/ }).click();
-    await expect(proposalGroup(page, "Kitchen")).toBeHidden();
+    await acceptAllProposals(page);
 
     const tomorrow = weekdayFromToday(1);
     await saveSchedule(page, { daysOff: [tomorrow] });
@@ -81,7 +80,9 @@ test.describe("Scheduler", () => {
     await page.goto("/tasks");
     await page.getByRole("button", { name: "Delete Kitchen surface clean" }).click();
     await page.getByRole("alertdialog").getByRole("button", { name: "Delete" }).click();
-    await expect(page.getByText("Kitchen surface clean", { exact: true })).toBeHidden();
+    await expect(page.getByText("Kitchen surface clean", { exact: true })).toBeHidden({
+      timeout: REPLAN_TIMEOUT,
+    });
     await page.goto("/plan");
     await expect(planDays(page)).toHaveCount(7);
     await expect(page.getByText("Kitchen surface clean")).toHaveCount(0);

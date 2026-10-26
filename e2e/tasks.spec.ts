@@ -1,6 +1,13 @@
 import { expect, test } from "./fixtures";
 import { addItem, addRoom, openRoom } from "./support/inventory";
-import { GENERATION_TIMEOUT, proposalGroup, proposeTasks, saveHomeProfile } from "./support/tasks";
+import {
+  acceptAllProposals,
+  GENERATION_TIMEOUT,
+  proposalGroup,
+  proposeTasks,
+  REPLAN_TIMEOUT,
+  saveHomeProfile,
+} from "./support/tasks";
 
 test.describe("AI task proposals", () => {
   test("AC1: saves helpers and a note, and shows them after a reload", async ({
@@ -79,7 +86,7 @@ test.describe("AI task proposals", () => {
     await expect(home).toContainText("Make the bed");
 
     await bedroom.getByRole("button", { name: "Accept Clean Bed" }).click();
-    await expect(bedroom.getByText("Clean Bed")).toBeHidden();
+    await expect(bedroom.getByText("Clean Bed")).toBeHidden({ timeout: REPLAN_TIMEOUT });
 
     await bedroom.getByRole("button", { name: "Edit Bedroom deep clean" }).click();
     const dialog = page.getByRole("dialog", { name: "Edit proposal" });
@@ -96,8 +103,8 @@ test.describe("AI task proposals", () => {
     await expect(page.getByRole("region", { name: "Pending proposals" })).toContainText(
       "Bedroom deep clean, part 1",
     );
-    await page.getByRole("button", { name: "Accept all (3)" }).click();
-    await expect(page.getByRole("region", { name: "Pending proposals" })).toBeHidden();
+    await expect(page.getByRole("button", { name: "Accept all (3)" })).toBeVisible();
+    await acceptAllProposals(page);
 
     // The renamed and the discarded proposals come back; accepted tasks are not repeated.
     await proposeTasks(page, "2 tasks proposed for the whole home.");
@@ -127,13 +134,13 @@ test.describe("AI task proposals", () => {
     const edit = page.getByRole("dialog", { name: "Edit task" });
     await edit.getByRole("spinbutton", { name: "Every how many days" }).fill("7");
     await edit.getByRole("button", { name: "Save" }).click();
-    await expect(edit).toBeHidden();
+    await expect(edit).toBeHidden({ timeout: REPLAN_TIMEOUT });
     await expect(cleaning).toContainText(/Clean Bed\s*Bed · 3 min · Every week/);
 
     await routines.getByRole("button", { name: "Delete Take out the trash" }).click();
     const confirm = page.getByRole("alertdialog", { name: 'Delete "Take out the trash"?' });
     await confirm.getByRole("button", { name: "Delete" }).click();
-    await expect(confirm).toBeHidden();
+    await expect(confirm).toBeHidden({ timeout: REPLAN_TIMEOUT });
     await expect(routines).not.toContainText("Take out the trash");
   });
 
@@ -175,7 +182,7 @@ test.describe("AI task proposals", () => {
     await accept.focus();
     await expect(accept).toBeFocused();
     await page.keyboard.press("Enter");
-    await expect(page.getByText("Clean Desk")).toBeHidden();
+    await expect(page.getByText("Clean Desk")).toBeHidden({ timeout: REPLAN_TIMEOUT });
 
     const edit = page.getByRole("button", { name: "Edit Office deep clean" });
     await edit.focus();

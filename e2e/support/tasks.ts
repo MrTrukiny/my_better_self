@@ -25,6 +25,17 @@ export async function proposeTasks(page: Page, expected: string | RegExp) {
   });
 }
 
+/** Writes that run a transaction and then replan are slow under parallel workers too. */
+export const REPLAN_TIMEOUT = 20_000;
+
+/** Accepts every pending proposal and waits until none are left. */
+export async function acceptAllProposals(page: Page) {
+  await page.getByRole("button", { name: /Accept all/ }).click();
+  await expect(page.getByRole("region", { name: "Pending proposals" })).toBeHidden({
+    timeout: REPLAN_TIMEOUT,
+  });
+}
+
 export function proposalGroup(page: Page, title: string) {
   return page.getByRole("region", { name: "Pending proposals" }).getByRole("list", { name: title });
 }

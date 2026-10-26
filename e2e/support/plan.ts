@@ -1,4 +1,5 @@
 import { expect, type Page } from "@playwright/test";
+import { REPLAN_TIMEOUT } from "./tasks";
 
 const WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
@@ -16,7 +17,9 @@ export async function saveSchedule(page: Page, { daysOff = [] }: { daysOff?: str
     await page.getByRole("checkbox", { name: day, exact: true }).uncheck();
   }
   await page.getByRole("button", { name: "Save" }).click();
-  await expect(page.getByRole("status").filter({ hasText: "Saved." })).toBeVisible();
+  await expect(page.getByRole("status").filter({ hasText: "Saved." })).toBeVisible({
+    timeout: REPLAN_TIMEOUT,
+  });
 }
 
 export function planDays(page: Page) {
