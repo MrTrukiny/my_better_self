@@ -12,7 +12,31 @@ const valid = {
 
 describe("parseEnv", () => {
   it("returns the parsed values when everything is set", () => {
-    expect(parseEnv(valid)).toEqual({ ...valid, AI_MODEL: DEFAULT_AI_MODEL, AI_FAKE: false });
+    expect(parseEnv(valid)).toEqual({
+      ...valid,
+      AI_MODEL: DEFAULT_AI_MODEL,
+      AI_FAKE: false,
+      CALENDAR_FAKE: false,
+    });
+  });
+
+  it("turns on the fake calendar only for CALENDAR_FAKE=1", () => {
+    expect(parseEnv({ ...valid, CALENDAR_FAKE: "1" }).CALENDAR_FAKE).toBe(true);
+    expect(parseEnv({ ...valid, CALENDAR_FAKE: "true" }).CALENDAR_FAKE).toBe(false);
+  });
+
+  it("keeps the job secret optional outside Vercel production", () => {
+    expect(parseEnv(valid).CRON_SECRET).toBeUndefined();
+    expect(parseEnv({ ...valid, VERCEL_ENV: "preview" }).CRON_SECRET).toBeUndefined();
+    expect(parseEnv({ ...valid, CRON_SECRET: "s".repeat(32) }).CRON_SECRET).toBe("s".repeat(32));
+  });
+
+  it("requires a long job secret in Vercel production", () => {
+    expect(() => parseEnv({ ...valid, VERCEL_ENV: "production" })).toThrow(/CRON_SECRET/);
+    expect(() => parseEnv({ ...valid, CRON_SECRET: "short" })).toThrow(/CRON_SECRET/);
+    expect(
+      parseEnv({ ...valid, VERCEL_ENV: "production", CRON_SECRET: "s".repeat(32) }).CRON_SECRET,
+    ).toBe("s".repeat(32));
   });
 
   it("keeps the AI settings optional, with a default model", () => {
