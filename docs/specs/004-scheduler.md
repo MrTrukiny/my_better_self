@@ -1,6 +1,6 @@
 # 004: Scheduler
 
-- **Status**: Approved
+- **Status**: In progress
 - **Owner**: @mrtrukiny
 - **Created**: 2026-10-25
 
@@ -36,6 +36,7 @@ Each criterion is testable and maps to at least one test.
 
 - **Entry points:** a "Plan" link in the header, next to "Tasks". The task list links to the plan ("See your week"), and the plan links to the schedule settings.
 - **Plan layout:** one card per day, today first and marked "Today". Weekend days show their own budget. A day that is off shows "Day off". A cleaning day with no due tasks says "Nothing to clean, enjoy the day" instead of an empty card.
+- **First visit:** until the owner saves the schedule once (prefilled with the defaults), the plan shows "Set your schedule" instead of days. Saving also records the device time zone.
 - **Load summary:** above the days, a short line such as "Your tasks need about 41 min a day; you have about 48."
 - **Start times:** one per day of the week, chosen by the owner. 06:30 is the default for every day, since mornings work best; the app doesn't read the calendar yet.
 - **Routines:** listed under each day as "Also today", including days off, without minutes counting toward the budget. A daily routine shows on every day.
@@ -58,10 +59,54 @@ Each criterion is testable and maps to at least one test.
 
 ## Technical plan
 
-_Filled in by the `plan-feature` skill after the spec is approved._
-
 ### Approach
+
+See [ADR 0007](../decisions/0007-persisted-plan-and-replanning.md) for the data model and replanning rules.
+
+- **Scheduler (pure):** `src/lib/scheduler/schedule.ts` walks the range day by day, using whole-day numbers. On each day it keeps a list of candidates: tasks whose earliest date (last completion plus three quarters of the frequency, rounded down, at least 1) has arrived. A task without history is treated as due at the end of its first frequency period, which staggers new tasks.
+  - **Cleaning days:** first, the tasks that must be done today (due before the next cleaning day) are packed, ordered by slack relative to frequency, `(due - day) / frequency` (negative slack is the overdue ratio). Then the day is topped up with early candidates in the same order, up to a target: the average load per cleaning day, capped at the budget. That evens out the days instead of filling every session. Tasks that don't fit are skipped (first fit), and the day never exceeds its budget.
+  - **Routines:** placed on every day, including days off, when they are due, with no budget.
+  - **Ties:** broken by frequency, name, and id.
+- **Dates and time zone:** `src/lib/scheduler/dates.ts` converts between ISO dates and day numbers, gets the weekday, and computes "today" and the current time in the owner's IANA time zone with `Intl.DateTimeFormat`.
+- **Data:**
+  - `schedule_settings`: per-weekday start times, Monday first, null for off; budgets; time zone.
+  - `occurrence`: task, date, unique on both.
+  - `src/lib/scheduler/plan.ts` (server-only) holds `replan(userId, now)` and `ensureHorizon(userId, now)`. They read tasks, settings, and last completions, run the scheduler, and write in a transaction.
+  - The task actions (accept, accept all, update, delete) and the settings action call `replan`.
+- **Plan page (`/plan`):** a Server Component. The day list sits inside `Suspense` and calls `await io()` before reading the clock, then `ensureHorizon`, then reads the next 7 days (uncached, since it depends on the date). The load summary and the overload notice come from a pure `loadSummary(tasks, settings)`. Without saved settings, it shows a "Set your schedule" call to action. Without cleaning tasks, it links to "Propose tasks".
+- **Settings page (`/schedule`):**
+  - The form is a client component: a fieldset per weekday with a checkbox and a time input, then the two budgets.
+  - A hidden field carries the device time zone.
+  - It's validated by a Zod schema shared with the Server Action, follows the `ActionState` pattern from the home profile, and is disabled offline.
+- **Offline:** add `/plan` and `/schedule` to the service worker's document routes and refresh their cached copies with `OfflineCacheWarmer`, as for the task pages.
 
 ### Tasks
 
+- [ ] T1: Date helpers and the pure scheduler, with defaults and limits. Files: `src/lib/scheduler/dates.ts`, `src/lib/scheduler/dates.test.ts`, `src/lib/scheduler/settings.ts`, `src/lib/scheduler/schedule.ts`, `src/lib/scheduler/schedule.test.ts`. Covers: AC3, AC4, AC5, AC6 (determinism).
+- [ ] T2: Load summary. Files: `src/lib/scheduler/load.ts`, `src/lib/scheduler/load.test.ts`. Covers: AC4, AC5.
+- [ ] T3: Schema and migration for `schedule_settings` and `occurrence`, plus ADR 0007. Files: `src/db/schema/schedule.ts`, `src/db/schema/index.ts`, `drizzle/0003_*.sql`, `docs/decisions/0007-persisted-plan-and-replanning.md`. Covers: AC1, AC6.
+- [ ] T4: Replanning service: deciding the start date, then replanning and extending the horizon. Files: `src/lib/scheduler/plan.ts`, `src/lib/scheduler/replan-start.ts`, `src/lib/scheduler/replan-start.test.ts`. Covers: AC6.
+- [ ] T5: Settings validation, action, form, and page. Task and settings mutations replan. Files: `src/lib/scheduler/schemas.ts`, `src/lib/scheduler/schemas.test.ts`, `src/app/(app)/schedule/actions.ts`, `src/app/(app)/schedule/page.tsx`, `src/components/plan/schedule-form.tsx`, `src/components/plan/schedule-form.test.tsx`, `src/app/(app)/tasks/actions.ts`. Covers: AC1, AC6.
+- [ ] T6: Plan page, with day cards, load summary, empty states, and links. The header link, plus "See your week" on the task list. Files: `src/app/(app)/plan/page.tsx`, `src/components/plan/plan-day.tsx`, `src/components/plan/load-notice.tsx`, `src/lib/scheduler/queries.ts`, `src/lib/scheduler/format.ts`, `src/lib/scheduler/format.test.ts`, `src/components/app-shell.tsx`, `src/components/tasks/task-list.tsx`. Covers: AC2, AC5, AC8.
+- [ ] T7: Offline: service worker routes, cache warmer, and disabled settings. Files: `src/app/sw.ts`, `src/components/plan/plan-cache-warmer.tsx`, `docs/decisions/0005-offline-inventory-reading.md`. Covers: AC7.
+- [ ] T8: E2E and docs. Files: `e2e/plan.spec.ts`, `e2e/plan-offline.spec.ts`, `e2e/support/plan.ts`, `docs/ARCHITECTURE.md`. Covers: AC1 to AC8.
+
 ### Test plan
+
+- **Unit (scheduler):** simulations over 120 days with generated task sets.
+  - Budgets are never exceeded, and days off stay empty (AC3).
+  - Each task's first session falls within its frequency, and the gaps between sessions stay within the bounds, including around days off (AC4).
+  - Under overload, the most overdue ratio goes first and every task appears within twice its frequency (AC5).
+  - The same input gives the same output (AC6).
+- **Unit (other):**
+  - The replan start date, before and after today's start time, across time zones (AC6).
+  - Settings validation: ranges, time format, at least one day on (AC1).
+  - The settings form's field errors and the offline state (AC1, AC7).
+  - The load summary and the formatters (AC2, AC5).
+- **E2E:**
+  - Saving the settings, then seeing 7 days with "Today", totals within budget, a day off, and routines apart (AC1, AC2, AC3).
+  - Editing a task replans the future (AC6).
+  - The overload notice with a tight budget (AC5).
+  - The empty states (AC2).
+  - Offline reading with the settings disabled (AC7).
+  - Keyboard only and dark mode at both viewports (AC8).
