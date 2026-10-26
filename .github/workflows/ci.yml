@@ -37,6 +37,9 @@ jobs:
       ALLOWED_EMAILS: owner@example.com
       # Deterministic task proposals instead of live Gemini calls.
       AI_FAKE: "1"
+      # In-memory Google Calendar instead of live calls; e2e passes the same job secret.
+      CALENDAR_FAKE: "1"
+      CRON_SECRET: e2e-only-cron-secret-not-used-anywhere-else
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
