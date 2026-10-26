@@ -22,6 +22,12 @@ export type ScheduleInput = {
 
 export type PlannedDay = { day: DayNumber; taskIds: string[] };
 
+export type ScheduleResult = {
+  days: PlannedDay[];
+  /** The first due day picked for each new cleaning task, to keep on later replans. */
+  firstDues: Map<string, DayNumber>;
+};
+
 type State = { task: SchedulerTask; earliest: DayNumber; due: DayNumber };
 
 /** A task can come back once three quarters of its frequency has passed (at least one day). */
@@ -202,13 +208,16 @@ function firstCollision(
  * on every day they are due, outside the budget.
  * Deterministic: ties break by frequency, name, and id. See ADR 0007.
  */
-export function schedule({ tasks, settings, lastDone, from, to }: ScheduleInput): PlannedDay[] {
+export function schedule({ tasks, settings, lastDone, from, to }: ScheduleInput): ScheduleResult {
   const cleaning = tasks.filter((t) => t.kind === "cleaning");
   const routines = tasks
     .filter((t) => t.kind === "routine")
     .map((t) => routineState(t, lastDone.get(t.id), from))
     .sort((a, b) => compareTasks(a.task, b.task));
   const states = cleaningStates(cleaning, settings, lastDone, from);
+  const firstDues = new Map(
+    states.filter((s) => !lastDone.has(s.task.id)).map((s) => [s.task.id, s.due] as const),
+  );
   const ratio = fillRatio(cleaning, settings);
   const plan: PlannedDay[] = [];
 
@@ -255,5 +264,5 @@ export function schedule({ tasks, settings, lastDone, from, to }: ScheduleInput)
 
     plan.push({ day, taskIds });
   }
-  return plan;
+  return { days: plan, firstDues };
 }

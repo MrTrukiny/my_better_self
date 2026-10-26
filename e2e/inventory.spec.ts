@@ -7,7 +7,7 @@ test.describe("home inventory", () => {
     signedInUser: _,
   }) => {
     await page.goto("/");
-    await page.getByRole("link", { name: /Home inventory/ }).click();
+    await page.getByRole("link", { name: "Rooms", exact: true }).click();
 
     await expect(page.getByRole("heading", { level: 1, name: "Rooms" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "No rooms yet" })).toBeVisible();

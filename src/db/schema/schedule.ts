@@ -18,6 +18,8 @@ export const scheduleSettings = pgTable(
     timeZone: text("time_zone").notNull(),
     /** Last date the plan covers; days off without routines leave no occurrences to tell. */
     plannedThrough: date("planned_through", { mode: "string" }),
+    /** The owner's date of the last full replan; the first visit of a new day replans. */
+    replannedOn: date("replanned_on", { mode: "string" }),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .defaultNow()
@@ -33,7 +35,10 @@ export const scheduleSettings = pgTable(
   ],
 );
 
-/** A task planned for a date. Past rows are the history until check-off exists (spec 006). */
+export const OCCURRENCE_STATUSES = ["scheduled", "done", "skipped"] as const;
+export type OccurrenceStatus = (typeof OCCURRENCE_STATUSES)[number];
+
+/** A task planned for a date. Past `done` and `skipped` rows are the history. See ADR 0008. */
 export const occurrence = pgTable(
   "occurrence",
   {
@@ -47,11 +52,14 @@ export const occurrence = pgTable(
       .notNull()
       .references(() => task.id, { onDelete: "cascade" }),
     date: date("date", { mode: "string" }).notNull(),
+    status: text("status").$type<OccurrenceStatus>().notNull().default("scheduled"),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => [
     unique("occurrence_task_date").on(table.taskId, table.date),
     index("occurrence_user_date_idx").on(table.userId, table.date),
+    check("occurrence_status", sql`${table.status} in ('scheduled', 'done', 'skipped')`),
   ],
 );
 

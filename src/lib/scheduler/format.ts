@@ -57,7 +57,8 @@ export function buildWeek(
   });
 }
 
-function byPlace(a: PlanTask, b: PlanTask): number {
+/** Orders tasks by where they are, then by name. */
+export function byPlace(a: PlanTask, b: PlanTask): number {
   return (
     (a.roomName ?? "").localeCompare(b.roomName ?? "") ||
     (a.itemName ?? "").localeCompare(b.itemName ?? "") ||

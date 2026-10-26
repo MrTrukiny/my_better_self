@@ -20,3 +20,7 @@ Spec 004 needs a plan that never changes in the past, moves forward as days pass
 - Deleting a task deletes its occurrences, including past ones. The plan only shows the future, so nothing visible changes in the past.
 - Editing a task's minutes changes how its past occurrences would read. Spec 006 can snapshot minutes on completion if history needs to be exact.
 - The plan page writes to the database while rendering when the horizon is short. The write is idempotent and scoped to the signed-in user.
+
+## Amendment (spec 006)
+
+Past occurrences are no longer assumed done: history comes from their status, the plan is rebuilt once a day so missed tasks come back, and new tasks keep their first due date. See ADR 0008.

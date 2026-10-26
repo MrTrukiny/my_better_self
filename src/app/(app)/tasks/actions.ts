@@ -200,7 +200,8 @@ export async function updateTask(
   try {
     const updated = await db
       .update(task)
-      .set(parsed.data)
+      // The frequency may change, so a task that was never done gets its first date picked again.
+      .set({ ...parsed.data, firstDue: null })
       .where(and(eq(task.id, taskId), eq(task.userId, user.id)))
       .returning({ id: task.id });
     if (updated.length === 0) {
