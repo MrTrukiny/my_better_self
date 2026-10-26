@@ -7,13 +7,6 @@ import { getEnv } from "@/lib/env";
 import { createFakeCalendarClient } from "./fake";
 import { type CalendarClient, CalendarError, createGoogleCalendarClient } from "./google";
 
-/** The calendar permissions "Connect Google Calendar" asks for, on top of sign-in. ADR 0002. */
-export const CALENDAR_SCOPES = [
-  "https://www.googleapis.com/auth/calendar.app.created",
-  "https://www.googleapis.com/auth/calendar.calendarlist.readonly",
-  "https://www.googleapis.com/auth/calendar.freebusy",
-] as const;
-
 export function isCalendarFake(): boolean {
   return getEnv().CALENDAR_FAKE;
 }
