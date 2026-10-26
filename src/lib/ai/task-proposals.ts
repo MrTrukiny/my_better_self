@@ -14,6 +14,7 @@ import {
   type TaskKind,
 } from "@/lib/tasks/limits";
 import { fakeProposalOutput } from "./fake-proposals";
+import { describeLocale, type OwnerLocale } from "./locale";
 
 const PROPOSALS_MAX = 150;
 const TIMEOUT_MS = 60_000;
@@ -28,6 +29,7 @@ export type ProposalInput = {
   existing: { roomId: string | null; itemId: string | null; name: string }[];
   /** Propose for one room, or for the whole home when null. */
   scopeRoomId: string | null;
+  locale: OwnerLocale;
 };
 
 export type ProposedTask = {
@@ -82,7 +84,11 @@ Rules:
 - Scale minutes with the item count, and use the notes.
 - Respect the helpers: don't propose work a helper already does, only what it leaves behind.
 - Don't repeat or rephrase the tasks that are already planned.
-- Write task names in the same language as the room and item names, phrased the way a native speaker would say them at home, with everyday verbs, not translated word for word. Don't repeat the item's type when its name already says it ("Clean the main bathroom mirror", not "Clean mirror of Main Bathroom Mirror"). Keep them under ${TASK_NAME_MAX} characters.`;
+- Write task names in the same language as the room and item names, phrased the way a native speaker would say them at home, with everyday verbs, not translated word for word.
+- Use the regional variant of that language that fits the owner's locale (for example, Colombian Spanish for a Colombian locale), with the words people there use for each chore and fixture.
+- Use only real, common words that any speaker of that variant knows. Never invent words, and never borrow terms from another country's variant. When unsure, use the plainest verb for the chore.
+- Proofread every name before answering: correct spelling, grammar, and gender agreement (in Spanish, "de la alcoba", not "del alcoba"), and each verb must make sense for the chore.
+- Don't repeat the item's type when its name already says it ("Clean the main bathroom mirror", not "Clean mirror of Main Bathroom Mirror"). Keep them under ${TASK_NAME_MAX} characters.`;
 
 /** Builds the prompt and the reference map that turns model targets back into ids. */
 export function buildProposalRequest(input: ProposalInput) {
@@ -135,6 +141,7 @@ export function buildProposalRequest(input: ProposalInput) {
     ...(helperLines.filter(Boolean).length ? helperLines.filter(Boolean) : ["- None"]),
     "",
     `Home note: ${input.profile.note ?? "None"}`,
+    `Owner's locale: ${describeLocale(input.locale)}`,
     "",
     "Already planned (don't repeat):",
     ...(existingLines.length ? existingLines : ["- Nothing yet"]),

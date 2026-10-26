@@ -2,8 +2,10 @@
 
 import { and, eq, isNull, type SQL } from "drizzle-orm";
 import { updateTag } from "next/cache";
+import { headers } from "next/headers";
 import { db } from "@/db";
 import { homeProfile, task, taskProposal } from "@/db/schema";
+import { preferredLanguage } from "@/lib/ai/locale";
 import { getProposalOptions } from "@/lib/ai/model";
 import { proposeTasks } from "@/lib/ai/task-proposals";
 import type { ActionState } from "@/lib/inventory/action-state";
@@ -59,7 +61,8 @@ export async function saveHomeProfile(
 export async function generateProposals(scopeRoomId: string | null): Promise<GenerateState> {
   const user = await getCurrentUser();
   try {
-    const input = await readProposalInput(user.id, scopeRoomId);
+    const language = preferredLanguage((await headers()).get("accept-language"));
+    const input = await readProposalInput(user.id, scopeRoomId, language);
     if (input.rooms.length === 0) {
       return { status: "error", formError: NO_ROOMS };
     }
