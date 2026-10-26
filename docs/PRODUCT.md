@@ -74,7 +74,7 @@ See [`ROADMAP.md`](ROADMAP.md): richer item attributes (size, material), time ca
 | **Daily budget**      | Maximum minutes of cleaning per day: one value for weekdays (default 45) and one for weekends (default 60).                                                                          |
 | **Start time**        | When the daily session begins, set per day of the week (default 06:30). Days can be turned off.                                                                                      |
 | **Scheduling window** | Later: hours in which the app may look for a free slot in the calendar, mornings first.                                                                                              |
-| **Streak**            | Consecutive days with the session completed.                                                                                                                                         |
+| **Streak**            | Consecutive cleaning days on which every cleaning task was done or skipped (not all skipped). Days off don't break it; routines don't count.                                         |
 
 **Item fields.**
 
@@ -82,9 +82,3 @@ See [`ROADMAP.md`](ROADMAP.md): richer item attributes (size, material), time ca
 - **Name**: defaults to the type's label, up to 60 characters.
 - **Count**: a whole number from 1 to 99. It is shown as "Window x3".
 - **Note**: optional, up to 200 characters.
-
-## Open questions
-
-Answer these before the Today view spec (006) is approved:
-
-- **"Completed" threshold for the streak**: does it require all of the day's tasks, or is a partial session enough?
