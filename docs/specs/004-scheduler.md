@@ -27,6 +27,7 @@ Each criterion is testable and maps to at least one test.
   - Every task's first session falls within its first frequency period: a task every 10 days first appears within the first 10 days.
   - After that, every task comes back no later than its frequency and no earlier than three quarters of it (rounded down). When the day it is due is off, it moves to the closest earlier cleaning day, or to the next one if no earlier day fits in that range.
   - Daily tasks appear on every cleaning day.
+  - Tasks are whole (up to 30 minutes each), so when several big ones collide, a repetition can run late. With the load at up to 60% of the time available, fewer than 1 in 1,000 repetitions run late, by at most a day, when every day is on. With days off, under 5% do, by at most 3 days, mostly frequent tasks around several days off in a row.
 - [ ] AC5: Given the average daily load exceeds the average time available, then the plan shows a notice with the minutes per day my tasks need and the minutes I have, and suggests raising a budget, turning on another day, or making tasks less frequent. Late tasks are scheduled by how overdue they are relative to their frequency, so a task every 3 days that is 2 days late goes before a task every 30 days that is 2 days late, and every task still appears within twice its frequency.
 - [ ] AC6: Given days pass, then each past day counts as done as planned, until check-off exists (spec 006). Given I add, edit, or delete a task, or change the settings, then the plan is recomputed from today if today's start time hasn't passed, or from tomorrow otherwise, and past days don't change. The same tasks and settings always produce the same plan.
 - [ ] AC7: Given I am offline, then the plan stays readable and the settings can't be changed, with a visible reason, consistent with specs 002 and 003.
@@ -82,7 +83,7 @@ See [ADR 0007](../decisions/0007-persisted-plan-and-replanning.md) for the data 
 
 ### Tasks
 
-- [ ] T1: Date helpers and the pure scheduler, with defaults and limits. Files: `src/lib/scheduler/dates.ts`, `src/lib/scheduler/dates.test.ts`, `src/lib/scheduler/settings.ts`, `src/lib/scheduler/schedule.ts`, `src/lib/scheduler/schedule.test.ts`. Covers: AC3, AC4, AC5, AC6 (determinism).
+- [x] T1: Date helpers and the pure scheduler, with defaults and limits. Files: `src/lib/scheduler/dates.ts`, `src/lib/scheduler/dates.test.ts`, `src/lib/scheduler/settings.ts`, `src/lib/scheduler/schedule.ts`, `src/lib/scheduler/schedule.test.ts`. Covers: AC3, AC4, AC5, AC6 (determinism).
 - [ ] T2: Load summary. Files: `src/lib/scheduler/load.ts`, `src/lib/scheduler/load.test.ts`. Covers: AC4, AC5.
 - [ ] T3: Schema and migration for `schedule_settings` and `occurrence`, plus ADR 0007. Files: `src/db/schema/schedule.ts`, `src/db/schema/index.ts`, `drizzle/0003_*.sql`, `docs/decisions/0007-persisted-plan-and-replanning.md`. Covers: AC1, AC6.
 - [ ] T4: Replanning service: deciding the start date, then replanning and extending the horizon. Files: `src/lib/scheduler/plan.ts`, `src/lib/scheduler/replan-start.ts`, `src/lib/scheduler/replan-start.test.ts`. Covers: AC6.
