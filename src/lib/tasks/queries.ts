@@ -61,7 +61,7 @@ async function tasksForUser(userId: string): Promise<TaskEntry[]> {
     .leftJoin(room, eq(room.id, task.roomId))
     .leftJoin(item, eq(item.id, task.itemId))
     .where(eq(task.userId, userId))
-    .orderBy(asc(task.createdAt), asc(task.id));
+    .orderBy(asc(task.createdAt), asc(task.name), asc(task.id));
   return rows.map(toEntry);
 }
 
@@ -75,7 +75,7 @@ async function proposalsForUser(userId: string): Promise<TaskEntry[]> {
     .leftJoin(room, eq(room.id, taskProposal.roomId))
     .leftJoin(item, eq(item.id, taskProposal.itemId))
     .where(eq(taskProposal.userId, userId))
-    .orderBy(asc(taskProposal.createdAt), asc(taskProposal.id));
+    .orderBy(asc(taskProposal.createdAt), asc(taskProposal.name), asc(taskProposal.id));
   return rows.map(toEntry);
 }
 

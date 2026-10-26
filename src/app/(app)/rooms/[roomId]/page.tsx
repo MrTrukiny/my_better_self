@@ -8,7 +8,8 @@ import { ItemList, RoomDetailSkeleton } from "@/components/inventory/item-list";
 import { RenameRoomButton } from "@/components/inventory/room-form";
 import { OfflineAwareLink } from "@/components/offline-aware-link";
 import { OfflineCacheWarmer } from "@/components/offline-cache-warmer";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+import { cacheVersion } from "@/lib/cache-version";
 import { itemCountLabel } from "@/lib/inventory/format";
 import { getRoom } from "@/lib/inventory/queries";
 
@@ -51,15 +52,13 @@ async function RoomDetailSection({ params }: Pick<PageProps<"/rooms/[roomId]">, 
           <p className="text-muted-foreground text-sm">{itemCountLabel(itemCount)}</p>
         </div>
         <div className="flex shrink-0 flex-wrap gap-2">
-          <Button
-            size="lg"
-            className="h-11"
-            render={<OfflineAwareLink href={`/tasks/review?room=${room.id}`} />}
-            nativeButton={false}
+          <OfflineAwareLink
+            href={`/tasks/review?room=${room.id}`}
+            className={buttonVariants({ size: "lg", className: "h-11" })}
           >
             <Sparkles aria-hidden />
             Propose tasks
-          </Button>
+          </OfflineAwareLink>
           <RenameRoomButton room={{ id: room.id, name: room.name }} />
           <DeleteConfirm
             title={`Delete ${room.name}?`}
@@ -71,7 +70,7 @@ async function RoomDetailSection({ params }: Pick<PageProps<"/rooms/[roomId]">, 
       </div>
       <EditNotice />
       <ItemList room={room} />
-      <OfflineCacheWarmer urls={["/rooms", `/rooms/${room.id}`]} version={JSON.stringify(room)} />
+      <OfflineCacheWarmer urls={["/rooms", `/rooms/${room.id}`]} version={cacheVersion(room)} />
     </section>
   );
 }

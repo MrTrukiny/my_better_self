@@ -8,7 +8,7 @@ import { GenerateButton } from "@/components/tasks/generate-button";
 import { ProposalList } from "@/components/tasks/proposal-list";
 import { ScopePicker } from "@/components/tasks/scope-picker";
 import { TasksCacheWarmer } from "@/components/tasks/tasks-cache-warmer";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getRooms } from "@/lib/inventory/queries";
 import { HELPERS } from "@/lib/tasks/helpers";
@@ -58,14 +58,12 @@ async function ReviewSection({ searchParams }: Pick<PageProps<"/tasks/review">, 
         <p className="text-muted-foreground max-w-sm text-sm">
           Add your rooms and what's in them that needs cleaning. Then the AI can propose tasks.
         </p>
-        <Button
-          size="lg"
-          className="h-11"
-          render={<OfflineAwareLink href="/rooms" />}
-          nativeButton={false}
+        <OfflineAwareLink
+          href="/rooms"
+          className={buttonVariants({ size: "lg", className: "h-11" })}
         >
           Go to rooms
-        </Button>
+        </OfflineAwareLink>
       </div>
     );
   }

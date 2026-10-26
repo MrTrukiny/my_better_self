@@ -5,7 +5,7 @@ import { EditNotice } from "@/components/inventory/edit-guard";
 import { OfflineAwareLink } from "@/components/offline-aware-link";
 import { TaskList, TaskListSkeleton } from "@/components/tasks/task-list";
 import { TasksCacheWarmer } from "@/components/tasks/tasks-cache-warmer";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { getRooms } from "@/lib/inventory/queries";
 import { getProposals, getTasks } from "@/lib/tasks/queries";
 
@@ -32,16 +32,13 @@ export default function TasksPage() {
             </OfflineAwareLink>
           </p>
         </div>
-        <Button
-          variant="outline"
-          size="lg"
-          className="h-11 shrink-0"
-          render={<OfflineAwareLink href="/tasks/review" />}
-          nativeButton={false}
+        <OfflineAwareLink
+          href="/tasks/review"
+          className={buttonVariants({ variant: "outline", size: "lg", className: "h-11 shrink-0" })}
         >
           <Sparkles aria-hidden />
           Propose tasks
-        </Button>
+        </OfflineAwareLink>
       </div>
       <EditNotice />
       <Suspense fallback={<TaskListSkeleton />}>
@@ -64,7 +61,7 @@ async function TasksSection() {
           href="/tasks/review"
           className="bg-muted hover:bg-muted/70 focus-visible:ring-ring flex min-h-11 items-center justify-between gap-3 rounded-lg px-4 py-3 text-sm font-medium outline-none focus-visible:ring-2"
         >
-          {pending} {pending === 1 ? "proposal" : "proposals"} waiting for review
+          {`${pending} ${pending === 1 ? "proposal" : "proposals"} waiting for review`}
           <ChevronRight aria-hidden className="size-4 shrink-0" />
         </OfflineAwareLink>
       ) : null}

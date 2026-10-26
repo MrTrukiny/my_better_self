@@ -1,6 +1,6 @@
 import { ListChecks, Sparkles } from "lucide-react";
 import { OfflineAwareLink } from "@/components/offline-aware-link";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DAILY_CLEANING_MINUTES } from "@/lib/app-config";
 import { dailyMinutes, groupByTarget } from "@/lib/tasks/format";
@@ -31,15 +31,13 @@ export function TaskList({ tasks, roomOrder }: { tasks: TaskEntry[]; roomOrder: 
         <p className="text-muted-foreground max-w-sm text-sm">
           Let the AI propose tasks from your inventory, then keep the ones that fit.
         </p>
-        <Button
-          size="lg"
-          className="h-11"
-          render={<OfflineAwareLink href="/tasks/review" />}
-          nativeButton={false}
+        <OfflineAwareLink
+          href="/tasks/review"
+          className={buttonVariants({ size: "lg", className: "h-11" })}
         >
           <Sparkles aria-hidden />
           Propose tasks
-        </Button>
+        </OfflineAwareLink>
       </div>
     );
   }

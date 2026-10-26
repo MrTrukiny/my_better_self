@@ -1,4 +1,5 @@
 import { OfflineCacheWarmer } from "@/components/offline-cache-warmer";
+import { cacheVersion } from "@/lib/cache-version";
 import { getRooms } from "@/lib/inventory/queries";
 import { getHomeProfile, getProposals, getTasks } from "@/lib/tasks/queries";
 
@@ -15,7 +16,7 @@ export async function TasksCacheWarmer() {
   return (
     <OfflineCacheWarmer
       urls={TASK_PAGES}
-      version={JSON.stringify([tasks, proposals, profile, rooms])}
+      version={cacheVersion([tasks, proposals, profile, rooms])}
     />
   );
 }
