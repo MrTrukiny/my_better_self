@@ -1,6 +1,6 @@
 # 005: Google Calendar sync
 
-- **Status**: Approved
+- **Status**: In progress
 - **Owner**: @mrtrukiny
 - **Created**: 2026-10-26
 
@@ -20,7 +20,7 @@ Put each day's cleaning session in Google Calendar, where the owner already mana
 
 Each criterion is testable and maps to at least one test.
 
-- [ ] AC1: Given I'm signed in and my calendar isn't connected, when I choose "Connect Google Calendar" on the schedule page and accept Google's consent screen, then I'm back on the schedule page and it shows the calendar as connected, with the calendar's name. The app asks only to manage calendars it creates and to read free/busy times. Given I cancel or deny consent, then I'm back on the schedule page with a message, and nothing is connected.
+- [ ] AC1: Given I'm signed in and my calendar isn't connected, when I choose "Connect Google Calendar" on the schedule page and accept Google's consent screen, then I'm back on the schedule page and it shows the calendar as connected, with the calendar's name. The app asks only to manage calendars it creates, to see the list of my calendars, and to read their free/busy times. Given I cancel or deny consent, then I'm back on the schedule page with a message, and nothing is connected.
 - [ ] AC2: Given my calendar is connected, then the app has created one secondary calendar named "Cleaning" in my time zone (once; if I delete it in Google, the next sync creates it again). Each day of the plan that has cleaning tasks gets one event in it:
   - Title "Cleaning, 38 min" (the day's total cleaning minutes).
   - Start at that day's start time, end after the total minutes, in my time zone.
@@ -58,7 +58,7 @@ Each criterion is testable and maps to at least one test.
 ## Owner actions (outside the code)
 
 - Create the Vercel project and set the production environment variables (database, auth, Google, AI key, job secret).
-- In Google Cloud: enable the Calendar API, add the production redirect URI, add the two calendar scopes to the consent screen, and set the consent screen to "In production" (unverified is fine for personal use), since refresh tokens expire after 7 days in "Testing".
+- In Google Cloud: enable the Calendar API, add the production redirect URI, add the three calendar scopes to the consent screen, and set the consent screen to "In production" (unverified is fine for personal use), since refresh tokens expire after 7 days in "Testing".
 - Run `pnpm db:migrate` against the production database.
 
 ---
@@ -67,17 +67,17 @@ Each criterion is testable and maps to at least one test.
 
 ### Approach
 
-- **Consent through Better Auth.** "Connect" calls `authClient.linkSocial` for Google with the two calendar scopes and `access_type=offline`, `prompt=consent`, `include_granted_scopes=true`, so the existing Google account row gains a refresh token. Its callback lands on `GET /api/calendar/connected`, which resolves the user, checks the granted scopes, creates the connection, runs a first sync, and redirects to `/schedule?calendar=connected`; a denial comes back as `/schedule?calendar=denied`. Sign-in keeps its current scopes.
+- **Consent through Better Auth.** "Connect" calls `authClient.linkSocial` for Google with the three calendar scopes (`calendar.app.created`, `calendar.calendarlist.readonly`, `calendar.freebusy`) and `access_type=offline`, `prompt=consent`, `include_granted_scopes=true`, so the existing Google account row gains a refresh token. Its callback lands on `GET /api/calendar/connected`, which resolves the user, checks the granted scopes, creates the connection, runs a first sync, and redirects to `/schedule?calendar=connected`; a denial comes back as `/schedule?calendar=denied`. Sign-in keeps its current scopes.
 - **Tokens**: `auth.api.getAccessToken` returns a fresh access token and refreshes it with the stored refresh token. No token handling of our own.
 - **Google client over `fetch`** (no `googleapis` dependency): create and read a calendar, put and delete an event, query free/busy, revoke a token. Errors are classified as `auth` (revoked or expired grant), `gone` (404/410), or `transient`. `CALENDAR_FAKE=1` swaps in an in-memory client for e2e and CI, like `AI_FAKE`, with a fixed busy block so overlaps can be tested.
 - **Storage**: `calendar_connection` (one row per user: calendar id, status `ok` or `reauth` or `error`, last sync time) and `calendar_day` (user, date, event id, content digest, overlap flag). Event ids are derived from the user and date (base32hex), so a lost row can't create a duplicate: a put that finds the id gets an update.
 - **Sync** (`syncCalendar(userId, now)`) is a pure diff plus I/O: build the desired events from the plan (from `replanStart`, so a started day is left alone, through the seventh day), compare digests with `calendar_day`, put what changed, delete days that lost their cleaning, query free/busy for the range, and save overlap flags. A missing "Cleaning" calendar is recreated and every day is re-put. Failures set the connection status and are logged; they never throw into the caller.
 - **When it runs**: after every replan, via `after()` from `next/server`, so saving tasks or settings doesn't wait for Google; on connect; and in the daily job. `replanAfterChange` and the schedule save schedule it.
-- **Free/busy reads the primary calendar.** `calendar.freebusy` only answers for calendar ids we name, and listing the owner's calendars would need another scope; the primary calendar covers personal events. The "Cleaning" calendar is never queried.
+- **Free/busy reads all the owner's calendars.** `calendar.freebusy` only answers for calendar ids we name, so the sync lists them with `calendar.calendarlist.readonly` (ids and names only, no events) and queries every selected calendar except "Cleaning". Decided with the owner over querying only the primary calendar.
 - **Daily job**: `GET /api/cron/daily`, checked against `Authorization: Bearer ${CRON_SECRET}` with a timing-safe compare, scheduled in `vercel.json` (once a day, Hobby plan). For each connected owner, one at a time, it extends the plan and syncs; one owner's failure is logged and the loop goes on.
 - **Disconnect** is a Server Action: delete the calendar in Google (ignoring `gone`), revoke the grant, delete the connection and its days. Revoking the grant doesn't sign the owner out; the next "Connect" asks again.
 - **UI**: a "Google Calendar" section at the end of `/schedule` (Server Component for status, client leaves for the buttons and the confirmation dialog, reusing `ResponsiveDialog`), the overlap line on `PlanDay`, and a sync-error notice on both pages. Buttons use the existing offline guard.
-- **ADR 0002 is amended**: sessions go at the start time and free/busy only flags overlaps; consent is incremental through Better Auth; the REST client and derived event ids.
+- **ADR 0002 is amended**: sessions go at the start time and free/busy only flags overlaps; the calendar-list scope is added; consent is incremental through Better Auth; the REST client and derived event ids.
 - **Merging with spec 006**: both add a migration and touch `src/lib/scheduler/plan.ts`. Whichever merges second rebases, regenerates its migration with the next number, and calls 006's `ensurePlan` in the daily job instead of `ensureHorizon`.
 
 ### Tasks
@@ -85,7 +85,7 @@ Each criterion is testable and maps to at least one test.
 - [ ] T1: ADR 0002 amendment; env vars `CRON_SECRET` (required in production) and `CALENDAR_FAKE`; `.env.example`. Files: `docs/decisions/0002-google-calendar.md`, `src/lib/env.ts`, `src/lib/env.test.ts`, `.env.example`. Covers: AC1, AC4, AC5.
 - [ ] T2: Schema and migration for `calendar_connection` and `calendar_day`. Files: `src/db/schema/calendar.ts`, `src/db/schema/index.ts`, `drizzle/0004_calendar.sql`, `drizzle/meta/*`. Covers: AC2, AC3, AC7.
 - [ ] T3: Event content and ids: title, start and end in the owner's time zone, description, digest, base32hex id. Files: `src/lib/calendar/events.ts`, `src/lib/calendar/events.test.ts`. Covers: AC2.
-- [ ] T4: Google client and fake: calendars, events, free/busy, revoke, error classes. Files: `src/lib/calendar/google.ts`, `src/lib/calendar/google.test.ts`, `src/lib/calendar/fake.ts`, `src/lib/calendar/client.ts`. Covers: AC2, AC4, AC6, AC7.
+- [ ] T4: Google client and fake: calendars, calendar list, events, free/busy, revoke, error classes. Files: `src/lib/calendar/google.ts`, `src/lib/calendar/google.test.ts`, `src/lib/calendar/fake.ts`, `src/lib/calendar/client.ts`. Covers: AC2, AC4, AC6, AC7.
 - [ ] T5: Sync: pure diff (`planSync`) and overlap detection, then `syncCalendar` with storage and status; scheduled after replans and schedule saves. Files: `src/lib/calendar/diff.ts`, `src/lib/calendar/diff.test.ts`, `src/lib/calendar/overlap.ts`, `src/lib/calendar/overlap.test.ts`, `src/lib/calendar/sync.ts`, `src/lib/scheduler/plan.ts`, `src/app/(app)/schedule/actions.ts`. Covers: AC2, AC3, AC4, AC7.
 - [ ] T6: Connect and disconnect: Google provider options, `linkSocial` call, the connected route handler, the disconnect action. Files: `src/lib/auth.ts`, `src/app/api/calendar/connected/route.ts`, `src/app/(app)/schedule/calendar-actions.ts`, `src/lib/calendar/queries.ts`. Covers: AC1, AC6.
 - [ ] T7: UI: calendar section with status, connect, disconnect dialog, denial and error messages; overlap line on plan days; sync-error notice. Files: `src/components/calendar/calendar-section.tsx`, `src/components/calendar/connect-button.tsx`, `src/components/calendar/disconnect-button.tsx`, `src/components/calendar/calendar-section.test.tsx`, `src/components/plan/plan-day.tsx`, `src/app/(app)/schedule/page.tsx`, `src/app/(app)/plan/page.tsx`. Covers: AC1, AC4, AC6, AC7, AC8.
