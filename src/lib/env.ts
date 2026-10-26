@@ -1,7 +1,7 @@
 import "server-only";
 import { z } from "zod";
 
-export const DEFAULT_AI_MODEL = "gemini-3.8-flash";
+export const DEFAULT_AI_MODEL = "gemini-3.5-flash";
 
 const envSchema = z.object({
   DATABASE_URL: z.url(),
