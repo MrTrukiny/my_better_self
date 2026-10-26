@@ -7,13 +7,12 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import * as schema from "@/db/schema";
 import { isEmailAllowed, parseAllowlist } from "@/lib/allowlist";
+import { SESSION_OPTIONS } from "@/lib/app-config";
 import { EMAIL_NOT_ALLOWED } from "@/lib/auth-errors";
 import { getEnv } from "@/lib/env";
 
 const env = getEnv();
 const allowlist = parseAllowlist(env.ALLOWED_EMAILS);
-
-const DAY_IN_SECONDS = 60 * 60 * 24;
 
 function rejectNotAllowed(): never {
   throw new APIError("FORBIDDEN", {
@@ -33,10 +32,7 @@ export const auth = betterAuth({
       prompt: "select_account",
     },
   },
-  session: {
-    expiresIn: 30 * DAY_IN_SECONDS,
-    updateAge: DAY_IN_SECONDS,
-  },
+  session: SESSION_OPTIONS,
   databaseHooks: {
     user: {
       create: {

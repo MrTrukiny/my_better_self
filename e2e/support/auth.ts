@@ -5,6 +5,7 @@ import { and, eq, like, lt, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import * as schema from "../../src/db/schema";
+import { SESSION_OPTIONS } from "../../src/lib/app-config";
 
 /** Every e2e owner gets an address like this; `example.com` never belongs to a real account. */
 export const E2E_EMAIL_PATTERN = "e2e-%@example.com";
@@ -20,6 +21,8 @@ export function createTestAuth({ baseURL }: { baseURL: string }) {
     baseURL,
     secret: requireEnv("BETTER_AUTH_SECRET"),
     database: drizzleAdapter(db, { provider: "pg", schema }),
+    // Sessions it creates match the app's, so the server doesn't refresh them on the first request.
+    session: SESSION_OPTIONS,
     plugins: [testUtils()],
   });
   return {

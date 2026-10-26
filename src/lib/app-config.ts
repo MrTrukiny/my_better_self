@@ -5,3 +5,7 @@ export const APP_DESCRIPTION =
 /** Default daily cleaning budget. A single cleaning task is capped lower, so a session holds several. */
 export const DAILY_CLEANING_MINUTES = 45;
 export const THEME_COLOR = "#171717";
+
+const DAY_IN_SECONDS = 60 * 60 * 24;
+/** Better Auth session lifetime, and how often an active session's expiry is pushed back. */
+export const SESSION_OPTIONS = { expiresIn: 30 * DAY_IN_SECONDS, updateAge: DAY_IN_SECONDS };
