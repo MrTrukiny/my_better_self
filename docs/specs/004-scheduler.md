@@ -84,7 +84,7 @@ See [ADR 0007](../decisions/0007-persisted-plan-and-replanning.md) for the data 
 ### Tasks
 
 - [x] T1: Date helpers and the pure scheduler, with defaults and limits. Files: `src/lib/scheduler/dates.ts`, `src/lib/scheduler/dates.test.ts`, `src/lib/scheduler/settings.ts`, `src/lib/scheduler/schedule.ts`, `src/lib/scheduler/schedule.test.ts`. Covers: AC3, AC4, AC5, AC6 (determinism).
-- [ ] T2: Load summary. Files: `src/lib/scheduler/load.ts`, `src/lib/scheduler/load.test.ts`. Covers: AC4, AC5.
+- [x] T2: Load summary. Files: `src/lib/scheduler/load.ts`, `src/lib/scheduler/load.test.ts`. Covers: AC4, AC5.
 - [ ] T3: Schema and migration for `schedule_settings` and `occurrence`, plus ADR 0007. Files: `src/db/schema/schedule.ts`, `src/db/schema/index.ts`, `drizzle/0003_*.sql`, `docs/decisions/0007-persisted-plan-and-replanning.md`. Covers: AC1, AC6.
 - [ ] T4: Replanning service: deciding the start date, then replanning and extending the horizon. Files: `src/lib/scheduler/plan.ts`, `src/lib/scheduler/replan-start.ts`, `src/lib/scheduler/replan-start.test.ts`. Covers: AC6.
 - [ ] T5: Settings validation, action, form, and page. Task and settings mutations replan. Files: `src/lib/scheduler/schemas.ts`, `src/lib/scheduler/schemas.test.ts`, `src/app/(app)/schedule/actions.ts`, `src/app/(app)/schedule/page.tsx`, `src/components/plan/schedule-form.tsx`, `src/components/plan/schedule-form.test.tsx`, `src/app/(app)/tasks/actions.ts`. Covers: AC1, AC6.
