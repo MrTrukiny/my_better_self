@@ -90,7 +90,7 @@ See [ADR 0007](../decisions/0007-persisted-plan-and-replanning.md) for the data 
 - [x] T5: Settings validation, action, form, and page. Task and settings mutations replan. Files: `src/lib/scheduler/schemas.ts`, `src/lib/scheduler/schemas.test.ts`, `src/app/(app)/schedule/actions.ts`, `src/app/(app)/schedule/page.tsx`, `src/components/plan/schedule-form.tsx`, `src/components/plan/schedule-form.test.tsx`, `src/app/(app)/tasks/actions.ts`. Covers: AC1, AC6.
 - [x] T6: Plan page, with day cards, load summary, empty states, and links. The header link, plus "See your week" on the task list. Files: `src/app/(app)/plan/page.tsx`, `src/components/plan/plan-day.tsx`, `src/components/plan/load-notice.tsx`, `src/lib/scheduler/queries.ts`, `src/lib/scheduler/format.ts`, `src/lib/scheduler/format.test.ts`, `src/components/app-shell.tsx`, `src/components/tasks/task-list.tsx`. Covers: AC2, AC5, AC8.
 - [x] T7: Offline: service worker routes, cache warmers, and disabled settings. Files: `src/app/sw.ts`, `src/app/(app)/plan/page.tsx`, `src/app/(app)/schedule/page.tsx`, `src/components/tasks/tasks-cache-warmer.tsx`, `e2e/plan-offline.spec.ts`, `docs/decisions/0005-offline-inventory-reading.md`. Covers: AC7.
-- [ ] T8: E2E and docs. Files: `e2e/plan.spec.ts`, `e2e/plan-offline.spec.ts`, `e2e/support/plan.ts`, `docs/ARCHITECTURE.md`. Covers: AC1 to AC8.
+- [x] T8: E2E and docs. Files: `e2e/plan.spec.ts`, `e2e/plan-offline.spec.ts`, `e2e/support/plan.ts`, `docs/ARCHITECTURE.md`. Covers: AC1 to AC8.
 
 ### Test plan
 

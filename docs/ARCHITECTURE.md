@@ -89,6 +89,20 @@ Proposal flow: the user picks a scope (whole home or one room) and asks for prop
 - **Due date = `lastDoneAt` + frequency.** A task's schedule moves with actual completion rather than following a fixed recurrence.
 - **Priority = overdue ratio** (days past due divided by frequency), so a weekly task 3 days late outranks a monthly task 3 days late.
 
+### Scheduler (spec 004)
+
+See [ADR 0007](decisions/0007-persisted-plan-and-replanning.md).
+
+| Concern   | Where                                                                    | Notes                                                                                                                                                                        |
+| --------- | ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Tables    | `src/db/schema/schedule.ts`                                              | `schedule_settings` (a start time per weekday or null for off, weekday and weekend budgets, time zone, `planned_through`) and `occurrence` (task and date, unique together). |
+| Algorithm | `src/lib/scheduler/schedule.ts`                                          | Pure and deterministic, in whole-day numbers. Packs must-do work by overdue ratio, pulls work forward when a coming day would overflow, and staggers new tasks.              |
+| Replans   | `src/lib/scheduler/plan.ts`, `replan-start.ts`                           | `replan` after task, inventory, or settings changes; `ensureHorizon` when the plan page is read. Both lock the settings row and only replace days from the start date on.    |
+| Reads     | `src/lib/scheduler/queries.ts`                                           | Settings are cached per user (`schedule:<userId>`). The week is read uncached after `io()`, since it depends on the date.                                                    |
+| UI        | `src/app/(app)/plan/`, `src/app/(app)/schedule/`, `src/components/plan/` | Weekly plan (`/plan`) and settings (`/schedule`). Both stay readable offline (ADR 0005).                                                                                     |
+
+Until check-off exists (spec 006), each past occurrence counts as done, so a task's last completion is its latest occurrence before the replanning date.
+
 ## Responsibilities: AI vs code
 
 | Concern                                   | Owner                                          | Why                                      |
