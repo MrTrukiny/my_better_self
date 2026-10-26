@@ -4,15 +4,17 @@ import { DAILY_CLEANING_MINUTES } from "@/lib/app-config";
 import { getItemType, ITEM_TYPE_IDS, type ItemTypeId } from "@/lib/inventory/item-types";
 import { CLEANING_GUIDE } from "@/lib/tasks/cleaning-guide";
 import { getHelper, type HelperId } from "@/lib/tasks/helpers";
+import {
+  CLEANING_MINUTES_MAX,
+  FREQUENCY_DAYS_MAX,
+  minutesMax,
+  ROUTINE_MINUTES_MAX,
+  TASK_KINDS,
+  TASK_NAME_MAX,
+  type TaskKind,
+} from "@/lib/tasks/limits";
 import { fakeProposalOutput } from "./fake-proposals";
 
-export const TASK_KINDS = ["cleaning", "routine"] as const;
-export type TaskKind = (typeof TASK_KINDS)[number];
-
-export const CLEANING_MINUTES_MAX = 30;
-export const ROUTINE_MINUTES_MAX = 120;
-export const FREQUENCY_DAYS_MAX = 365;
-export const TASK_NAME_MAX = 80;
 const PROPOSALS_MAX = 150;
 const TIMEOUT_MS = 60_000;
 
@@ -167,12 +169,11 @@ export function toProposals(
   for (const task of output.tasks) {
     const target = refs.get(task.target.trim());
     const name = task.name.trim();
-    const minutesMax = task.kind === "cleaning" ? CLEANING_MINUTES_MAX : ROUTINE_MINUTES_MAX;
     if (
       !target ||
       !name ||
       name.length > TASK_NAME_MAX ||
-      !isWholeInRange(task.minutes, minutesMax) ||
+      !isWholeInRange(task.minutes, minutesMax(task.kind)) ||
       !isWholeInRange(task.frequencyDays, FREQUENCY_DAYS_MAX)
     ) {
       continue;
