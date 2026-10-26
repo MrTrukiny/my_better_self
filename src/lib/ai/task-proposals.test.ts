@@ -1,5 +1,6 @@
 import { MockLanguageModelV4 } from "ai/test";
 import { describe, expect, it } from "vitest";
+import { CLEANING_GUIDE } from "@/lib/tasks/cleaning-guide";
 import { fakeProposalOutput } from "./fake-proposals";
 import {
   buildProposalRequest,
@@ -60,6 +61,13 @@ describe("buildProposalRequest", () => {
     const { prompt } = buildProposalRequest(input);
     expect(prompt).toMatch(/Robot vacuum: .*corners/);
     expect(prompt).toContain("Two cats that shed a lot");
+  });
+
+  it("includes the cleaning guide only for the item types in the home", () => {
+    const { prompt } = buildProposalRequest(input);
+    expect(prompt).toContain(`- window: ${CLEANING_GUIDE.window}`);
+    expect(prompt).toContain(`- bed: ${CLEANING_GUIDE.bed}`);
+    expect(prompt).not.toContain("- toilet:");
   });
 
   it("AC6: lists the existing tasks so they aren't proposed again", () => {

@@ -1,6 +1,7 @@
 import { generateText, type LanguageModel, Output } from "ai";
 import { z } from "zod";
-import { getItemType } from "@/lib/inventory/item-types";
+import { getItemType, ITEM_TYPE_IDS, type ItemTypeId } from "@/lib/inventory/item-types";
+import { CLEANING_GUIDE } from "@/lib/tasks/cleaning-guide";
 import { getHelper, type HelperId } from "@/lib/tasks/helpers";
 import { fakeProposalOutput } from "./fake-proposals";
 
@@ -11,7 +12,7 @@ export const CLEANING_MINUTES_MAX = 30;
 export const ROUTINE_MINUTES_MAX = 120;
 export const FREQUENCY_DAYS_MAX = 365;
 export const TASK_NAME_MAX = 80;
-const PROPOSALS_MAX = 80;
+const PROPOSALS_MAX = 150;
 const TIMEOUT_MS = 45_000;
 
 export type ProposalInput = {
@@ -61,20 +62,22 @@ export const proposalOutputSchema = z.object({
 export type ProposalOutput = z.infer<typeof proposalOutputSchema>;
 
 const INSTRUCTIONS = `You plan household cleaning for one person who cleans in a single session of at most ${CLEANING_MINUTES_MAX} minutes per day.
-Propose tasks for the home described below. Mix:
-- Small, specific item tasks (for example "Wipe the bathroom mirror", 3 minutes, every 7 days).
-- Room passes at two depths: a quick surface clean (frequent) and a deep clean (rare).
-- Only when proposing for the whole home: home-wide routines such as making the bed, dishes, laundry, or taking out the trash.
+Propose tasks for the home described below:
+- Item tasks: every item in the list gets at least one cleaning task. Follow the cleaning guide for its type: when the guide names a light and a deep clean, propose both as separate tasks with their own frequencies.
+- Room tasks: for each room, the work that belongs to no listed item (floors not in the list, baseboards, switches, general surfaces), as a quick pass and a deep pass.
+- Routines: frequent upkeep that isn't cleaning, such as making a bed, washing dishes, laundry, taking out the trash, watering plants, or scooping a litter box. When the chore belongs to a listed item, target that item; otherwise, and only when proposing for the whole home, target "home". Never propose the same chore for both "home" and an item. When proposing for the whole home, always include washing the dishes and taking out the trash.
 
 Rules:
 - Every task targets "home", a room reference, or an item reference from the list. Never invent references.
-- "cleaning" tasks take 1 to ${CLEANING_MINUTES_MAX} minutes. Split bigger jobs into several tasks (for example per item, or "first half" and "second half").
+- One task covers exactly one item. Never combine several items in one task, and never name another item in a task's name; give each item its own task even when they sit together.
+- Follow the frequencies in the cleaning guide unless an item note says otherwise.
+- "cleaning" tasks take 1 to ${CLEANING_MINUTES_MAX} minutes. Split bigger jobs into several tasks (for example "first half" and "second half").
 - "routine" tasks are daily or frequent chores tracked outside the cleaning budget, 1 to ${ROUTINE_MINUTES_MAX} minutes.
 - frequencyDays is a whole number from 1 to ${FREQUENCY_DAYS_MAX}.
 - Scale minutes with the item count, and use the notes.
 - Respect the helpers: don't propose work a helper already does, only what it leaves behind.
 - Don't repeat or rephrase the tasks that are already planned.
-- Write task names in the same language as the room and item names. Keep them under ${TASK_NAME_MAX} characters.`;
+- Write task names in the same language as the room and item names, phrased the way a native speaker would say them at home, not translated word for word. Keep them under ${TASK_NAME_MAX} characters.`;
 
 /** Builds the prompt and the reference map that turns model targets back into ids. */
 export function buildProposalRequest(input: ProposalInput) {
@@ -86,6 +89,7 @@ export function buildProposalRequest(input: ProposalInput) {
   }
 
   const rooms = forHome ? input.rooms : input.rooms.filter((r) => r.id === input.scopeRoomId);
+  const typesInHome = new Set<ItemTypeId>();
   const roomLines = rooms.flatMap((room, roomIndex) => {
     const roomRef = `r${roomIndex + 1}`;
     refs.set(roomRef, { roomId: room.id, itemId: null });
@@ -95,6 +99,7 @@ export function buildProposalRequest(input: ProposalInput) {
       refs.set(itemRef, { roomId: room.id, itemId: item.id });
       keyOf.set(`${room.id}|${item.id}`, itemRef);
       const typeId = getItemType(item.type)?.id ?? "other";
+      typesInHome.add(typeId);
       const note = item.note ? ` (note: ${item.note})` : "";
       return `  ${itemRef} ${typeId} "${item.name}" x${item.count}${note}`;
     });
@@ -115,6 +120,11 @@ export function buildProposalRequest(input: ProposalInput) {
     "",
     "Rooms and items:",
     ...roomLines,
+    "",
+    "Cleaning guide by item type:",
+    ...ITEM_TYPE_IDS.filter((id) => typesInHome.has(id)).map(
+      (id) => `- ${id}: ${CLEANING_GUIDE[id]}`,
+    ),
     "",
     "Helpers:",
     ...(helperLines.filter(Boolean).length ? helperLines.filter(Boolean) : ["- None"]),
