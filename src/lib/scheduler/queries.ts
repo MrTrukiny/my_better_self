@@ -6,7 +6,7 @@ import { item, occurrence, room, scheduleSettings, task } from "@/db/schema";
 import { getCurrentUser } from "@/lib/session";
 import { type DayNumber, toIsoDate, zonedNow } from "./dates";
 import type { PlanOccurrence } from "./format";
-import { ensureHorizon } from "./plan";
+import { ensurePlan } from "./plan";
 import { PLAN_DAYS, type ScheduleSettings } from "./settings";
 
 /** Cache tag for one user's schedule settings. */
@@ -29,7 +29,7 @@ export async function getPlanWeek(
   now: Date,
 ): Promise<{ today: DayNumber; occurrences: PlanOccurrence[] }> {
   const user = await getCurrentUser();
-  await ensureHorizon(user.id, now);
+  await ensurePlan(user.id, now);
   const today = zonedNow(settings.timeZone, now).day;
   const rows = await db
     .select({
