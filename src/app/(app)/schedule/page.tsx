@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { saveSchedule } from "@/app/(app)/schedule/actions";
 import { EditNotice } from "@/components/inventory/edit-guard";
+import { OfflineCacheWarmer } from "@/components/offline-cache-warmer";
 import { ScheduleForm } from "@/components/plan/schedule-form";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cacheVersion } from "@/lib/cache-version";
 import { getScheduleSettings } from "@/lib/scheduler/queries";
 import { defaultSettings, WEEKDAYS } from "@/lib/scheduler/settings";
 
@@ -32,8 +34,14 @@ export default function SchedulePage() {
 }
 
 async function ScheduleSection() {
-  const { timeZone: _, ...settings } = (await getScheduleSettings()) ?? defaultSettings("UTC");
-  return <ScheduleForm action={saveSchedule} settings={settings} />;
+  const saved = await getScheduleSettings();
+  const { timeZone: _, ...settings } = saved ?? defaultSettings("UTC");
+  return (
+    <>
+      <ScheduleForm action={saveSchedule} settings={settings} />
+      <OfflineCacheWarmer urls={["/schedule", "/plan"]} version={cacheVersion(saved)} />
+    </>
+  );
 }
 
 function ScheduleSkeleton() {

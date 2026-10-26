@@ -2,11 +2,14 @@ import { CalendarClock, Sparkles } from "lucide-react";
 import type { Metadata } from "next";
 import { io } from "next/cache";
 import { type ReactNode, Suspense } from "react";
+import { EditNotice } from "@/components/inventory/edit-guard";
 import { OfflineAwareLink } from "@/components/offline-aware-link";
+import { OfflineCacheWarmer } from "@/components/offline-cache-warmer";
 import { LoadNotice } from "@/components/plan/load-notice";
 import { PlanDay } from "@/components/plan/plan-day";
 import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cacheVersion } from "@/lib/cache-version";
 import { buildWeek } from "@/lib/scheduler/format";
 import { loadSummary } from "@/lib/scheduler/load";
 import { getPlanWeek, getScheduleSettings } from "@/lib/scheduler/queries";
@@ -14,6 +17,9 @@ import { PLAN_DAYS, WEEKDAYS } from "@/lib/scheduler/settings";
 import { getTasks } from "@/lib/tasks/queries";
 
 export const metadata: Metadata = { title: "Plan" };
+
+/** Pages whose offline copies show the plan or its settings. */
+const PLAN_PAGES = ["/plan", "/schedule"];
 
 const linkClass =
   "text-foreground focus-visible:ring-ring rounded-sm font-medium underline underline-offset-4 outline-none focus-visible:ring-2";
@@ -35,6 +41,7 @@ export default function PlanPage() {
           </OfflineAwareLink>
         </p>
       </div>
+      <EditNotice />
       <Suspense fallback={<PlanSkeleton />}>
         <PlanSection />
       </Suspense>
@@ -46,24 +53,30 @@ async function PlanSection() {
   const [settings, tasks] = await Promise.all([getScheduleSettings(), getTasks()]);
   if (!settings) {
     return (
-      <EmptyState
-        icon={<CalendarClock aria-hidden className="text-muted-foreground size-6" />}
-        title="Set your schedule"
-        text="Choose the days you clean, when you start, and how many minutes you have. The plan fits your tasks into that time."
-        href="/schedule"
-        action="Set your schedule"
-      />
+      <>
+        <EmptyState
+          icon={<CalendarClock aria-hidden className="text-muted-foreground size-6" />}
+          title="Set your schedule"
+          text="Choose the days you clean, when you start, and how many minutes you have. The plan fits your tasks into that time."
+          href="/schedule"
+          action="Set your schedule"
+        />
+        <OfflineCacheWarmer urls={PLAN_PAGES} version={cacheVersion(["no-schedule", tasks])} />
+      </>
     );
   }
   if (!tasks.some((t) => t.kind === "cleaning")) {
     return (
-      <EmptyState
-        icon={<Sparkles aria-hidden className="text-muted-foreground size-6" />}
-        title="Tasks come first"
-        text="Once you have cleaning tasks, the plan spreads them over your week."
-        href="/tasks/review"
-        action="Propose tasks"
-      />
+      <>
+        <EmptyState
+          icon={<Sparkles aria-hidden className="text-muted-foreground size-6" />}
+          title="Tasks come first"
+          text="Once you have cleaning tasks, the plan spreads them over your week."
+          href="/tasks/review"
+          action="Propose tasks"
+        />
+        <OfflineCacheWarmer urls={PLAN_PAGES} version={cacheVersion([settings, tasks])} />
+      </>
     );
   }
 
@@ -80,6 +93,7 @@ async function PlanSection() {
           </li>
         ))}
       </ol>
+      <OfflineCacheWarmer urls={PLAN_PAGES} version={cacheVersion([settings, week])} />
     </div>
   );
 }
