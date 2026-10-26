@@ -25,6 +25,18 @@ export async function replan(userId: string, now: Date = new Date()): Promise<vo
   });
 }
 
+/**
+ * For actions whose own change already succeeded: a failed replan is logged, not reported,
+ * and the next change or settings save replans again.
+ */
+export async function replanAfterChange(userId: string): Promise<void> {
+  try {
+    await replan(userId);
+  } catch (error) {
+    console.error("replan failed", error);
+  }
+}
+
 /** Plans the days missing from the next week, so the plan keeps moving as days pass. */
 export async function ensureHorizon(userId: string, now: Date = new Date()): Promise<void> {
   await db.transaction(async (tx) => {

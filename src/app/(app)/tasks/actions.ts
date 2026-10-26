@@ -8,6 +8,7 @@ import { getProposalOptions } from "@/lib/ai/model";
 import { proposeTasks } from "@/lib/ai/task-proposals";
 import type { ActionState } from "@/lib/inventory/action-state";
 import { parseInput } from "@/lib/inventory/schemas";
+import { replanAfterChange } from "@/lib/scheduler/plan";
 import { getCurrentUser } from "@/lib/session";
 import type { GenerateState } from "@/lib/tasks/generate-state";
 import { readProposalInput, tasksTag } from "@/lib/tasks/queries";
@@ -159,6 +160,7 @@ async function acceptWhere(userId: string, where: SQL | undefined): Promise<Acti
     if (accepted === 0) {
       return { status: "error", formError: NOT_FOUND };
     }
+    await replanAfterChange(userId);
     updateTag(tasksTag(userId));
     return { status: "success" };
   } catch (error) {
@@ -201,6 +203,7 @@ export async function updateTask(
     if (updated.length === 0) {
       return { status: "error", formError: NOT_FOUND, values };
     }
+    await replanAfterChange(user.id);
     updateTag(tasksTag(user.id));
     return { status: "success", id: taskId };
   } catch (error) {
@@ -213,6 +216,7 @@ export async function deleteTask(taskId: string): Promise<ActionState> {
   const user = await getCurrentUser();
   try {
     await db.delete(task).where(and(eq(task.id, taskId), eq(task.userId, user.id)));
+    await replanAfterChange(user.id);
     updateTag(tasksTag(user.id));
     return { status: "success" };
   } catch (error) {
