@@ -3,8 +3,8 @@ import { addItem, addRoom, openRoom } from "./support/inventory";
 import {
   controlWithServiceWorker,
   expectCachedPage,
-  goOffline,
   OFFLINE_NOTICE,
+  openOffline,
 } from "./support/offline";
 import { proposalGroup, proposeTasks, REPLAN_TIMEOUT } from "./support/tasks";
 
@@ -30,8 +30,7 @@ test("AC8: task pages stay readable offline with generation and edits disabled",
   await expectCachedPage(page, "/tasks", "3 proposals waiting for review");
   await expectCachedPage(page, "/tasks/review", "Bathroom deep clean");
 
-  await goOffline(page, context);
-  await page.goto("/tasks");
+  await openOffline(page, context, "/tasks");
   const tasks = page.getByRole("region", { name: "Tasks" });
   await expect(tasks.getByText(OFFLINE_NOTICE)).toBeVisible();
   await expect(tasks.getByRole("region", { name: "Cleaning tasks" })).toContainText("Clean Mirror");

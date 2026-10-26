@@ -3,8 +3,8 @@ import { addItem, addRoom, openRoom } from "./support/inventory";
 import {
   controlWithServiceWorker,
   expectCachedPage,
-  goOffline,
   OFFLINE_NOTICE,
+  openOffline,
 } from "./support/offline";
 
 test("AC7: shows the latest inventory offline with edits disabled, and re-enables them online", async ({
@@ -23,8 +23,7 @@ test("AC7: shows the latest inventory offline with edits disabled, and re-enable
   await expectCachedPage(page, kitchenPath, "Sink");
   await expectCachedPage(page, "/rooms", "Bathroom");
 
-  await goOffline(page, context);
-  await page.goto("/rooms");
+  await openOffline(page, context, "/rooms");
 
   const rooms = page.getByRole("region", { name: "Rooms" });
   await expect(rooms.getByRole("list", { name: "Rooms" })).toContainText("Kitchen");

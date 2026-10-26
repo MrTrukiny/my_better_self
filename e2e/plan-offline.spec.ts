@@ -3,8 +3,8 @@ import { addItem, addRoom, openRoom } from "./support/inventory";
 import {
   controlWithServiceWorker,
   expectCachedPage,
-  goOffline,
   OFFLINE_NOTICE,
+  openOffline,
 } from "./support/offline";
 import { planDays, saveSchedule } from "./support/plan";
 import { acceptAllProposals, proposeTasks } from "./support/tasks";
@@ -30,8 +30,7 @@ test("AC7: the plan stays readable offline and the schedule can't be changed", a
   await expectCachedPage(page, "/plan", "Kitchen surface clean");
   await expectCachedPage(page, "/schedule", "Weekend minutes");
 
-  await goOffline(page, context);
-  await page.goto("/plan");
+  await openOffline(page, context, "/plan");
   const plan = page.getByRole("region", { name: "Your week" });
   await expect(plan.getByText(OFFLINE_NOTICE)).toBeVisible();
   await expect(planDays(page)).toHaveCount(7);
