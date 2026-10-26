@@ -1,6 +1,6 @@
 # 005: Google Calendar sync
 
-- **Status**: In progress
+- **Status**: Done
 - **Owner**: @mrtrukiny
 - **Created**: 2026-10-26
 
@@ -20,18 +20,18 @@ Put each day's cleaning session in Google Calendar, where the owner already mana
 
 Each criterion is testable and maps to at least one test.
 
-- [ ] AC1: Given I'm signed in and my calendar isn't connected, when I choose "Connect Google Calendar" on the schedule page and accept Google's consent screen, then I'm back on the schedule page and it shows the calendar as connected, with the calendar's name. The app asks only to manage calendars it creates, to see the list of my calendars, and to read their free/busy times. Given I cancel or deny consent, then I'm back on the schedule page with a message, and nothing is connected.
-- [ ] AC2: Given my calendar is connected, then the app has created one secondary calendar named "Cleaning" in my time zone (once; if I delete it in Google, the next sync creates it again). Each day of the plan that has cleaning tasks gets one event in it:
+- [x] AC1: Given I'm signed in and my calendar isn't connected, when I choose "Connect Google Calendar" on the schedule page and accept Google's consent screen, then I'm back on the schedule page and it shows the calendar as connected, with the calendar's name. The app asks only to manage calendars it creates, to see the list of my calendars, and to read their free/busy times. Given I cancel or deny consent, then I'm back on the schedule page with a message, and nothing is connected.
+- [x] AC2: Given my calendar is connected, then the app has created one secondary calendar named "Cleaning" in my time zone (once; if I delete it in Google, the next sync creates it again). Each day of the plan that has cleaning tasks gets one event in it:
   - Title "Cleaning, 38 min" (the day's total cleaning minutes).
   - Start at that day's start time, end after the total minutes, in my time zone.
   - Description: the cleaning tasks with their minutes and what each belongs to, then the day's routines under "Also today", then a link to the app.
   - Days that are off or have no cleaning tasks get no event.
-- [ ] AC3: Given my calendar is connected, when the plan changes (I add, edit, or delete tasks, delete rooms or items, or change the schedule), then within that action the events of the changed days are updated in place, created, or deleted to match the plan. There is never more than one event per day. Events of past days are not changed.
-- [ ] AC4: Given a day's session overlaps a busy time in any of my calendars (other than "Cleaning"), then that day on the plan says "Overlaps another event in your calendar" with the session's time, and the event is still placed at the start time. The app reads only busy times, never the details of other events. When the overlap goes away, so does the notice.
-- [ ] AC5: Given the app is deployed, then once a day a scheduled job extends every connected owner's plan to the next 7 days and syncs their calendar, without the owner being present. The job's endpoint rejects any caller without the job secret, and one owner's failure doesn't stop the others.
-- [ ] AC6: Given my calendar is connected, when I choose "Disconnect" and confirm, then the "Cleaning" calendar and its events are deleted from my Google account, the app's access is revoked, and the schedule page shows "Connect Google Calendar" again. The plan keeps working without a calendar.
-- [ ] AC7: Given Google rejects a sync (for example I revoked access from my Google account, or Google is down), then saving tasks or settings still succeeds, the plan still works, and the schedule and plan pages show "We couldn't update your calendar" with a "Reconnect" action when access was lost. The next successful sync brings the calendar up to date.
-- [ ] AC8: The calendar section works at 360px and on desktop, in light and dark mode, and with the keyboard only; every control has an accessible name and status messages are announced. Offline, the connection status stays readable and "Connect", "Disconnect", and "Reconnect" are disabled with the usual offline notice.
+- [x] AC3: Given my calendar is connected, when the plan changes (I add, edit, or delete tasks, delete rooms or items, or change the schedule), then within that action the events of the changed days are updated in place, created, or deleted to match the plan. There is never more than one event per day. Events of past days are not changed.
+- [x] AC4: Given a day's session overlaps a busy time in any of my calendars (other than "Cleaning"), then that day on the plan says "Overlaps another event in your calendar" with the session's time, and the event is still placed at the start time. The app reads only busy times, never the details of other events. When the overlap goes away, so does the notice.
+- [x] AC5: Given the app is deployed, then once a day a scheduled job extends every connected owner's plan to the next 7 days and syncs their calendar, without the owner being present. The job's endpoint rejects any caller without the job secret, and one owner's failure doesn't stop the others.
+- [x] AC6: Given my calendar is connected, when I choose "Disconnect" and confirm, then the "Cleaning" calendar and its events are deleted from my Google account, the app's access is revoked, and the schedule page shows "Connect Google Calendar" again. The plan keeps working without a calendar.
+- [x] AC7: Given Google rejects a sync (for example I revoked access from my Google account, or Google is down), then saving tasks or settings still succeeds, the plan still works, and the schedule and plan pages show "We couldn't update your calendar" with a "Reconnect" action when access was lost. The next successful sync brings the calendar up to date.
+- [x] AC8: The calendar section works at 360px and on desktop, in light and dark mode, and with the keyboard only; every control has an accessible name and status messages are announced. Offline, the connection status stays readable and "Connect", "Disconnect", and "Reconnect" are disabled with the usual offline notice.
 
 ## UX notes
 
@@ -91,7 +91,16 @@ Each criterion is testable and maps to at least one test.
 - [x] T7: UI: calendar section with status, connect, disconnect dialog, denial and error messages; overlap line on plan days; sync-error notice. Files: `src/components/calendar/calendar-section.tsx`, `src/components/calendar/connect-button.tsx`, `src/components/calendar/disconnect-button.tsx`, `src/components/calendar/calendar-section.test.tsx`, `src/components/plan/plan-day.tsx`, `src/app/(app)/schedule/page.tsx`, `src/app/(app)/plan/page.tsx`. Covers: AC1, AC4, AC6, AC7, AC8.
 - [x] T8: Daily job: route handler, secret check, per-owner loop, `vercel.json` cron. Files: `src/app/api/cron/daily/route.ts`, `src/lib/calendar/cron-auth.ts`, `src/lib/calendar/cron-auth.test.ts`, `vercel.json`. Covers: AC5.
 - [x] T9: E2E with the fake client: connect, status, overlap line, disconnect with confirmation, offline-disabled buttons, unauthorized job call. Files: `e2e/calendar.spec.ts`, `e2e/support/calendar.ts`, `playwright.config.ts`, `.github/workflows/*` (`CALENDAR_FAKE`, `CRON_SECRET`). Covers: AC1, AC4, AC5, AC6, AC8.
-- [ ] T10: Deployment and docs: production setup guide (Vercel project, env vars, Google Cloud consent and redirect URI, migrations), architecture notes, spec status. Files: `docs/DEPLOYMENT.md`, `docs/ARCHITECTURE.md`, this spec. Covers: AC5.
+- [x] T10: Deployment and docs: production setup guide (Vercel project, env vars, Google Cloud consent and redirect URI, migrations), architecture notes, spec status. Files: `docs/DEPLOYMENT.md`, `docs/ARCHITECTURE.md`, this spec. Covers: AC5.
+
+### Implementation notes
+
+- `src/lib/auth.ts` needed no change: `linkSocial` takes the scopes, and `access_type` and `prompt` go in its `additionalParams`; Google's provider already sends `include_granted_scopes=true`.
+- The scope list and checks live in `src/lib/calendar/scopes.ts`, shared by the connect button and the server. Disconnect also clears the refresh token and the calendar scopes from the account row, so a later connect re-checks what Google grants.
+- The disconnect confirmation uses `AlertDialog`, like the app's other destructive confirmations, instead of `ResponsiveDialog`.
+- Better Auth's `getAccessToken` doesn't say why a refresh failed, so any token failure counts as lost access ("Reconnect").
+- Without saved schedule settings the sync waits: the calendar is created in the owner's time zone on the first sync after the schedule is saved.
+- `playwright.config.ts` reads an optional `E2E_PORT` (default 3100) so checkouts running side by side don't share a server.
 
 ### Test plan
 

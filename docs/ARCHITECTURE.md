@@ -114,6 +114,22 @@ A task's last completion is its latest done or skipped occurrence before the rep
 | Offline   | `src/lib/today/queue.ts`, `src/components/today/`      | A `localStorage` queue per user, flushed in order on load, `online`, and visibility. The page overlays queued states on the server's. |
 | UI        | `src/app/(app)/page.tsx`, `src/components/today/`      | The home page (`/`). Readable and checkable offline (ADR 0005 amendment, ADR 0008).                                                   |
 
+### Google Calendar sync (spec 005)
+
+See [ADR 0002](decisions/0002-google-calendar.md) and [`DEPLOYMENT.md`](DEPLOYMENT.md).
+
+| Concern   | Where                                                                           | Notes                                                                                                                                                                                        |
+| --------- | ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Tables    | `src/db/schema/calendar.ts`                                                     | `calendar_connection` (one row per connected owner: calendar id and name, status `ok`, `reauth`, or `error`, last sync) and `calendar_day` (event id, content digest, and overlap per date). |
+| Consent   | `src/components/calendar/connect-button.tsx`, `src/app/api/calendar/connected/` | Better Auth `linkSocial` adds the calendar scopes and a refresh token to the Google account; the route checks the scopes, creates the connection, and runs the first sync.                   |
+| Google    | `src/lib/calendar/google.ts`, `client.ts`, `fake.ts`                            | REST over `fetch`; errors are `auth`, `gone`, `conflict`, or `transient`. Better Auth's `getAccessToken` refreshes tokens. `CALENDAR_FAKE=1` swaps in an in-memory calendar for e2e and CI.  |
+| Sync      | `src/lib/calendar/sync.ts`, `diff.ts`, `events.ts`, `overlap.ts`                | Builds one event per cleaning day from the first replannable day through the seventh, writes only changed digests, deletes days that lost their cleaning, and flags overlaps from free/busy. |
+| When      | `scheduleCalendarSync` in `plan.ts` and the schedule action                     | After every replan, via `after()`; on connect; and in the daily job. A row lock runs one sync per owner at a time. Failures set the status and never reach the caller.                       |
+| Daily job | `src/app/api/cron/daily/`, `vercel.json`                                        | Vercel Cron, once a day, `Authorization: Bearer $CRON_SECRET`. Extends each connected owner's plan, then syncs, one owner at a time.                                                         |
+| UI        | `src/components/calendar/`, `src/components/plan/plan-day.tsx`                  | "Google Calendar" section on `/schedule`, overlap line on plan days, and a sync-error notice on both pages. Disconnect deletes the calendar and revokes the grant.                           |
+
+Event ids derive from the user and the date (base32hex), so writing a day again updates the same event and a lost row can't duplicate it. A deleted "Cleaning" calendar is created again on the next sync, with every day re-put.
+
 ## Responsibilities: AI vs code
 
 | Concern                                   | Owner                                          | Why                                      |
@@ -121,7 +137,7 @@ A task's last completion is its latest done or skipped occurrence before the rep
 | Propose tasks, minutes, frequency, splits | Gemini (structured output, Zod-validated)      | Needs world knowledge about cleaning     |
 | Approve or edit proposals                 | User                                           | Trust and control                        |
 | Pack tasks into daily sessions, rebalance | Deterministic scheduler (`src/lib/scheduler/`) | Predictable, testable, free, explainable |
-| Place the session in a free slot          | Calendar sync via FreeBusy                     | Respects the user's real availability    |
+| Flag sessions that overlap busy times     | Calendar sync via FreeBusy                     | Respects the user's real availability    |
 
 ## Daily flow
 
@@ -129,26 +145,24 @@ A task's last completion is its latest done or skipped occurrence before the rep
 flowchart TD
   Cron["Vercel Cron, daily"] --> Due["Compute due and overdue tasks"]
   Due --> Pack["Scheduler packs sessions for the next days within the budget"]
-  Pack --> FreeBusy["FreeBusy query in the day's scheduling window"]
-  FreeBusy --> Upsert["Create or update the day's event in the Cleaning calendar"]
+  Pack --> Upsert["Create, update, or delete each day's event in the Cleaning calendar, at the day's start time"]
+  Upsert --> FreeBusy["FreeBusy across the owner's other calendars flags overlapping sessions"]
   CheckOff["User checks off or skips tasks in the PWA"] --> Update["Set the occurrence's status"]
   Update --> Due
 ```
 
 - The scheduler plans a rolling 7-day horizon and replans from today on the first visit of each day (and in the daily job), so missed work is redistributed automatically without exceeding the daily budget.
-- Calendar writes are idempotent: each session stores its `calendarEventId` and is updated in place.
+- Calendar writes are idempotent: each day's event id is derived from the owner and the date, and only days whose content digest changed are written.
 
 ## Data, auth, and integrations
 
 See ADRs [0002](decisions/0002-google-calendar.md), [0003](decisions/0003-ai-provider-gemini.md), and [0004](decisions/0004-data-auth-hosting.md). In short:
 
 - **Database:** Postgres (Neon), accessed through Drizzle over a `pg` pool (`src/db/index.ts`). The schema lives in `src/db/schema/` and migrations in `drizzle/`. Environment variables are validated in `src/lib/env.ts`.
-- **Auth:** Better Auth with Google sign-in (`src/lib/auth.ts`, mounted at `/api/auth/*`), restricted to an email allowlist. Later it also stores the refresh token for calendar access.
+- **Auth:** Better Auth with Google sign-in (`src/lib/auth.ts`, mounted at `/api/auth/*`), restricted to an email allowlist. Connecting Google Calendar adds the calendar scopes and a refresh token to the same account row.
 - **AI:** Gemini through the Vercel AI SDK, server-only. Prompts and schemas live in `src/lib/ai/`.
-- **Calendar:** Google Calendar API with the `calendar.app.created` and `calendar.freebusy` scopes. The app writes only to its own calendar.
-- **Hosting:** Vercel, with Vercel Cron for the daily job.
-
-The calendar and cron paths are planned; they are created by the specs that introduce them (see [`ROADMAP.md`](ROADMAP.md)).
+- **Calendar:** Google Calendar API with the `calendar.app.created`, `calendar.calendarlist.readonly`, and `calendar.freebusy` scopes. The app writes only to its own calendar and reads only busy times from the others.
+- **Hosting:** Vercel, with Vercel Cron for the daily job (`/api/cron/daily`). Setup steps are in [`DEPLOYMENT.md`](DEPLOYMENT.md).
 
 ### Route protection
 

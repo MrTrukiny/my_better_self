@@ -33,10 +33,14 @@ Open http://localhost:3000 and sign in with an email listed in `ALLOWED_EMAILS`.
 
 Task proposals use Gemini. Create a key in [Google AI Studio](https://aistudio.google.com/apikey) and set `GOOGLE_GENERATIVE_AI_API_KEY` in `.env.local`. Without it, "Propose tasks" shows an error. `AI_MODEL` overrides the default Flash model, and `AI_FAKE=1` swaps Gemini for deterministic proposals (used by e2e and CI).
 
+### 5. Google Calendar and deployment
+
+Connecting Google Calendar (on the schedule page) needs the Calendar API enabled and three calendar scopes on the consent screen; `CALENDAR_FAKE=1` swaps in an in-memory calendar (used by e2e and CI). Production setup on Vercel, including the daily job and `CRON_SECRET`, is in [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
+
 ## Scripts
 
 - `pnpm check:fast`: typecheck, lint, unit tests
-- `pnpm check`: everything above plus Playwright e2e (needs `DATABASE_URL`; it runs migrations first)
+- `pnpm check`: everything above plus Playwright e2e (needs `DATABASE_URL`; it runs migrations first; `E2E_PORT` picks a port other than 3100)
 - `pnpm db:generate`: create a migration in `drizzle/` from schema changes in `src/db/schema/`
 - `pnpm db:migrate`: apply pending migrations to `DATABASE_URL`
 - `pnpm ai:try`: run the live prompt against Gemini with a sample home and print the proposals (needs the API key)
