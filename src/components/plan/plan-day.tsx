@@ -1,9 +1,11 @@
-import { Coffee, Repeat } from "lucide-react";
+import { Coffee, Repeat, TriangleAlert } from "lucide-react";
+import { OfflineAwareLink } from "@/components/offline-aware-link";
 import { dayLabel, type PlanDayView, planTarget } from "@/lib/scheduler/format";
 import { formatMinutes } from "@/lib/tasks/format";
 import { cn } from "@/lib/utils";
 
-export function PlanDay({ day }: { day: PlanDayView }) {
+/** `overlap`: the session overlaps a busy time in the owner's other calendars (spec 005). */
+export function PlanDay({ day, overlap = false }: { day: PlanDayView; overlap?: boolean }) {
   const headingId = `day-${day.date}`;
   const label = dayLabel(day.date);
   return (
@@ -49,6 +51,24 @@ export function PlanDay({ day }: { day: PlanDayView }) {
           Nothing to clean, enjoy the day.
         </p>
       )}
+
+      {overlap && !day.off && day.cleaning.length > 0 ? (
+        <p className="flex items-start gap-2 text-sm">
+          <TriangleAlert
+            aria-hidden
+            className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-400"
+          />
+          <span>
+            Overlaps another event in your calendar ({day.start}–{day.end}).{" "}
+            <OfflineAwareLink
+              href="/schedule"
+              className="focus-visible:ring-ring rounded-sm font-medium underline underline-offset-4 outline-none focus-visible:ring-2"
+            >
+              Change the start time
+            </OfflineAwareLink>
+          </span>
+        </p>
+      ) : null}
 
       {day.routines.length > 0 ? (
         <div className="flex flex-col gap-1">

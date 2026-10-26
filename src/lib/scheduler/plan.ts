@@ -2,6 +2,7 @@ import "server-only";
 import { and, eq, gte, lt, min, ne, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { occurrence, scheduleSettings, task } from "@/db/schema";
+import { scheduleCalendarSync } from "@/lib/calendar/sync";
 import { type DayNumber, toDayNumber, toIsoDate, zonedNow } from "./dates";
 import { lastCompletions, type PastOccurrence } from "./history";
 import { type PlanState, pendingRange, replanStart } from "./replan-start";
@@ -38,6 +39,7 @@ export async function replan(userId: string, now: Date = new Date()): Promise<vo
 export async function replanAfterChange(userId: string): Promise<void> {
   try {
     await replan(userId);
+    scheduleCalendarSync(userId);
   } catch (error) {
     console.error("replan failed", error);
   }

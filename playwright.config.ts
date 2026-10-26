@@ -1,5 +1,6 @@
 import { existsSync } from "node:fs";
 import { defineConfig, devices } from "@playwright/test";
+import { E2E_CRON_SECRET } from "./e2e/support/calendar";
 
 if (!process.env.CI && existsSync(".env.local")) {
   process.loadEnvFile(".env.local");
@@ -30,7 +31,13 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
     // Sessions created by the e2e auth instance are bound to this origin. AI_FAKE swaps Gemini
-    // for deterministic proposals, so e2e never makes live AI calls.
-    env: { BETTER_AUTH_URL: baseURL, AI_FAKE: "1" },
+    // for deterministic proposals and CALENDAR_FAKE swaps Google Calendar for an in-memory fake,
+    // so e2e never calls Google.
+    env: {
+      BETTER_AUTH_URL: baseURL,
+      AI_FAKE: "1",
+      CALENDAR_FAKE: "1",
+      CRON_SECRET: E2E_CRON_SECRET,
+    },
   },
 });

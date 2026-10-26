@@ -3,6 +3,7 @@
 import { updateTag } from "next/cache";
 import { db } from "@/db";
 import { scheduleSettings } from "@/db/schema";
+import { scheduleCalendarSync } from "@/lib/calendar/sync";
 import type { ActionState } from "@/lib/inventory/action-state";
 import { parseInput } from "@/lib/inventory/schemas";
 import { replan } from "@/lib/scheduler/plan";
@@ -26,6 +27,7 @@ export async function saveSchedule(_prev: ActionState, formData: FormData): Prom
       .onConflictDoUpdate({ target: scheduleSettings.userId, set: parsed.data });
     updateTag(scheduleTag(user.id));
     await replan(user.id);
+    scheduleCalendarSync(user.id);
     return { status: "success" };
   } catch (error) {
     console.error("saveSchedule failed", error);
