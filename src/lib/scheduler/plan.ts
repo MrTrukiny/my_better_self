@@ -111,7 +111,7 @@ async function planRange(
   const lastDone = new Map(
     history.flatMap(({ taskId, last }) => (last ? [[taskId, toDayNumber(last)] as const] : [])),
   );
-  const plan = schedule({
+  const { days: plan } = schedule({
     tasks: tasks.map((t) => ({ ...t, kind: t.kind === "routine" ? "routine" : "cleaning" })),
     settings,
     lastDone,

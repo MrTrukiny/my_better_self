@@ -49,7 +49,7 @@ function averageLoad(tasks: SchedulerTask[]): number {
 }
 
 function run(tasks: SchedulerTask[], budgets: Budgets, days: number, lastDone = new Map()) {
-  return schedule({ tasks, settings: budgets, lastDone, from: MONDAY, to: MONDAY + days - 1 });
+  return schedule({ tasks, settings: budgets, lastDone, from: MONDAY, to: MONDAY + days - 1 }).days;
 }
 
 function sessionsOf(plan: ReturnType<typeof run>, id: string): DayNumber[] {
@@ -225,5 +225,23 @@ describe("schedule", () => {
     const plan = run(tasks, WEDNESDAY_OFF, 9);
     expect(sessionsOf(plan, "bed")).toHaveLength(9);
     expect(sessionsOf(plan, "laundry")).toEqual([MONDAY, MONDAY + 3, MONDAY + 6]);
+  });
+
+  it("reports the first due day picked for new cleaning tasks only", () => {
+    const tasks = [
+      cleaning("monthly", 20, 30),
+      cleaning("weekly", 10, 7),
+      { ...cleaning("bed", 2, 1), kind: "routine" as const },
+    ];
+    const { firstDues } = schedule({
+      tasks,
+      settings: EVERY_DAY,
+      lastDone: new Map([["weekly", MONDAY - 3]]),
+      from: MONDAY,
+      to: MONDAY + 6,
+    });
+    expect([...firstDues.keys()]).toEqual(["monthly"]);
+    expect(firstDues.get("monthly")).toBeGreaterThanOrEqual(MONDAY);
+    expect(firstDues.get("monthly")).toBeLessThan(MONDAY + 30);
   });
 });
