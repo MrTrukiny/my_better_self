@@ -1,23 +1,6 @@
-import type { Page } from "@playwright/test";
 import { expect, test } from "./fixtures";
 import { addItem, addRoom, openRoom } from "./support/inventory";
-
-const NOTICE = "You're offline. You can browse what's saved, but changes need a connection.";
-
-/** Waits until the service worker holds a copy of `path` that contains `text`. */
-async function expectCachedPage(page: Page, path: string, text: string) {
-  await expect
-    .poll(() =>
-      page.evaluate(
-        async ([url, expected]) => {
-          const cached = await caches.match(url);
-          return cached ? (await cached.text()).includes(expected) : false;
-        },
-        [path, text],
-      ),
-    )
-    .toBe(true);
-}
+import { controlWithServiceWorker, expectCachedPage, OFFLINE_NOTICE } from "./support/offline";
 
 test("AC7: shows the latest inventory offline with edits disabled, and re-enables them online", async ({
   page,
@@ -25,9 +8,7 @@ test("AC7: shows the latest inventory offline with edits disabled, and re-enable
   signedInUser: _,
 }) => {
   await page.goto("/rooms");
-  await page.evaluate(() => navigator.serviceWorker.ready);
-  await page.reload();
-  await page.waitForFunction(() => navigator.serviceWorker.controller !== null);
+  await controlWithServiceWorker(page);
 
   await addRoom(page, "Kitchen");
   await addRoom(page, "Bathroom");
@@ -42,7 +23,7 @@ test("AC7: shows the latest inventory offline with edits disabled, and re-enable
 
   const rooms = page.getByRole("region", { name: "Rooms" });
   await expect(rooms.getByRole("list", { name: "Rooms" })).toContainText("Kitchen");
-  await expect(rooms.getByText(NOTICE)).toBeVisible();
+  await expect(rooms.getByText(OFFLINE_NOTICE)).toBeVisible();
   await expect(rooms.getByRole("button", { name: "Add room" })).toBeDisabled();
 
   await openRoom(page, "Kitchen");
@@ -51,9 +32,9 @@ test("AC7: shows the latest inventory offline with edits disabled, and re-enable
   await expect(kitchen.getByRole("button", { name: "Add item" })).toBeDisabled();
   await expect(kitchen.getByRole("button", { name: "Edit Sink" })).toBeDisabled();
   await expect(kitchen.getByRole("button", { name: "Rename" })).toBeDisabled();
-  await expect(kitchen.getByText(NOTICE)).toBeVisible();
+  await expect(kitchen.getByText(OFFLINE_NOTICE)).toBeVisible();
 
   await context.setOffline(false);
   await expect(kitchen.getByRole("button", { name: "Add item" })).toBeEnabled();
-  await expect(kitchen.getByText(NOTICE)).toBeHidden();
+  await expect(kitchen.getByText(OFFLINE_NOTICE)).toBeHidden();
 });

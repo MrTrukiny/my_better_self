@@ -35,6 +35,8 @@ jobs:
       GOOGLE_CLIENT_ID: ci-google-client-id
       GOOGLE_CLIENT_SECRET: ci-google-client-secret
       ALLOWED_EMAILS: owner@example.com
+      # Deterministic task proposals instead of live Gemini calls.
+      AI_FAKE: "1"
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6

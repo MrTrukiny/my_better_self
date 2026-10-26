@@ -1,6 +1,6 @@
 # 003: AI task proposals
 
-- **Status**: In progress
+- **Status**: Done
 - **Owner**: @mrtrukiny
 - **Created**: 2026-10-25
 
@@ -27,18 +27,18 @@ The proposals take the home's helpers into account. With a robot vacuum, for exa
 
 Each criterion is testable and maps to at least one test.
 
-- [ ] AC1: Given I open the home profile, when I mark helpers from a fixed list (robot vacuum, dishwasher, washing machine, dryer, other) and write an optional note of up to 500 characters, then they are saved and shown the next time I open it; a longer note shows a field message and is not saved.
-- [ ] AC2: Given I have at least one room with items, when I choose "Propose tasks", then I see a busy state that can't be triggered twice, followed by a proposal list grouped by room, with a "Whole home" group. Each proposal shows a name, what it belongs to (an item, a room, or the whole home), estimated minutes, a frequency, and whether it is a cleaning task or a routine. Given I have no rooms, the action is unavailable and explains that the inventory comes first.
-- [ ] AC3: Given the proposals are shown, then:
+- [x] AC1: Given I open the home profile, when I mark helpers from a fixed list (robot vacuum, dishwasher, washing machine, dryer, other) and write an optional note of up to 500 characters, then they are saved and shown the next time I open it; a longer note shows a field message and is not saved.
+- [x] AC2: Given I have at least one room with items, when I choose "Propose tasks", then I see a busy state that can't be triggered twice, followed by a proposal list grouped by room, with a "Whole home" group. Each proposal shows a name, what it belongs to (an item, a room, or the whole home), estimated minutes, a frequency, and whether it is a cleaning task or a routine. Given I have no rooms, the action is unavailable and explains that the inventory comes first.
+- [x] AC3: Given the proposals are shown, then:
   - Every cleaning task takes 1 to 30 minutes, so it fits in one daily session. Bigger jobs come as several smaller tasks.
   - Every frequency is a whole number of days from 1 to 365.
   - Proposals that the response doesn't link to one of my rooms or items are not shown.
-- [ ] AC4: Given I marked helpers or wrote a note, when proposals are generated, then they reflect it. For example, with a robot vacuum marked, floor tasks cover only the spots it can't reach instead of full vacuuming. With a washing machine, laundry tasks are about loading it and hanging the clothes.
-- [ ] AC5: Given a proposal list, when I accept, edit (name, minutes, frequency, cleaning task or routine), or discard each proposal, or choose "Accept all", then accepted proposals become tasks and discarded ones disappear. Nothing is accepted by default, and leaving the page keeps the pending proposals for later.
-- [ ] AC6: Given I already have tasks, when I propose again, for the whole home or for a single room, then the new proposals don't repeat existing tasks, and the existing tasks are unchanged.
-- [ ] AC7: Given I have tasks, when I open the task list, then I see the cleaning tasks grouped by room and "Whole home", and the routines in their own section, each with minutes and frequency. I can edit or delete each task, and deleting asks for confirmation.
-- [ ] AC8: Given the AI request fails, times out, or returns something invalid, then I see a message with "Try again" and nothing is saved. Given I am offline, "Propose tasks" and all edits are disabled with a visible reason, and the task list and pending proposals stay readable.
-- [ ] AC9: The home profile, the proposal review, and the task list work at 360px wide and on desktop, in light and dark mode, and with the keyboard only. Every control and list has an accessible name, and completion of a generation is announced to screen readers.
+- [x] AC4: Given I marked helpers or wrote a note, when proposals are generated, then they reflect it. For example, with a robot vacuum marked, floor tasks cover only the spots it can't reach instead of full vacuuming. With a washing machine, laundry tasks are about loading it and hanging the clothes.
+- [x] AC5: Given a proposal list, when I accept, edit (name, minutes, frequency, cleaning task or routine), or discard each proposal, or choose "Accept all", then accepted proposals become tasks and discarded ones disappear. Nothing is accepted by default, and leaving the page keeps the pending proposals for later.
+- [x] AC6: Given I already have tasks, when I propose again, for the whole home or for a single room, then the new proposals don't repeat existing tasks, and the existing tasks are unchanged.
+- [x] AC7: Given I have tasks, when I open the task list, then I see the cleaning tasks grouped by room and "Whole home", and the routines in their own section, each with minutes and frequency. I can edit or delete each task, and deleting asks for confirmation.
+- [x] AC8: Given the AI request fails, times out, or returns something invalid, then I see a message with "Try again" and nothing is saved. Given I am offline, "Propose tasks" and all edits are disabled with a visible reason, and the task list and pending proposals stay readable.
+- [x] AC9: The home profile, the proposal review, and the task list work at 360px wide and on desktop, in light and dark mode, and with the keyboard only. Every control and list has an accessible name, and completion of a generation is announced to screen readers.
 
 ## UX notes
 
@@ -116,7 +116,7 @@ Builds on specs 001 and 002 and on ADR 0003 (Gemini through the AI SDK).
 - [x] T6: Review screen: `/tasks/review` with the scope picker, the generate button with progress and live announcements, grouped proposal cards, the edit sheet, and the "Accept all" bar. Also the entry points from the room list and room pages. Files: `src/app/(app)/tasks/review/page.tsx`, `src/components/tasks/generate-button.tsx`, `src/components/tasks/generate-button.test.tsx`, `src/components/tasks/proposal-list.tsx`, `src/components/tasks/proposal-card.tsx`, `src/components/tasks/task-form.tsx`, `src/components/tasks/task-form.test.tsx`, `src/components/tasks/scope-picker.tsx`, `src/lib/tasks/format.ts`, `src/lib/tasks/format.test.ts`, `src/components/inventory/room-list.tsx`, `src/app/(app)/rooms/[roomId]/page.tsx`. Covers: AC2, AC5, AC8, AC9.
 - [x] T7: Task list: `/tasks` grouped by room and "Whole home", a routines section, edit and delete with confirmation, the pending-proposals banner, and the header "Tasks" link. Files: `src/app/(app)/tasks/page.tsx`, `src/components/tasks/task-list.tsx`, `src/components/tasks/task-row.tsx`, `src/components/app-shell.tsx`. Covers: AC7, AC9.
 - [x] T8: Offline: generalize `InventoryLink` into `OfflineAwareLink`, extend the service worker rule and the document warmer to the task routes, and amend ADR 0005. Files: `src/components/offline-aware-link.tsx` (moved from `src/components/inventory/inventory-link.tsx`), `src/app/sw.ts`, `src/components/inventory/offline-cache-warmer.tsx` (moved to `src/components/offline-cache-warmer.tsx`), `src/components/tasks/tasks-cache-warmer.tsx`, `src/components/tasks/scope-picker.tsx`, `src/components/inventory/edit-guard.tsx`, the pages above, `docs/decisions/0005-offline-inventory-reading.md`. Covers: AC8.
-- [ ] T9: E2E flows with the fake AI, and docs (domain model and AI flow in `ARCHITECTURE.md`, AI variables in the README). Files: `e2e/tasks.spec.ts`, `e2e/tasks-offline.spec.ts`, `playwright.config.ts` (`AI_FAKE=1`), `.github/workflows/ci.yml`, `docs/ARCHITECTURE.md`, `README.md`. Covers: AC1 to AC9.
+- [x] T9: E2E flows with the fake AI, and docs (domain model and AI flow in `ARCHITECTURE.md`, AI variables in the README). Files: `e2e/tasks.spec.ts`, `e2e/tasks-offline.spec.ts`, `playwright.config.ts` (`AI_FAKE=1`), `.github/workflows/ci.yml`, `docs/ARCHITECTURE.md`, `README.md`. Covers: AC1 to AC9.
 
 ### Test plan
 
