@@ -42,3 +42,8 @@ The pattern now covers the task pages too, under generic names:
 - `/plan` and `/schedule` join `OFFLINE_DOCUMENT_ROUTES`.
 - The plan page refreshes the copies of `/plan` and `/schedule` when the week or the settings it shows change, and the schedule page does the same for its settings. Task pages also refresh `/plan` once there is a schedule, since task changes replan.
 - An offline copy of the plan is the plan as of its last refresh: on a later day, "Today" still marks the day it was cached. Spec 006 (the Today view) should revisit this if the plan is used offline across days.
+
+## Amendment (spec 006)
+
+- `/` (the Today page) joins `OFFLINE_DOCUMENT_ROUTES` as an exact match, and refreshes its own copy and `/plan` after each check-off.
+- The Today page is the one exception to "nothing is queued": check-offs made offline are kept on the device and sent later. See ADR 0008.

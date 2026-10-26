@@ -1,6 +1,6 @@
 # 006: Today view and habit
 
-- **Status**: Approved
+- **Status**: In progress
 - **Owner**: @mrtrukiny
 - **Created**: 2026-10-26
 
@@ -68,7 +68,7 @@ Each criterion is testable and maps to at least one test.
 
 ### Tasks
 
-- [ ] T1: ADR 0008 (check-off history, daily replan, offline queue; amends ADRs 0005 and 0007). Files: `docs/decisions/0008-check-off-and-offline-queue.md`, `docs/decisions/0005-offline-inventory-reading.md`, `docs/decisions/0007-persisted-plan-and-replanning.md`. Covers: AC4, AC6.
+- [x] T1: ADR 0008 (check-off history, daily replan, offline queue; amends ADRs 0005 and 0007). Files: `docs/decisions/0008-check-off-and-offline-queue.md`, `docs/decisions/0005-offline-inventory-reading.md`, `docs/decisions/0007-persisted-plan-and-replanning.md`. Covers: AC4, AC6.
 - [ ] T2: Schema: `occurrence.status` (check constraint) and `completed_at`, `task.first_due`, `schedule_settings.replanned_on`; migration. Files: `src/db/schema/schedule.ts`, `src/db/schema/tasks.ts`, `drizzle/0004_check_off.sql`, `drizzle/meta/*`. Covers: AC2, AC3, AC4.
 - [ ] T3: Scheduler history: a pure `lastCompletions(rows, from)` that turns occurrences with status and first dues into the scheduler's input, and `schedule` reporting the first due it picks for new tasks. Files: `src/lib/scheduler/history.ts`, `src/lib/scheduler/history.test.ts`, `src/lib/scheduler/schedule.ts`, `src/lib/scheduler/schedule.test.ts`. Covers: AC3, AC4.
 - [ ] T4: Planning: `ensurePlan` (daily replan, then horizon), `replanStart` treating a handled today as started, replans delete only `scheduled` rows and save first dues; plan and schedule pages use `ensurePlan`. Files: `src/lib/scheduler/plan.ts`, `src/lib/scheduler/replan-start.ts`, `src/lib/scheduler/replan-start.test.ts`, `src/lib/scheduler/queries.ts`. Covers: AC4.
