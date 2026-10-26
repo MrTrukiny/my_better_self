@@ -2,7 +2,7 @@ import "server-only";
 import { and, asc, eq, isNotNull, isNull, ne, or } from "drizzle-orm";
 import { cacheTag } from "next/cache";
 import { db } from "@/db";
-import { homeProfile, item, room, task, taskProposal } from "@/db/schema";
+import { homeProfile, item, room, scheduleSettings, task, taskProposal } from "@/db/schema";
 import type { ProposalInput } from "@/lib/ai/task-proposals";
 import { inventoryTag } from "@/lib/inventory/queries";
 import { getCurrentUser } from "@/lib/session";
@@ -114,8 +114,9 @@ async function readHomeProfile(userId: string): Promise<HomeProfile> {
 export async function readProposalInput(
   userId: string,
   scopeRoomId: string | null,
+  language: string | null,
 ): Promise<ProposalInput> {
-  const [rooms, items, profile, tasks, otherProposals] = await Promise.all([
+  const [rooms, items, profile, tasks, otherProposals, [schedule]] = await Promise.all([
     db
       .select({ id: room.id, name: room.name })
       .from(room)
@@ -149,6 +150,10 @@ export async function readProposalInput(
             : or(isNull(taskProposal.scopeRoomId), ne(taskProposal.scopeRoomId, scopeRoomId)),
         ),
       ),
+    db
+      .select({ timeZone: scheduleSettings.timeZone })
+      .from(scheduleSettings)
+      .where(eq(scheduleSettings.userId, userId)),
   ]);
   return {
     rooms: rooms.map((r) => ({
@@ -158,5 +163,6 @@ export async function readProposalInput(
     profile,
     existing: [...tasks, ...otherProposals],
     scopeRoomId,
+    locale: { language, timeZone: schedule?.timeZone ?? null },
   };
 }

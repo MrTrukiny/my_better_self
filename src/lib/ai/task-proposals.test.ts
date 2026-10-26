@@ -28,6 +28,7 @@ const input: ProposalInput = {
   profile: { helpers: ["robot-vacuum"], note: "Two cats that shed a lot" },
   existing: [{ roomId: "room-kitchen", itemId: "item-window", name: "Clean Window" }],
   scopeRoomId: null,
+  locale: { language: "es-CO", timeZone: "America/Bogota" },
 };
 
 const usage = {
@@ -61,6 +62,13 @@ describe("buildProposalRequest", () => {
     const { prompt } = buildProposalRequest(input);
     expect(prompt).toMatch(/Robot vacuum: .*corners/);
     expect(prompt).toContain("Two cats that shed a lot");
+  });
+
+  it("tells the model the owner's locale, so names use their regional variant", () => {
+    const { prompt } = buildProposalRequest(input);
+    expect(prompt).toContain(
+      "Owner's locale: device language es-CO (Spanish (Colombia)), time zone America/Bogota",
+    );
   });
 
   it("includes the cleaning guide only for the item types in the home", () => {

@@ -78,6 +78,7 @@ const sampleHome: ProposalInput = {
   profile: { helpers: ["robot-vacuum", "washing-machine"], note: null },
   existing: [],
   scopeRoomId: null,
+  locale: { language: "es-CO", timeZone: "America/Bogota" },
 };
 
 describe.skipIf(!process.env.AI_TRY)("live task proposals", () => {
