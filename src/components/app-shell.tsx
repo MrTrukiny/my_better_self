@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { type ReactNode, Suspense } from "react";
 import { AccountMenu } from "@/components/account-menu";
-import { OfflineAwareLink } from "@/components/offline-aware-link";
+import { AppNav, NavLinks } from "@/components/app-nav";
 import { OfflineBanner } from "@/components/offline-banner";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { APP_NAME } from "@/lib/app-config";
@@ -20,26 +20,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             {APP_NAME}
           </Link>
           <div className="flex shrink-0 items-center gap-1">
-            <nav aria-label="Main" className="flex">
-              <OfflineAwareLink
-                href="/rooms"
-                className="hover:bg-muted focus-visible:ring-ring inline-flex h-9 items-center rounded-md px-1.5 text-sm font-medium sm:px-3 outline-none focus-visible:ring-2"
-              >
-                Rooms
-              </OfflineAwareLink>
-              <OfflineAwareLink
-                href="/tasks"
-                className="hover:bg-muted focus-visible:ring-ring inline-flex h-9 items-center rounded-md px-1.5 text-sm font-medium sm:px-3 outline-none focus-visible:ring-2"
-              >
-                Tasks
-              </OfflineAwareLink>
-              <OfflineAwareLink
-                href="/plan"
-                className="hover:bg-muted focus-visible:ring-ring inline-flex h-9 items-center rounded-md px-1.5 text-sm font-medium sm:px-3 outline-none focus-visible:ring-2"
-              >
-                Plan
-              </OfflineAwareLink>
-            </nav>
+            <Suspense fallback={<NavLinks variant="top" current={null} />}>
+              <AppNav variant="top" />
+            </Suspense>
             <ThemeToggle />
             <Suspense fallback={<div aria-hidden className="bg-muted size-8 rounded-full" />}>
               <CurrentAccountMenu />
@@ -47,7 +30,10 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </div>
       </header>
-      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6 sm:py-10">{children}</main>
+      <main className="mx-auto w-full max-w-5xl flex-1 px-4 pt-6 pb-24 sm:py-10">{children}</main>
+      <Suspense fallback={<NavLinks variant="tabs" current={null} />}>
+        <AppNav variant="tabs" />
+      </Suspense>
     </div>
   );
 }

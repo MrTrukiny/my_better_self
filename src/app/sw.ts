@@ -13,7 +13,15 @@ declare global {
 declare const self: ServiceWorkerGlobalScope;
 
 // `/` only matches the Today page itself: the check below adds a slash for nested routes.
-const OFFLINE_DOCUMENT_ROUTES = ["/", "/rooms", "/tasks", "/home-profile", "/plan", "/schedule"];
+const OFFLINE_DOCUMENT_ROUTES = [
+  "/",
+  "/rooms",
+  "/tasks",
+  "/home-profile",
+  "/plan",
+  "/schedule",
+  "/settings",
+];
 
 const serwist = new Serwist({
   precacheEntries: self.__SW_MANIFEST,
@@ -21,7 +29,7 @@ const serwist = new Serwist({
   clientsClaim: true,
   navigationPreload: true,
   runtimeCaching: [
-    // Today, inventory, task, and plan RSC payloads are keyed by the router state they were fetched from, so a
+    // Today, inventory, task, plan, and settings RSC payloads are keyed by the router state they were fetched from, so a
     // cached one can be stale offline. These pages are read offline from documents instead; see
     // docs/decisions/0005-offline-inventory-reading.md.
     {

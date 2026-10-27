@@ -1,7 +1,9 @@
+import { ChevronLeft } from "lucide-react";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { saveHomeProfile } from "@/app/(app)/tasks/actions";
 import { EditNotice } from "@/components/inventory/edit-guard";
+import { OfflineAwareLink } from "@/components/offline-aware-link";
 import { HomeProfileForm } from "@/components/tasks/home-profile-form";
 import { TasksCacheWarmer } from "@/components/tasks/tasks-cache-warmer";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,6 +17,13 @@ export default function HomeProfilePage() {
       aria-labelledby="home-profile-heading"
       className="mx-auto flex max-w-2xl flex-col gap-6"
     >
+      <OfflineAwareLink
+        href="/settings"
+        className="text-muted-foreground hover:text-foreground focus-visible:ring-ring -mb-4 -ml-1 inline-flex h-11 w-fit items-center gap-1 rounded-md px-1 text-sm outline-none focus-visible:ring-2"
+      >
+        <ChevronLeft aria-hidden className="size-4" />
+        Settings
+      </OfflineAwareLink>
       <div className="flex flex-col gap-1">
         <h1
           id="home-profile-heading"

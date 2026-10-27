@@ -60,7 +60,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             disableTransitionOnChange
           >
             {children}
-            <Toaster />
+            <Toaster mobileOffset={{ bottom: "calc(4.5rem + env(safe-area-inset-bottom))" }} />
           </ThemeProvider>
         </SerwistProvider>
       </body>

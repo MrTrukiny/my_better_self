@@ -1,4 +1,5 @@
 import { CalendarCheck } from "lucide-react";
+import { ScrollToHash } from "@/components/scroll-to-hash";
 import { lastSyncedLine } from "@/lib/calendar/format";
 import type { CalendarConnectionView } from "@/lib/calendar/queries";
 import type { ActionState } from "@/lib/inventory/action-state";
@@ -27,7 +28,12 @@ export function CalendarSection({
   now: Date;
 }) {
   return (
-    <section aria-labelledby="calendar-heading" className="flex flex-col gap-3 border-t pt-6">
+    <section
+      id="calendar"
+      aria-labelledby="calendar-heading"
+      className="flex scroll-mt-20 flex-col gap-3 border-t pt-6"
+    >
+      <ScrollToHash id="calendar" />
       <h2 id="calendar-heading" className="font-heading text-lg font-semibold">
         Google Calendar
       </h2>
