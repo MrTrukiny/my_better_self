@@ -160,6 +160,99 @@ describe("TodaySession", () => {
     expect(readQueue(localStorage, USER)).toHaveLength(2);
   });
 
+  it("009 AC1, AC2, AC7: numbers cleaning tasks with back-to-back slots; routines have none", () => {
+    renderSession();
+    const rows = screen.getByRole("list", { name: "Cleaning today" }).children;
+    expect(rows[0]).toHaveTextContent("1 · 07:00–07:15");
+    expect(rows[1]).toHaveTextContent("2 · 07:15–07:25");
+    expect(rows[2]).toHaveTextContent("3 · 07:25–07:38");
+    const routines = screen.getByRole("list", { name: "Routines today" });
+    expect(routines).not.toHaveTextContent("·");
+    expect(screen.queryByRole("textbox", { name: /Make the bed/ })).not.toBeInTheDocument();
+  });
+
+  it("009 AC2: slots don't move when a task is skipped", async () => {
+    const user = userEvent.setup();
+    renderSession();
+    await user.click(screen.getByRole("button", { name: "Skip Wipe counters" }));
+    const rows = screen.getByRole("list", { name: "Cleaning today" }).children;
+    expect(rows[1]).toHaveTextContent("2 · 07:15–07:25");
+  });
+
+  it("009 AC3, AC5: a done task takes the minutes it took, saved on Enter", async () => {
+    const user = userEvent.setup();
+    const { send } = renderSession();
+    expect(screen.queryByRole("textbox", { name: /Minutes taken/ })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("checkbox", { name: /Wipe counters/ }));
+    const field = screen.getByRole("textbox", { name: "Minutes taken for Wipe counters" });
+    await user.type(field, "12{Enter}");
+    await waitFor(() =>
+      expect(send).toHaveBeenCalledWith(
+        expect.objectContaining({ occurrenceId: "o-counters", status: "done", actualMinutes: 12 }),
+      ),
+    );
+    expect(screen.getByText("Took 12 min so far")).toBeInTheDocument();
+    expect(screen.getByText("15 of 38 min done")).toBeInTheDocument();
+  });
+
+  it("009 AC3, AC8: a value out of range shows an announced message and isn't saved", async () => {
+    const user = userEvent.setup();
+    const { send } = renderSession();
+    await user.click(screen.getByRole("checkbox", { name: /Wipe counters/ }));
+    const field = screen.getByRole("textbox", { name: "Minutes taken for Wipe counters" });
+    await user.type(field, "300");
+    await user.tab();
+    expect(screen.getByRole("alert")).toHaveTextContent("Enter whole minutes from 1 to 240.");
+    expect(field).toHaveAttribute("aria-invalid", "true");
+    expect(field).toHaveAccessibleDescription("Enter whole minutes from 1 to 240.");
+    expect(send).not.toHaveBeenCalledWith(expect.objectContaining({ actualMinutes: 300 }));
+  });
+
+  it("009 AC3: clearing the field removes the minutes", async () => {
+    const user = userEvent.setup();
+    const done = { ...TASKS[0], status: "done" as const, actualMinutes: 12 };
+    const { send } = renderSession({ tasks: [done, ...TASKS.slice(1)] });
+    expect(screen.getByText("Took 12 min so far")).toBeInTheDocument();
+    const field = screen.getByRole("textbox", { name: "Minutes taken for Wipe counters" });
+    expect(field).toHaveValue("12");
+    await user.clear(field);
+    await user.tab();
+    await waitFor(() =>
+      expect(send).toHaveBeenCalledWith(
+        expect.objectContaining({
+          occurrenceId: "o-counters",
+          status: "done",
+          actualMinutes: null,
+        }),
+      ),
+    );
+    expect(screen.queryByText(/so far/)).not.toBeInTheDocument();
+  });
+
+  it("009 AC4: unchecking a task removes its minutes", async () => {
+    const user = userEvent.setup();
+    const done = { ...TASKS[0], status: "done" as const, actualMinutes: 12 };
+    renderSession({ tasks: [done, ...TASKS.slice(1)] });
+    await user.click(screen.getByRole("checkbox", { name: /Wipe counters/ }));
+    expect(screen.queryByText(/so far/)).not.toBeInTheDocument();
+    await user.click(screen.getByRole("checkbox", { name: /Wipe counters/ }));
+    expect(screen.getByRole("textbox", { name: "Minutes taken for Wipe counters" })).toHaveValue(
+      "",
+    );
+  });
+
+  it("009 AC6: shows minutes queued on the device after a reload", () => {
+    localStorage.setItem(
+      queueKey(USER),
+      JSON.stringify([{ occurrenceId: "o-floor", status: "done", actualMinutes: 8, queuedAt: 1 }]),
+    );
+    vi.spyOn(navigator, "onLine", "get").mockReturnValue(false);
+    renderSession();
+    expect(screen.getByRole("textbox", { name: "Minutes taken for Sweep floor" })).toHaveValue("8");
+    expect(screen.getByText("Took 8 min so far")).toBeInTheDocument();
+    vi.restoreAllMocks();
+  });
+
   it("AC4: an offline copy from an earlier day can't be checked", () => {
     renderSession({ date: "2020-01-01" });
     expect(screen.getByText(/This is the session saved for/)).toBeInTheDocument();
