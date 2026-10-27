@@ -1,6 +1,6 @@
 # 007: Fixed-length sessions and calendar resync
 
-- **Status**: In progress
+- **Status**: Done
 - **Owner**: @mrtrukiny
 - **Created**: 2026-10-27
 
@@ -17,13 +17,13 @@ Make the daily cleaning session a fixed block of time, so the owner can protect 
 
 Each criterion is testable and maps to at least one test.
 
-- [ ] AC1: Given my calendar is connected and a day has cleaning tasks, then that day's event starts at the day's start time and lasts the day's budget (weekday or weekend minutes), whatever the tasks add up to. The title reads "Cleaning, 45 min" with the budget. The description starts with the planned minutes ("38 of 45 min planned"), then lists the tasks and routines as today. Days that are off or have no cleaning tasks still get no event.
-- [ ] AC2: Given I change a budget on the schedule page, when I save, then the events of the coming days change length to match, and no day gets a second event.
-- [ ] AC3: Given a day's session (start time plus budget) overlaps a busy time in my other calendars, then the plan shows the overlap warning for that day; given only the time after the planned tasks would overlap, the warning still shows, since the whole block is booked.
-- [ ] AC4: Given I open the plan or Today, then each day shows its session as start to start plus budget ("06:30–07:15"), followed by the planned minutes ("38 of 45 min").
-- [ ] AC5: Given my calendar is connected, when I choose "Sync now" in the calendar section of the schedule page, then the app replans from today, rewrites every event from today through the next 7 days (even those that look unchanged), deletes events of days that no longer have cleaning, and shows "Synced just now". The button shows a busy state and can't be triggered twice. Events of past days are not changed.
-- [ ] AC6: Given Google rejects "Sync now", then the calendar section shows "We couldn't update your calendar" as with any other sync, with "Reconnect" when access was lost, and the plan keeps the replan.
-- [ ] AC7: The calendar section shows when the calendar last synced ("Last synced 10 minutes ago"). "Sync now" works at 360px and on desktop, in light and dark mode, and with the keyboard; its result is announced to screen readers. Offline, it is disabled with the usual offline notice.
+- [x] AC1: Given my calendar is connected and a day has cleaning tasks, then that day's event starts at the day's start time and lasts the day's budget (weekday or weekend minutes), whatever the tasks add up to. The title reads "Cleaning, 45 min" with the budget. The description starts with the planned minutes ("38 of 45 min planned"), then lists the tasks and routines as today. Days that are off or have no cleaning tasks still get no event.
+- [x] AC2: Given I change a budget on the schedule page, when I save, then the events of the coming days change length to match, and no day gets a second event.
+- [x] AC3: Given a day's session (start time plus budget) overlaps a busy time in my other calendars, then the plan shows the overlap warning for that day; given only the time after the planned tasks would overlap, the warning still shows, since the whole block is booked.
+- [x] AC4: Given I open the plan or Today, then each day shows its session as start to start plus budget ("06:30–07:15"), followed by the planned minutes ("38 of 45 min").
+- [x] AC5: Given my calendar is connected, when I choose "Sync now" in the calendar section of the schedule page, then the app replans from today, rewrites every event from today through the next 7 days (even those that look unchanged), deletes events of days that no longer have cleaning, and shows "Synced just now". The button shows a busy state and can't be triggered twice. Events of past days are not changed.
+- [x] AC6: Given Google rejects "Sync now", then the calendar section shows "We couldn't update your calendar" as with any other sync, with "Reconnect" when access was lost, and the plan keeps the replan.
+- [x] AC7: The calendar section shows when the calendar last synced ("Last synced 10 minutes ago"). "Sync now" works at 360px and on desktop, in light and dark mode, and with the keyboard; its result is announced to screen readers. Offline, it is disabled with the usual offline notice.
 
 ## UX notes
 
@@ -74,7 +74,7 @@ Each criterion is testable and maps to at least one test.
   - Spec 006: AC1's session end-time wording gets a note superseded by 007.
 
   Files: `docs/decisions/0002-google-calendar.md`, `docs/ARCHITECTURE.md`, `docs/specs/004-scheduler.md`, `docs/specs/005-calendar-sync.md`, `docs/specs/006-today-view.md`. Covers: none; keeps docs consistent with AC1, AC3, AC4, AC5.
-- [ ] T9: E2E for the new flows with `CALENDAR_FAKE=1`:
+- [x] T9: E2E for the new flows with `CALENDAR_FAKE=1`:
   - The plan and Today show `06:30–07:15 · N of 45 min` with the default budget.
   - After changing the weekday budget to 60, the plan shows the new end time and the calendar status stays "Connected" with no failure notice.
   - "Sync now" from the keyboard at 360px in dark mode: it shows "Syncing…" and is disabled while running, then shows "Synced just now". After a reload it shows "Last synced …". No console errors.

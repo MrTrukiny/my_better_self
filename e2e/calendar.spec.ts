@@ -65,6 +65,88 @@ test.describe("Google Calendar sync", () => {
     });
   });
 
+  test("spec 007 AC1, AC2, AC4: the plan shows the budget-long session and follows budget changes", async ({
+    page,
+    signedInUser: _,
+  }) => {
+    test.slow();
+    await page.goto("/rooms");
+    await addRoom(page, "Kitchen");
+    await openRoom(page, "Kitchen");
+    await addItem(page, { type: "Floor" });
+    await page.goto("/tasks/review");
+    await proposeTasks(page, /tasks proposed for the whole home/);
+    await acceptAllProposals(page);
+    await saveSchedule(page);
+    await connectCalendar(page);
+
+    await page.goto("/plan");
+    await expect(planDays(page)).toHaveCount(7);
+    await expect(page.getByText(/^06:30–07:15 · \d+ of 45 min$/).first()).toBeVisible();
+
+    await page.goto("/schedule");
+    await page.getByLabel("Weekday minutes").fill("60");
+    await page.getByRole("button", { name: "Save" }).click();
+    await expect(page.getByRole("status").filter({ hasText: "Saved." })).toBeVisible({
+      timeout: REPLAN_TIMEOUT,
+    });
+
+    await page.goto("/plan");
+    await expect(page.getByText(/^06:30–07:30 · \d+ of 60 min$/).first()).toBeVisible();
+    await expect(page.getByText(/of 45 min$/)).toHaveCount(0);
+
+    await page.goto("/schedule");
+    await expect(connectedStatus(page)).toHaveText("Connected: Cleaning");
+    await expect(calendarSection(page)).not.toContainText("We couldn't update your calendar");
+  });
+
+  test("spec 007 AC5 and AC7: syncs now with the keyboard at 360px in dark mode", async ({
+    page,
+    signedInUser: _,
+  }) => {
+    test.slow();
+    const errors: string[] = [];
+    page.on("console", (message) => {
+      if (message.type() === "error") errors.push(message.text());
+    });
+    await page.setViewportSize({ width: 360, height: 780 });
+    await page.emulateMedia({ colorScheme: "dark" });
+    await saveSchedule(page);
+    await connectCalendar(page);
+
+    const section = calendarSection(page);
+    await expect(section.getByRole("status").filter({ hasText: /^Last synced / })).toBeVisible();
+
+    // Holds the Server Action briefly, so the busy state can be seen.
+    await page.route("**/schedule*", async (route) => {
+      if (route.request().method() === "POST") {
+        await new Promise((resolve) => setTimeout(resolve, 1_000));
+      }
+      await route.fallback();
+    });
+    const syncNow = section.getByRole("button", { name: "Sync now" });
+    await syncNow.focus();
+    await page.keyboard.press("Enter");
+    await expect(section.getByRole("button", { name: "Syncing…" })).toBeDisabled();
+    await expect(section.getByRole("status").filter({ hasText: "Synced just now" })).toBeVisible({
+      timeout: REPLAN_TIMEOUT,
+    });
+    await expect(syncNow).toBeEnabled();
+    await expect(section).not.toContainText("We couldn't update your calendar");
+    await page.unroute("**/schedule*");
+
+    await expect(page.locator("html")).toHaveClass(/dark/);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+      360,
+    );
+
+    await page.reload();
+    await expect(
+      section.getByRole("status").filter({ hasText: /^Last synced (just now|\d+ minutes? ago)$/ }),
+    ).toBeVisible();
+    expect(errors).toEqual([]);
+  });
+
   test("AC1: a cancelled consent connects nothing and says so", async ({
     page,
     signedInUser: _,
@@ -140,9 +222,11 @@ test.describe("Google Calendar sync", () => {
     const section = calendarSection(page);
     await expect(connectedStatus(page)).toHaveText("Connected: Cleaning");
     await expect(section.getByRole("button", { name: "Disconnect" })).toBeDisabled();
+    await expect(section.getByRole("button", { name: "Sync now" })).toBeDisabled();
 
     await context.setOffline(false);
     await expect(section.getByRole("button", { name: "Disconnect" })).toBeEnabled();
+    await expect(section.getByRole("button", { name: "Sync now" })).toBeEnabled();
   });
 });
 

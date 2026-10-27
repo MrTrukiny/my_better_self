@@ -1,4 +1,5 @@
 import { expect, test } from "./fixtures";
+import { weekdayFromToday } from "./support/plan";
 import { REPLAN_TIMEOUT } from "./support/tasks";
 import { cleaningToday, setUpToday, waitForSync } from "./support/today";
 
@@ -28,6 +29,10 @@ test.describe("Today", () => {
     await expect(boxes.first()).toBeVisible({ timeout: REPLAN_TIMEOUT });
     const count = await boxes.count();
     expect(count).toBeGreaterThan(0);
+    // setUpToday starts today's session at 23:59; it lasts the day's default budget.
+    const weekend = ["Saturday", "Sunday"].includes(weekdayFromToday(0));
+    const sessionWindow = weekend ? "23:59–00:59 · \\d+ of 60 min" : "23:59–00:44 · \\d+ of 45 min";
+    await expect(page.getByText(new RegExp(sessionWindow))).toBeVisible();
     await expect(page.getByText("Start a streak today")).toBeVisible();
     await expect(page.getByText(/^0 of \d+ min done$/)).toBeVisible();
     await expect(page.getByRole("list", { name: "Routines today" })).toContainText(
