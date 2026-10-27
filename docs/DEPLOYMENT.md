@@ -14,6 +14,12 @@ How to put My Better Self in production on Vercel, with Google sign-in, Google C
 
    Run it again after every merge that adds a file in `drizzle/`, before or right after the deploy that needs it.
 
+   With the Neon CLI, `neon connection-string <branch> --project-id <id>` prints the direct URL (add `--pooled` for the pooled one), so the secret never has to be pasted. If `drizzle-kit migrate` exits with code 1 and no message, run the same migrations with drizzle-orm's migrator, which prints the error:
+
+   ```bash
+   U="<direct production URL>" node -e 'const {Pool}=require("pg");const {drizzle}=require("drizzle-orm/node-postgres");const {migrate}=require("drizzle-orm/node-postgres/migrator");const pool=new Pool({connectionString:process.env.U});migrate(drizzle(pool),{migrationsFolder:"drizzle"}).then(()=>console.log("ok"),console.error).finally(()=>pool.end())'
+   ```
+
 ## 2. Google Cloud
 
 In the project that holds the OAuth client used for sign-in ([Google Cloud Console](https://console.cloud.google.com/)):
@@ -24,12 +30,15 @@ In the project that holds the OAuth client used for sign-in ([Google Cloud Conso
    - `https://www.googleapis.com/auth/calendar.app.created`
    - `https://www.googleapis.com/auth/calendar.calendarlist.readonly`
    - `https://www.googleapis.com/auth/calendar.freebusy`
-4. **Publishing status**: Audience > Publish app, so the status is **In production**. It can stay unverified for personal use: Google shows an "unverified app" warning when you connect the calendar, which you accept with "Advanced > Go to My Better Self". In **Testing**, refresh tokens expire after 7 days and the daily job stops working.
+4. **Branding**: app name, support and developer contact emails, home page `https://<your-domain>`, privacy policy `https://<your-domain>/privacy`, terms `https://<your-domain>/terms`, and `<your-domain>` under Authorized domains. Leave the logo empty: uploading one requires verification. Publishing stays disabled until this page is complete.
+5. **Publishing status**: Audience > Publish app, so the status is **In production**. It can stay unverified for personal use: Google shows an "unverified app" warning when you connect the calendar, which you accept with "Advanced > Go to My Better Self". In **Testing**, refresh tokens expire after 7 days and the daily job stops working.
 
 ## 3. Vercel project
 
 1. Import the GitHub repository in Vercel (framework preset: Next.js; build command and output are detected). Use Node 24.
-2. Set these environment variables for **Production** (and Preview, with preview values, if you use preview deployments):
+   - **Domain**: the public production domain is the one under Settings > Domains (for example `my-better-self-tkn.vercel.app`). The `<project>-<team>.vercel.app` alias and per-deployment URLs sit behind Vercel's login, so don't use them for `BETTER_AUTH_URL` or the Google redirect URI. If you change the domain, update both and redeploy.
+   - **Production only**: the app has no preview environment, so set Settings > Git > Ignored Build Step to `if [ "$VERCEL_ENV" = "production" ]; then exit 1; else exit 0; fi`. Otherwise every pull request gets a failed preview deployment, since its variables exist only in Production.
+2. Set these environment variables for **Production**:
 
    | Variable                       | Value                                                               |
    | ------------------------------ | ------------------------------------------------------------------- |
