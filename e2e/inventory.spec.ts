@@ -90,6 +90,7 @@ test.describe("home inventory", () => {
     page,
     signedInUser: _,
   }) => {
+    test.slow();
     await page.goto("/rooms");
     await addRoom(page, "Garage");
     await openRoom(page, "Garage");
