@@ -43,6 +43,32 @@ describe("queue", () => {
     expect(dequeue(storage, USER, change("a", "done", 1))).toEqual([change("a", "scheduled", 2)]);
   });
 
+  it("009 AC6: carries minutes, and a later change replaces them too", () => {
+    enqueue(storage, USER, { ...change("a", "done", 1), actualMinutes: 12 });
+    enqueue(storage, USER, { ...change("b", "done", 2), actualMinutes: null });
+    expect(readQueue(storage, USER)).toEqual([
+      { ...change("a", "done", 1), actualMinutes: 12 },
+      { ...change("b", "done", 2), actualMinutes: null },
+    ]);
+    enqueue(storage, USER, change("a", "scheduled", 3));
+    expect(readQueue(storage, USER)).toEqual([
+      { ...change("b", "done", 2), actualMinutes: null },
+      change("a", "scheduled", 3),
+    ]);
+  });
+
+  it("009 AC6: drops entries with malformed minutes", () => {
+    storage.setItem(
+      queueKey(USER),
+      JSON.stringify([
+        { ...change("a", "done", 1), actualMinutes: "12" },
+        { ...change("b", "done", 2), actualMinutes: 1.5 },
+        { ...change("c", "done", 3), actualMinutes: 12 },
+      ]),
+    );
+    expect(readQueue(storage, USER).map((c) => c.occurrenceId)).toEqual(["c"]);
+  });
+
   it("is scoped to the user and ignores corrupt data", () => {
     enqueue(storage, USER, change("a", "done", 1));
     expect(readQueue(storage, "someone-else")).toEqual([]);

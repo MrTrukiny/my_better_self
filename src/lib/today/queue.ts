@@ -5,7 +5,13 @@ import type { CheckOffResult } from "./schemas";
  * Check-offs waiting to reach the server, kept on the device so they survive a reload or a
  * lost connection. One entry per occurrence: a later change replaces an earlier one. See ADR 0008.
  */
-export type QueuedChange = { occurrenceId: string; status: OccurrenceStatus; queuedAt: number };
+export type QueuedChange = {
+  occurrenceId: string;
+  status: OccurrenceStatus;
+  /** As in `CheckOffInput`: a number sets the minutes, null clears them, absent keeps them. */
+  actualMinutes?: number | null;
+  queuedAt: number;
+};
 
 type QueueStorage = Pick<Storage, "getItem" | "setItem" | "removeItem">;
 
@@ -92,10 +98,11 @@ function isQueuedChange(value: unknown): value is QueuedChange {
   if (typeof value !== "object" || value === null) {
     return false;
   }
-  const { occurrenceId, status, queuedAt } = value as Record<string, unknown>;
+  const { occurrenceId, status, actualMinutes, queuedAt } = value as Record<string, unknown>;
   return (
     typeof occurrenceId === "string" &&
     (status === "scheduled" || status === "done" || status === "skipped") &&
+    (actualMinutes === undefined || actualMinutes === null || Number.isInteger(actualMinutes)) &&
     typeof queuedAt === "number"
   );
 }
