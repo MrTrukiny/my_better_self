@@ -11,8 +11,9 @@ import { TasksCacheWarmer } from "@/components/tasks/tasks-cache-warmer";
 import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getRooms } from "@/lib/inventory/queries";
+import { describeUncovered, findUncovered, hasUncovered, NOTHING_NEW } from "@/lib/tasks/coverage";
 import { HELPERS } from "@/lib/tasks/helpers";
-import { getHomeProfile, getProposals } from "@/lib/tasks/queries";
+import { getHomeProfile, getProposals, getProposalTargets } from "@/lib/tasks/queries";
 
 export const metadata: Metadata = { title: "Propose tasks" };
 
@@ -43,11 +44,12 @@ export default function ReviewPage({ searchParams }: PageProps<"/tasks/review">)
 }
 
 async function ReviewSection({ searchParams }: Pick<PageProps<"/tasks/review">, "searchParams">) {
-  const [{ room: roomParam }, rooms, proposals, profile] = await Promise.all([
+  const [{ room: roomParam }, rooms, proposals, profile, targets] = await Promise.all([
     searchParams,
     getRooms(),
     getProposals(),
     getHomeProfile(),
+    getProposalTargets(),
   ]);
 
   if (rooms.length === 0) {
@@ -70,6 +72,8 @@ async function ReviewSection({ searchParams }: Pick<PageProps<"/tasks/review">, 
 
   const scope = rooms.find((room) => room.id === roomParam) ?? null;
   const helperLabels = HELPERS.filter((h) => profile.helpers.includes(h.id)).map((h) => h.label);
+  const uncovered = findUncovered({ ...targets, scopeRoomId: scope?.id ?? null });
+  const somethingNew = hasUncovered(uncovered);
 
   return (
     <div className="flex flex-col gap-8">
@@ -84,10 +88,12 @@ async function ReviewSection({ searchParams }: Pick<PageProps<"/tasks/review">, 
             Tell us about your home
           </OfflineAwareLink>
         </p>
+        {somethingNew ? <p className="text-sm">{describeUncovered(uncovered)}</p> : null}
         <GenerateButton
           key={scope?.id ?? "home"}
           action={generateProposals.bind(null, scope?.id ?? null)}
           scopeLabel={scope?.name ?? "the whole home"}
+          unavailableReason={somethingNew ? undefined : NOTHING_NEW}
         />
       </div>
       <ProposalList proposals={proposals} roomOrder={rooms.map((room) => room.id)} />

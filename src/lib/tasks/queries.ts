@@ -6,6 +6,7 @@ import { homeProfile, item, room, scheduleSettings, task, taskProposal } from "@
 import type { ProposalInput } from "@/lib/ai/task-proposals";
 import { inventoryTag } from "@/lib/inventory/queries";
 import { getCurrentUser } from "@/lib/session";
+import type { CoverageInput } from "./coverage";
 import { HELPER_IDS, type HelperId } from "./helpers";
 import type { TaskKind } from "./limits";
 
@@ -44,7 +45,38 @@ export async function getProposals(): Promise<TaskEntry[]> {
   return proposalsForUser(user.id);
 }
 
+/** Rooms with their item ids and the targets of every task and pending proposal. */
+export async function getProposalTargets(): Promise<Omit<CoverageInput, "scopeRoomId">> {
+  const user = await getCurrentUser();
+  return proposalTargetsForUser(user.id);
+}
+
 // Not exported: callers must go through the getters above, which resolve the user first.
+async function proposalTargetsForUser(userId: string): Promise<Omit<CoverageInput, "scopeRoomId">> {
+  "use cache";
+  cacheTag(tasksTag(userId), inventoryTag(userId));
+
+  const [rooms, items, tasks, proposals] = await Promise.all([
+    db.select({ id: room.id }).from(room).where(eq(room.userId, userId)),
+    db.select({ id: item.id, roomId: item.roomId }).from(item).where(eq(item.userId, userId)),
+    db
+      .select({ roomId: task.roomId, itemId: task.itemId })
+      .from(task)
+      .where(eq(task.userId, userId)),
+    db
+      .select({ roomId: taskProposal.roomId, itemId: taskProposal.itemId })
+      .from(taskProposal)
+      .where(eq(taskProposal.userId, userId)),
+  ]);
+  return {
+    rooms: rooms.map((r) => ({
+      id: r.id,
+      items: items.filter((i) => i.roomId === r.id).map((i) => ({ id: i.id })),
+    })),
+    existing: [...tasks, ...proposals],
+  };
+}
+
 async function homeProfileForUser(userId: string): Promise<HomeProfile> {
   "use cache";
   cacheTag(tasksTag(userId));
