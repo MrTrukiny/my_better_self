@@ -127,4 +127,25 @@
   html {
     @apply font-sans;
   }
+  /* Tailwind v4 resets buttons to the default cursor; every control that acts on click points. */
+  button,
+  summary,
+  select,
+  input:is([type="checkbox"], [type="radio"], [type="file"], [type="range"]),
+  [role="button"],
+  [role="checkbox"],
+  [role="radio"],
+  [role="switch"],
+  [role="tab"],
+  [role="combobox"],
+  [role="option"],
+  [role="menuitem"],
+  [role="menuitemcheckbox"],
+  [role="menuitemradio"],
+  label:has([role="checkbox"], [role="radio"], [role="switch"]) {
+    cursor: pointer;
+  }
+  :is(button, select, input, [role]):is(:disabled, [aria-disabled="true"], [data-disabled]) {
+    cursor: not-allowed;
+  }
 }
