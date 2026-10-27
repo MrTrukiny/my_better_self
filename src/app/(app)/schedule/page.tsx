@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
+import { io } from "next/cache";
 import { Suspense } from "react";
 import { saveSchedule } from "@/app/(app)/schedule/actions";
-import { disconnectCalendar } from "@/app/(app)/schedule/calendar-actions";
+import { disconnectCalendar, syncCalendarNow } from "@/app/(app)/schedule/calendar-actions";
 import { CalendarSection } from "@/components/calendar/calendar-section";
 import { EditNotice } from "@/components/inventory/edit-guard";
 import { OfflineCacheWarmer } from "@/components/offline-cache-warmer";
@@ -58,6 +59,7 @@ async function CalendarArea({ searchParams }: Pick<PageProps<"/schedule">, "sear
     getCurrentUser(),
     getCalendarConnection(),
   ]);
+  await io();
   return (
     <CalendarSection
       connection={connection}
@@ -65,6 +67,8 @@ async function CalendarArea({ searchParams }: Pick<PageProps<"/schedule">, "sear
       fake={isCalendarFake()}
       email={user.email}
       disconnect={disconnectCalendar}
+      syncNow={syncCalendarNow}
+      now={new Date()}
     />
   );
 }

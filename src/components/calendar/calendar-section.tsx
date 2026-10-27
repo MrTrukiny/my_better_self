@@ -1,9 +1,11 @@
 import { CalendarCheck } from "lucide-react";
+import { lastSyncedLine } from "@/lib/calendar/format";
 import type { CalendarConnectionView } from "@/lib/calendar/queries";
 import type { ActionState } from "@/lib/inventory/action-state";
 import { CalendarSyncNotice } from "./calendar-sync-notice";
 import { ConnectButton } from "./connect-button";
 import { DisconnectButton } from "./disconnect-button";
+import { SyncNowButton } from "./sync-now-button";
 
 export function CalendarSection({
   connection,
@@ -11,6 +13,8 @@ export function CalendarSection({
   fake,
   email,
   disconnect,
+  syncNow,
+  now,
 }: {
   connection: CalendarConnectionView | null;
   /** The owner just cancelled or declined Google's consent screen. */
@@ -18,6 +22,9 @@ export function CalendarSection({
   fake: boolean;
   email: string;
   disconnect: () => Promise<ActionState>;
+  syncNow: () => Promise<ActionState>;
+  /** When the page was rendered, for the last-synced line. */
+  now: Date;
 }) {
   return (
     <section aria-labelledby="calendar-heading" className="flex flex-col gap-3 border-t pt-6">
@@ -36,9 +43,9 @@ export function CalendarSection({
             </div>
           </div>
           <CalendarSyncNotice status={connection.status} fake={fake} email={email} />
-          <div>
+          <SyncNowButton action={syncNow} lastSynced={lastSyncedLine(connection.lastSyncedAt, now)}>
             <DisconnectButton action={disconnect} />
-          </div>
+          </SyncNowButton>
         </>
       ) : (
         <>

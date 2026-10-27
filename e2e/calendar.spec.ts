@@ -2,6 +2,7 @@ import { expect, test } from "./fixtures";
 import {
   calendarSection,
   connectCalendar,
+  connectedStatus,
   E2E_CRON_SECRET,
   expectPlanEventually,
   OVERLAP_TEXT,
@@ -92,7 +93,7 @@ test.describe("Google Calendar sync", () => {
     const connect = section.getByRole("button", { name: "Connect Google Calendar" });
     await connect.focus();
     await page.keyboard.press("Enter");
-    await expect(section.getByRole("status")).toHaveText("Connected: Cleaning", {
+    await expect(connectedStatus(page)).toHaveText("Connected: Cleaning", {
       timeout: REPLAN_TIMEOUT,
     });
     await expect(page.locator("html")).toHaveClass(/dark/);
@@ -107,7 +108,7 @@ test.describe("Google Calendar sync", () => {
     await expect(dialog).toContainText("The Cleaning calendar and its events will be deleted");
     await page.keyboard.press("Escape");
     await expect(dialog).toBeHidden();
-    await expect(section.getByRole("status")).toHaveText("Connected: Cleaning");
+    await expect(connectedStatus(page)).toHaveText("Connected: Cleaning");
 
     await disconnect.focus();
     await page.keyboard.press("Enter");
@@ -137,7 +138,7 @@ test.describe("Google Calendar sync", () => {
     const schedule = page.getByRole("region", { name: "Schedule" });
     await expect(schedule.getByText(OFFLINE_NOTICE)).toBeVisible();
     const section = calendarSection(page);
-    await expect(section.getByRole("status")).toHaveText("Connected: Cleaning");
+    await expect(connectedStatus(page)).toHaveText("Connected: Cleaning");
     await expect(section.getByRole("button", { name: "Disconnect" })).toBeDisabled();
 
     await context.setOffline(false);
