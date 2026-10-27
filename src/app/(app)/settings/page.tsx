@@ -24,7 +24,10 @@ export default function SettingsPage() {
         </h1>
         <p className="text-muted-foreground text-sm">How and when the app plans your cleaning.</p>
       </div>
-      <ul aria-label="Settings" className="flex flex-col divide-y rounded-xl border">
+      <ul
+        aria-label="Settings"
+        className="flex flex-col divide-y overflow-hidden rounded-xl border"
+      >
         <SettingsRow href="/schedule" icon={Clock} title="Schedule">
           <ScheduleLine />
         </SettingsRow>
@@ -57,7 +60,7 @@ function SettingsRow({
     <li>
       <OfflineAwareLink
         href={href}
-        className="hover:bg-muted/50 focus-visible:ring-ring flex min-h-16 items-center gap-3 px-4 py-3 outline-none first:rounded-t-xl focus-visible:ring-2 focus-visible:ring-inset"
+        className="hover:bg-muted/50 focus-visible:ring-ring flex min-h-16 items-center gap-3 px-4 py-3 outline-none focus-visible:ring-2 focus-visible:ring-inset"
       >
         <Icon aria-hidden className="text-muted-foreground size-5 shrink-0" />
         <span className="flex min-w-0 flex-1 flex-col">

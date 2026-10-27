@@ -1,6 +1,6 @@
 # 010: App navigation and settings
 
-- **Status**: In progress
+- **Status**: Done
 - **Owner**: @mrtrukiny
 - **Created**: 2026-10-27
 
@@ -16,14 +16,14 @@ The schedule and the calendar connection are hard to find: the only ways in are 
 
 ## Acceptance criteria
 
-- [ ] AC1: Given I'm signed in on a phone (360px wide), then a tab bar fixed at the bottom shows five destinations with an icon and a label: Today, Plan, Tasks, Rooms, and Settings. It stays clear of the home indicator (safe area), and page content is never hidden behind it.
-- [ ] AC2: Given I'm signed in on desktop, then the top bar shows the same five destinations as links, and there is no bottom tab bar.
-- [ ] AC3: Given I'm on any page, then the destination it belongs to is marked as current, visually and for screen readers. A room page belongs to Rooms, task review to Tasks, and the schedule and home profile pages to Settings.
-- [ ] AC4: Given I open Settings, then I see three entries, each with a one-line summary: Schedule (for example "Weekdays 06:30 · 45 min"), Google Calendar ("Connected" or "Not connected"), and Home profile (for example "2 helpers"). Each entry opens its page.
-- [ ] AC5: Given I haven't set a schedule yet, then Settings says so in the Schedule entry ("Not set") and it still opens the schedule page. The links to the schedule that exist today in the plan keep working.
-- [ ] AC6: Given I'm on the schedule or home profile page, then a back link returns to Settings, and the browser's Back button returns where I came from.
-- [ ] AC7: Given I'm offline, then the navigation works as links do today: pages I've opened before load from the device, and others show the offline page. Settings shows its last saved summaries, and the pages behind it keep their current offline behavior.
-- [ ] AC8: The navigation works with the keyboard only (a logical tab order, a visible focus ring), in light and dark mode. Each destination has an accessible name, the tab bar is a labeled navigation landmark, and touch targets are at least 44px.
+- [x] AC1: Given I'm signed in on a phone (360px wide), then a tab bar fixed at the bottom shows five destinations with an icon and a label: Today, Plan, Tasks, Rooms, and Settings. It stays clear of the home indicator (safe area), and page content is never hidden behind it.
+- [x] AC2: Given I'm signed in on desktop, then the top bar shows the same five destinations as links, and there is no bottom tab bar.
+- [x] AC3: Given I'm on any page, then the destination it belongs to is marked as current, visually and for screen readers. A room page belongs to Rooms, task review to Tasks, and the schedule and home profile pages to Settings.
+- [x] AC4: Given I open Settings, then I see three entries, each with a one-line summary: Schedule (for example "Weekdays 06:30 · 45 min"), Google Calendar ("Connected" or "Not connected"), and Home profile (for example "2 helpers"). Each entry opens its page.
+- [x] AC5: Given I haven't set a schedule yet, then Settings says so in the Schedule entry ("Not set") and it still opens the schedule page. The links to the schedule that exist today in the plan keep working.
+- [x] AC6: Given I'm on the schedule or home profile page, then a back link returns to Settings, and the browser's Back button returns where I came from.
+- [x] AC7: Given I'm offline, then the navigation works as links do today: pages I've opened before load from the device, and others show the offline page. Settings shows its last saved summaries, and the pages behind it keep their current offline behavior.
+- [x] AC8: The navigation works with the keyboard only (a logical tab order, a visible focus ring), in light and dark mode. Each destination has an accessible name, the tab bar is a labeled navigation landmark, and touch targets are at least 44px.
 
 ## UX notes
 
@@ -62,11 +62,11 @@ The schedule and the calendar connection are hard to find: the only ways in are 
 
 ### Tasks
 
-- [ ] T1: Destinations and sections: `NAV_ITEMS` and `sectionFor`. Files: `src/lib/navigation.ts`, `src/lib/navigation.test.ts`. Covers: AC3.
-- [ ] T2: Navigation UI: `AppNav` with the top-bar list and the bottom tab bar, current marking, and `AppShell` using it with a Suspense fallback and mobile bottom padding. Files: `src/components/app-nav.tsx`, `src/components/app-nav.test.tsx`, `src/components/app-shell.tsx`. Covers: AC1, AC2, AC3, AC8.
-- [ ] T3: Settings summaries: schedule, calendar, and home profile one-liners. Files: `src/lib/settings/summary.ts`, `src/lib/settings/summary.test.ts`. Covers: AC4, AC5.
-- [ ] T4: Settings page and back links, plus its offline copy. Files: `src/app/(app)/settings/page.tsx`, `src/app/(app)/schedule/page.tsx`, `src/app/(app)/home-profile/page.tsx`, `src/components/calendar/calendar-section.tsx` (anchor id), `src/components/tasks/tasks-cache-warmer.tsx`, `src/app/sw.ts`. Covers: AC4, AC5, AC6, AC7.
-- [ ] T5: E2E and docs: tab bar on mobile and top links on desktop with the current section, Settings summaries and links, back links, Settings offline, keyboard and dark mode. `docs/ARCHITECTURE.md` (routes and the app shell). Files: `e2e/navigation.spec.ts`, `docs/ARCHITECTURE.md`. Covers: AC1–AC8.
+- [x] T1: Destinations and sections: `NAV_ITEMS` and `sectionFor`. Files: `src/lib/navigation.ts`, `src/lib/navigation.test.ts`. Covers: AC3.
+- [x] T2: Navigation UI: `AppNav` with the top-bar list and the bottom tab bar, current marking, and `AppShell` using it with a Suspense fallback and mobile bottom padding. Files: `src/components/app-nav.tsx`, `src/components/app-nav.test.tsx`, `src/components/app-shell.tsx`. Covers: AC1, AC2, AC3, AC8.
+- [x] T3: Settings summaries: schedule, calendar, and home profile one-liners. Files: `src/lib/settings/summary.ts`, `src/lib/settings/summary.test.ts`. Covers: AC4, AC5.
+- [x] T4: Settings page and back links, plus its offline copy. Files: `src/app/(app)/settings/page.tsx`, `src/app/(app)/schedule/page.tsx`, `src/app/(app)/home-profile/page.tsx`, `src/components/calendar/calendar-section.tsx` (anchor id), `src/components/tasks/tasks-cache-warmer.tsx`, `src/app/sw.ts`. Covers: AC4, AC5, AC6, AC7.
+- [x] T5: E2E and docs: tab bar on mobile and top links on desktop with the current section, Settings summaries and links, back links, Settings offline, keyboard and dark mode. `docs/ARCHITECTURE.md` (routes and the app shell). Files: `e2e/navigation.spec.ts`, `docs/ARCHITECTURE.md`. Covers: AC1–AC8.
 
 ### Test plan
 
