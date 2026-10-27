@@ -4,7 +4,7 @@ import { DEFAULT_AI_MODEL, parseEnv } from "./env";
 const valid = {
   DATABASE_URL: "postgres://user:pass@localhost:5432/db",
   BETTER_AUTH_SECRET: "a".repeat(32),
-  BETTER_AUTH_URL: "http://localhost:3000",
+  BETTER_AUTH_URL: "http://localhost:4837",
   GOOGLE_CLIENT_ID: "client-id",
   GOOGLE_CLIENT_SECRET: "client-secret",
   ALLOWED_EMAILS: "owner@example.com",

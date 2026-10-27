@@ -29,7 +29,7 @@ export default defineConfig({
   ],
   webServer: {
     // Service workers and offline behavior are only reliable in a production build.
-    command: `pnpm db:migrate && pnpm build && pnpm start --port ${PORT}`,
+    command: `pnpm db:migrate && pnpm build && pnpm exec next start --port ${PORT}`,
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,

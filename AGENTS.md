@@ -21,18 +21,18 @@ The user talks in **Spanish**; reply in chat in Spanish. Everything written to t
 
 ## Commands
 
-| Command                     | What it does                                                                    |
-| --------------------------- | ------------------------------------------------------------------------------- |
-| `pnpm dev`                  | Dev server (service worker is not reliable here; use a prod build for PWA work) |
-| `pnpm build && pnpm start`  | Production build and server                                                     |
-| `pnpm typecheck`            | `next typegen` + `tsc --noEmit`                                                 |
-| `pnpm lint` / `pnpm format` | Biome check / Biome check with fixes                                            |
-| `pnpm test`                 | Vitest unit tests                                                               |
-| `pnpm test:e2e`             | Playwright against a prod build, desktop + mobile viewports                     |
-| `pnpm check:fast`           | typecheck + lint + unit tests (run often)                                       |
-| `pnpm check`                | `check:fast` + e2e (run before declaring a task done; needs `DATABASE_URL`)     |
-| `pnpm db:generate`          | Generate a SQL migration in `drizzle/` from `src/db/schema/`                    |
-| `pnpm db:migrate`           | Apply pending migrations to `DATABASE_URL`                                      |
+| Command                     | What it does                                                                                 |
+| --------------------------- | -------------------------------------------------------------------------------------------- |
+| `pnpm dev`                  | Dev server on port 4837 (service worker is not reliable here; use a prod build for PWA work) |
+| `pnpm build && pnpm start`  | Production build and server                                                                  |
+| `pnpm typecheck`            | `next typegen` + `tsc --noEmit`                                                              |
+| `pnpm lint` / `pnpm format` | Biome check / Biome check with fixes                                                         |
+| `pnpm test`                 | Vitest unit tests                                                                            |
+| `pnpm test:e2e`             | Playwright against a prod build, desktop + mobile viewports                                  |
+| `pnpm check:fast`           | typecheck + lint + unit tests (run often)                                                    |
+| `pnpm check`                | `check:fast` + e2e (run before declaring a task done; needs `DATABASE_URL`)                  |
+| `pnpm db:generate`          | Generate a SQL migration in `drizzle/` from `src/db/schema/`                                 |
+| `pnpm db:migrate`           | Apply pending migrations to `DATABASE_URL`                                                   |
 
 ## Layout
 
