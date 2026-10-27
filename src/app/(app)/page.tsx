@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cacheVersion } from "@/lib/cache-version";
 import { toIsoDate } from "@/lib/scheduler/dates";
 import { getScheduleSettings } from "@/lib/scheduler/queries";
-import { startTimeFor } from "@/lib/scheduler/settings";
+import { budgetFor, startTimeFor } from "@/lib/scheduler/settings";
 import { getCurrentUser } from "@/lib/session";
 import { getTasks } from "@/lib/tasks/queries";
 import { getToday } from "@/lib/today/queries";
@@ -72,6 +72,7 @@ async function TodaySection() {
       date={toIsoDate(today)}
       timeZone={settings.timeZone}
       start={startTimeFor(settings, today)}
+      budget={budgetFor(settings, today)}
       tasks={todayTasks}
       pastStreak={streakOf(history, today, NO_COUNTS)}
       version={cacheVersion([settings, todayTasks])}

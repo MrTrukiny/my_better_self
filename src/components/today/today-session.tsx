@@ -26,6 +26,8 @@ export type TodaySessionProps = {
   timeZone: string;
   /** The day's start time, or null on a day off. */
   start: string | null;
+  /** The day's cleaning minutes; the session lasts this long. */
+  budget: number;
   tasks: TodayTask[];
   /** Complete cleaning days before today. */
   pastStreak: number;
@@ -39,6 +41,7 @@ export function TodaySession({
   date,
   timeZone,
   start,
+  budget,
   tasks,
   pastStreak,
   version,
@@ -106,7 +109,8 @@ export function TodaySession({
           {startMinutes !== null && cleaning.length > 0 ? (
             <span className="tabular-nums">
               {" "}
-              · {start}–{formatTime(startMinutes + progress.totalMinutes)}
+              · {start}–{formatTime(startMinutes + budget)} · {progress.totalMinutes} of {budget}{" "}
+              min
             </span>
           ) : null}
         </p>
