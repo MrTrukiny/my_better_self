@@ -7,10 +7,30 @@ import { account, calendarConnection, calendarDay } from "@/db/schema";
 import { getCalendarClient } from "@/lib/calendar/client";
 import { CalendarError } from "@/lib/calendar/google";
 import { withoutCalendarScopes } from "@/lib/calendar/scopes";
+import { syncCalendar } from "@/lib/calendar/sync";
 import type { ActionState } from "@/lib/inventory/action-state";
+import { replan } from "@/lib/scheduler/plan";
 import { getCurrentUser } from "@/lib/session";
 
 const DISCONNECT_FAILED = "Couldn't disconnect your calendar. Try again.";
+const REPLAN_FAILED = "Couldn't update your plan. Try again.";
+
+/**
+ * "Sync now": replans from today, then rewrites every event from today through the seventh day.
+ * A failed sync is stored as the connection's status, so the refreshed section shows its notice.
+ */
+export async function syncCalendarNow(): Promise<ActionState> {
+  const user = await getCurrentUser();
+  try {
+    await replan(user.id);
+  } catch (error) {
+    console.error("syncCalendarNow replan failed", error);
+    return { status: "error", formError: REPLAN_FAILED };
+  }
+  const result = await syncCalendar(user.id, { force: true });
+  refresh();
+  return result === "ok" ? { status: "success" } : { status: "error" };
+}
 
 /**
  * Deletes the "Cleaning" calendar in Google, revokes the grant, and forgets the connection.
