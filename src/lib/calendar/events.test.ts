@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { PlanDayView, PlanTask } from "@/lib/scheduler/format";
 import { buildEvent, eventIdFor, zonedTimeToUtc } from "./events";
+import { overlapsBusy } from "./overlap";
 
 const task = (overrides: Partial<PlanTask>): PlanTask => ({
   id: "t",
@@ -17,7 +18,7 @@ const day = (overrides: Partial<PlanDayView> = {}): PlanDayView => ({
   isToday: false,
   off: false,
   start: "06:30",
-  end: "07:08",
+  end: "07:15",
   budget: 45,
   total: 38,
   cleaning: [
@@ -83,26 +84,34 @@ describe("eventIdFor", () => {
 });
 
 describe("buildEvent", () => {
-  it("AC2: titles the event with the day's cleaning minutes", () => {
-    expect(buildEvent(day(), options)?.summary).toBe("Cleaning, 38 min");
+  it("spec 007 AC1: titles the event with the day's budget, weekday or weekend", () => {
+    expect(buildEvent(day(), options)?.summary).toBe("Cleaning, 45 min");
+    expect(buildEvent(day({ date: "2026-10-31", budget: 60 }), options)?.summary).toBe(
+      "Cleaning, 60 min",
+    );
   });
 
-  it("AC2: starts at the day's start time and ends after the total, in the owner's zone", () => {
+  it("spec 007 AC1: starts at the day's start time and lasts the budget, whatever the total", () => {
     const event = buildEvent(day(), options);
     expect(event?.start).toEqual({ dateTime: "2026-10-27T06:30:00", timeZone: "America/Bogota" });
-    expect(event?.end).toEqual({ dateTime: "2026-10-27T07:08:00", timeZone: "America/Bogota" });
+    expect(event?.end).toEqual({ dateTime: "2026-10-27T07:15:00", timeZone: "America/Bogota" });
     expect(event?.startsAt.toISOString()).toBe("2026-10-27T11:30:00.000Z");
-    expect(event?.endsAt.toISOString()).toBe("2026-10-27T12:08:00.000Z");
+    expect(event?.endsAt.toISOString()).toBe("2026-10-27T12:15:00.000Z");
+
+    const over = buildEvent(day({ total: 70 }), options);
+    expect(over?.end.dateTime).toBe("2026-10-27T07:15:00");
   });
 
   it("ends on the next day when the session runs past midnight", () => {
-    const event = buildEvent(day({ start: "23:40", end: "00:18" }), options);
-    expect(event?.end.dateTime).toBe("2026-10-28T00:18:00");
+    const event = buildEvent(day({ start: "23:40", end: "00:25" }), options);
+    expect(event?.end.dateTime).toBe("2026-10-28T00:25:00");
   });
 
-  it("AC2: lists the tasks, then the routines, then a link to the plan", () => {
+  it("spec 007 AC1: opens with the planned minutes, then the tasks, routines, and a link", () => {
     expect(buildEvent(day(), options)?.description).toBe(
       [
+        "38 of 45 min planned",
+        "",
         "Kitchen surface clean (Kitchen), 10 min",
         "Window wipe (Kitchen, Window), 28 min",
         "",
@@ -127,6 +136,22 @@ describe("buildEvent", () => {
     expect(buildEvent(day(), options)?.digest).toBe(digest);
     expect(buildEvent(day({ start: "07:00" }), options)?.digest).not.toBe(digest);
     expect(buildEvent(day({ routines: [] }), options)?.digest).not.toBe(digest);
+  });
+
+  it("spec 007 AC2: a different budget changes the digest but keeps the event id", () => {
+    const before = buildEvent(day(), options);
+    const after = buildEvent(day({ budget: 60, end: "07:30" }), options);
+    expect(after?.digest).not.toBe(before?.digest);
+    expect(after?.id).toBe(before?.id);
+  });
+
+  it("spec 007 AC3: overlaps a busy time after the planned tasks but within the budget", () => {
+    const event = buildEvent(day(), options);
+    // Planned tasks end at 12:08Z; the block runs to 12:15Z.
+    const busy = [
+      { start: new Date("2026-10-27T12:10:00Z"), end: new Date("2026-10-27T12:30:00Z") },
+    ];
+    expect(event && overlapsBusy(event, busy)).toBe(true);
   });
 
   it("carries the derived id and date", () => {

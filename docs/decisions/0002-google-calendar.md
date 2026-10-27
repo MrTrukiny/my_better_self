@@ -1,6 +1,6 @@
 # 0002: Google Calendar as the scheduling target
 
-- **Status**: Accepted, amended 2026-10-26 (spec 005)
+- **Status**: Accepted, amended 2026-10-26 (spec 005) and 2026-10-27 (spec 007)
 - **Date**: 2026-10-25
 
 ## Context
@@ -26,6 +26,11 @@ The user manages their time in Google Calendar. Cleaning sessions must appear th
 - **REST over `fetch`** instead of the `googleapis` package: the app needs a handful of endpoints, and the package is large.
 - **Derived event ids.** Each event's id is derived from the user and the date (base32hex, as Google requires), so a lost database row can't create a duplicate event: writing that id again updates the existing event.
 - **Disconnect** deletes the "Cleaning" calendar and revokes the grant. Revoking also drops the sign-in grant on Google's side, but the app session stays valid; the next sign-in or "Connect" asks again.
+
+## Amendment (spec 007)
+
+- **Fixed-length events.** Each day's event lasts the day's budget (the weekday or weekend minutes), not its total cleaning minutes, so the owner keeps the same block every day. The title carries the budget ("Cleaning, 45 min"), and the description opens with the planned minutes ("38 of 45 min planned") before the task list. Overlaps are checked against the whole block. The digest covers the new content, so a budget change rewrites the coming days in place under the same derived ids.
+- **"Sync now".** A button on the schedule page replans, then forces a sync that ignores digests and rewrites every day from today through the seventh, deleting days that lost their cleaning. Past days are never touched.
 
 ## Consequences
 

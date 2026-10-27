@@ -74,4 +74,35 @@ describe("planSync", () => {
     });
     expect(result.puts).toHaveLength(1);
   });
+
+  it("spec 007 AC2: puts a day whose budget changed in place, with no second event", () => {
+    const result = planSync({
+      ...range,
+      desired: [event("2026-10-27", "budget-60")],
+      stored: [stored("2026-10-27", "budget-45")],
+    });
+    expect(result.puts.map((e) => e.id)).toEqual(["id20261027"]);
+    expect(result.deletes).toEqual([]);
+  });
+
+  it("spec 007 AC5: force puts unchanged days and still deletes days that lost their cleaning", () => {
+    const result = planSync({
+      ...range,
+      force: true,
+      desired: [event("2026-10-27"), event("2026-10-28")],
+      stored: [stored("2026-10-27"), stored("2026-10-28"), stored("2026-10-29")],
+    });
+    expect(result.puts.map((e) => e.date)).toEqual(["2026-10-27", "2026-10-28"]);
+    expect(result.deletes.map((d) => d.date)).toEqual(["2026-10-29"]);
+  });
+
+  it("spec 007 AC5: force leaves days before the range alone", () => {
+    const result = planSync({
+      ...range,
+      force: true,
+      desired: [event("2026-10-26")],
+      stored: [stored("2026-10-25"), stored("2026-10-26")],
+    });
+    expect(result).toEqual({ puts: [], deletes: [] });
+  });
 });

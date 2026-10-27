@@ -8,17 +8,20 @@ export type SyncPlan = { puts: CalendarEvent[]; deletes: StoredDay[] };
 /**
  * What to write so the calendar matches the plan from `from` through `to` (ISO dates): put new
  * and changed days, delete days that lost their cleaning. Days outside the range are left alone.
+ * `force` puts every wanted day whatever its digest, to repair a calendar edited by hand.
  */
 export function planSync({
   desired,
   stored,
   from,
   to,
+  force = false,
 }: {
   desired: readonly CalendarEvent[];
   stored: readonly StoredDay[];
   from: string;
   to: string;
+  force?: boolean;
 }): SyncPlan {
   const inRange = (date: string) => date >= from && date <= to;
   const wanted = new Map<string, CalendarEvent>();
@@ -42,7 +45,7 @@ export function planSync({
   }
   for (const event of wanted.values()) {
     const day = storedByDate.get(event.date);
-    if (!day || day.eventId !== event.id || day.digest !== event.digest) {
+    if (force || !day || day.eventId !== event.id || day.digest !== event.digest) {
       puts.push(event);
     }
   }

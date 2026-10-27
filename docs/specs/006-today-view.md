@@ -22,6 +22,8 @@ Make the daily session something the owner does and tracks, not just reads. Open
 Each criterion is testable and maps to at least one test.
 
 - [x] AC1: Given I have a plan, when I open the app, then the home page shows today: the date, the session's start and end time, its cleaning tasks with minutes and what each belongs to, progress ("15 of 38 min done"), and today's routines apart. Given today is off, it says "Day off" and still lists today's routines. Given I have no schedule yet or no cleaning tasks, it shows the same calls to action as the plan ("Set your schedule", "Propose tasks"). It links to the week's plan.
+
+  > Superseded by [spec 007](007-fixed-session-and-resync.md) AC4: the session ends at the start time plus the day's budget, followed by the planned minutes ("07:00–07:45 · 38 of 45 min"); skipping a task doesn't move the end time.
 - [x] AC2: Given today's session, when I check a task, then it shows as done and the progress updates at once; unchecking it undoes that. Routines can be checked the same way, and don't count toward the progress. After a reload, I see what I checked.
 - [x] AC3: Given a cleaning task in today's session, when I choose "Skip", then it shows as skipped, it leaves the progress (the session's total drops by its minutes), and it comes back at its next time counted from today, as if done. "Undo" restores it.
 - [x] AC4: Given a past day had cleaning tasks that weren't checked or skipped, then they count as not done: on the next plan, each one is due from its last real completion, so it comes back as soon as the budget allows, most overdue first, without any day going over its budget. Days that went as planned stay as they were. Past days can no longer be checked or skipped.

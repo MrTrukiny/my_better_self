@@ -1,13 +1,14 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CALENDAR_SCOPES } from "@/lib/calendar/scopes";
 import { CalendarSection } from "./calendar-section";
 import { CalendarSyncNotice } from "./calendar-sync-notice";
 
-const { linkSocial, disconnect, offline } = vi.hoisted(() => ({
+const { linkSocial, disconnect, syncNow, offline } = vi.hoisted(() => ({
   linkSocial: vi.fn(),
   disconnect: vi.fn(),
+  syncNow: vi.fn(),
   offline: { value: false },
 }));
 
@@ -17,10 +18,18 @@ vi.mock("next/offline", () => ({ useOffline: () => offline.value }));
 beforeEach(() => {
   linkSocial.mockReset().mockResolvedValue({ data: { url: "https://accounts.google.com" } });
   disconnect.mockReset().mockResolvedValue({ status: "success" });
+  syncNow.mockReset().mockResolvedValue({ status: "success" });
   offline.value = false;
 });
 
-const connected = { status: "ok" as const, calendarName: "Cleaning", email: "owner@example.com" };
+const NOW = new Date("2026-10-27T14:00:00Z");
+
+const connected = {
+  status: "ok" as const,
+  calendarName: "Cleaning",
+  email: "owner@example.com",
+  lastSyncedAt: new Date("2026-10-27T13:50:00Z"),
+};
 
 function renderSection(props: Partial<Parameters<typeof CalendarSection>[0]> = {}) {
   return render(
@@ -30,6 +39,8 @@ function renderSection(props: Partial<Parameters<typeof CalendarSection>[0]> = {
       fake={false}
       email="owner@example.com"
       disconnect={disconnect}
+      syncNow={syncNow}
+      now={NOW}
       {...props}
     />,
   );
@@ -71,7 +82,7 @@ describe("CalendarSection", () => {
 
   it("AC1: shows the connected calendar and account", () => {
     renderSection({ connection: connected });
-    expect(screen.getByRole("status")).toHaveTextContent("Connected: Cleaning");
+    expect(screen.getByText("Connected: Cleaning")).toHaveAttribute("role", "status");
     expect(screen.getByText("owner@example.com")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Disconnect" })).toBeEnabled();
     expect(screen.queryByRole("button", { name: "Connect Google Calendar" })).toBeNull();
@@ -117,6 +128,52 @@ describe("CalendarSection", () => {
     renderSection({ connection: { ...connected, status: "reauth" } });
     expect(screen.getByRole("button", { name: "Disconnect" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Reconnect" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Sync now" })).toBeDisabled();
+  });
+
+  it("spec 007 AC7: says when the calendar last synced", () => {
+    const { unmount } = renderSection({ connection: connected });
+    expect(screen.getByText("Last synced 10 minutes ago")).toHaveAttribute("role", "status");
+    unmount();
+
+    renderSection({ connection: { ...connected, lastSyncedAt: null } });
+    expect(screen.getByText("Not synced yet")).toBeInTheDocument();
+  });
+
+  it("spec 007 AC5: syncs once, shows a busy state, then says it synced", async () => {
+    let finish: (state: { status: "success" }) => void = () => {};
+    syncNow.mockReturnValue(
+      new Promise((resolve) => {
+        finish = resolve;
+      }),
+    );
+    renderSection({ connection: connected });
+    await userEvent.click(screen.getByRole("button", { name: "Sync now" }));
+
+    const busy = await screen.findByRole("button", { name: "Syncing…" });
+    expect(busy).toBeDisabled();
+    await userEvent.click(busy);
+    expect(syncNow).toHaveBeenCalledOnce();
+
+    await act(async () => finish({ status: "success" }));
+    expect(await screen.findByText("Synced just now")).toHaveAttribute("role", "status");
+    expect(screen.getByRole("button", { name: "Sync now" })).toBeEnabled();
+  });
+
+  it("spec 007 AC6: a failed sync doesn't claim success, and a replan error shows", async () => {
+    syncNow.mockResolvedValue({ status: "error" });
+    const { unmount } = renderSection({ connection: connected });
+    await userEvent.click(screen.getByRole("button", { name: "Sync now" }));
+    expect(await screen.findByRole("button", { name: "Sync now" })).toBeEnabled();
+    expect(screen.queryByText("Synced just now")).toBeNull();
+    expect(screen.getByText("Last synced 10 minutes ago")).toBeInTheDocument();
+    unmount();
+
+    syncNow.mockResolvedValue({ status: "error", formError: "Couldn't update your plan." });
+    renderSection({ connection: connected });
+    await userEvent.click(screen.getByRole("button", { name: "Sync now" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Couldn't update your plan.");
+    expect(screen.queryByText("Synced just now")).toBeNull();
   });
 
   it("goes straight to the connect route with the fake calendar", async () => {

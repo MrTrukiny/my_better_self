@@ -43,13 +43,14 @@ export function buildWeek(
     const total = cleaning.reduce((sum, t) => sum + t.minutes, 0);
     const start = startTimeFor(settings, day);
     const startMinutes = start === null ? null : parseTime(start);
+    const budget = budgetFor(settings, day);
     return {
       date,
       isToday: offset === 0,
       off: start === null,
       start,
-      end: startMinutes === null ? null : formatTime(startMinutes + total),
-      budget: budgetFor(settings, day),
+      end: startMinutes === null ? null : formatTime(startMinutes + budget),
+      budget,
       total,
       cleaning,
       routines: tasks.filter((t) => t.kind === "routine"),

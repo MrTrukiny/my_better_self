@@ -48,7 +48,7 @@ describe("buildWeek", () => {
       isToday: true,
       off: false,
       start: "07:00",
-      end: "07:35",
+      end: "07:45",
       budget: 45,
       total: 35,
     });
@@ -58,6 +58,21 @@ describe("buildWeek", () => {
     expect(week[2]).toMatchObject({ off: true, start: null, end: null, budget: 0, total: 0 });
     expect(week[2]?.routines.map((t) => t.name)).toEqual(["Dishes"]);
     expect(week[5]).toMatchObject({ isToday: false, start: "09:00", budget: 60 });
+  });
+
+  it("spec 007 AC4: the session ends at start plus budget, and total stays the planned minutes", () => {
+    const week = buildWeek(
+      settings,
+      [
+        { date: "2026-10-26", task: task({ id: "a", minutes: 38 }) },
+        { date: "2026-10-31", task: task({ id: "b", minutes: 70 }) },
+      ],
+      MONDAY,
+    );
+
+    expect(week[0]).toMatchObject({ start: "07:00", end: "07:45", budget: 45, total: 38 });
+    expect(week[1]).toMatchObject({ start: "06:30", end: "07:15", total: 0 });
+    expect(week[5]).toMatchObject({ start: "09:00", end: "10:00", budget: 60, total: 70 });
   });
 });
 

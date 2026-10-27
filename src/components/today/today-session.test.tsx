@@ -48,6 +48,7 @@ function renderSession(props: Partial<TodaySessionProps> = {}) {
       date={today}
       timeZone="UTC"
       start="07:00"
+      budget={45}
       tasks={TASKS}
       pastStreak={2}
       version="v1"
@@ -71,7 +72,7 @@ beforeEach(() => {
 describe("TodaySession", () => {
   it("AC1: shows the session with its time, progress, and routines apart", () => {
     renderSession();
-    expect(screen.getByText(/07:00–07:38/)).toBeInTheDocument();
+    expect(screen.getByText(/07:00–07:45 · 38 of 45 min/)).toBeInTheDocument();
     expect(screen.getByText("0 of 38 min done")).toBeInTheDocument();
     expect(screen.getByRole("list", { name: "Cleaning today" }).children).toHaveLength(3);
     expect(screen.getByRole("list", { name: "Routines today" })).toHaveTextContent("Make the bed");
@@ -102,12 +103,12 @@ describe("TodaySession", () => {
     expect(screen.getByText("0 of 38 min done")).toBeInTheDocument();
   });
 
-  it("AC3: skipping leaves the total, and undo restores it", async () => {
+  it("AC3 and spec 007 AC4: skipping leaves the total but keeps the end time; undo restores it", async () => {
     const user = userEvent.setup();
     renderSession();
     await user.click(screen.getByRole("button", { name: "Skip Clean stove" }));
     expect(screen.getByText("0 of 25 min done")).toBeInTheDocument();
-    expect(screen.getByText(/07:00–07:25/)).toBeInTheDocument();
+    expect(screen.getByText(/07:00–07:45 · 25 of 45 min/)).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Undo skipping Clean stove" }));
     expect(screen.getByText("0 of 38 min done")).toBeInTheDocument();
   });

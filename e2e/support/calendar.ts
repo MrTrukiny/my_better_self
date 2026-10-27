@@ -10,12 +10,17 @@ export function calendarSection(page: Page) {
   return page.getByRole("region", { name: "Google Calendar" });
 }
 
+/** The connection line; the section has other status regions, such as the last-synced line. */
+export function connectedStatus(page: Page) {
+  return calendarSection(page).getByRole("status").filter({ hasText: "Connected: " });
+}
+
 /** Connects the fake calendar from the schedule page and waits for the first sync. */
 export async function connectCalendar(page: Page) {
   await page.goto("/schedule");
   await calendarSection(page).getByRole("button", { name: "Connect Google Calendar" }).click();
   await expect(page).toHaveURL(/\/schedule\?calendar=connected$/, { timeout: REPLAN_TIMEOUT });
-  await expect(calendarSection(page).getByRole("status")).toHaveText("Connected: Cleaning");
+  await expect(connectedStatus(page)).toHaveText("Connected: Cleaning");
 }
 
 /**

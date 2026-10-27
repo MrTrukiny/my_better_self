@@ -33,6 +33,13 @@ describe("overlapsBusy", () => {
     );
   });
 
+  it("spec 007 AC3: flags a busy time that starts after the planned tasks but within the block", () => {
+    // 38 planned minutes end at 12:08Z; the 45-minute block ends at 12:15Z.
+    const block = { startsAt: session.startsAt, endsAt: new Date("2026-10-27T12:15:00Z") };
+    expect(overlapsBusy(block, [busy("2026-10-27T12:10:00Z", "2026-10-27T12:30:00Z")])).toBe(true);
+    expect(overlapsBusy(block, [busy("2026-10-27T12:15:00Z", "2026-10-27T12:30:00Z")])).toBe(false);
+  });
+
   it("AC4: is clear without busy times", () => {
     expect(overlapsBusy(session, [])).toBe(false);
   });

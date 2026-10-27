@@ -39,10 +39,14 @@ export function scheduleCalendarSync(userId: string): void {
 
 /**
  * Brings the owner's "Cleaning" calendar in line with the plan, from the first day a replan may
- * change through the seventh day, and records which sessions overlap busy times. Never throws:
+ * change through the seventh day, and records which sessions overlap busy times. `force`
+ * ("Sync now") starts at today and rewrites every day, even unchanged ones. Never throws:
  * failures are logged and stored as the connection's status.
  */
-export async function syncCalendar(userId: string, now: Date = new Date()): Promise<SyncResult> {
+export async function syncCalendar(
+  userId: string,
+  { now = new Date(), force = false }: { now?: Date; force?: boolean } = {},
+): Promise<SyncResult> {
   try {
     // The row lock runs one sync per owner at a time, so two can't both create a calendar.
     return await db.transaction(async (tx) => {
@@ -65,7 +69,7 @@ export async function syncCalendar(userId: string, now: Date = new Date()): Prom
           const calendar = await ensureCalendar(tx, client, userId, calendarId, settings.timeZone);
           calendarId = calendar.id;
           calendarName = calendar.summary;
-          await syncDays(tx, client, userId, calendar.id, settings, now);
+          await syncDays(tx, client, userId, calendar.id, settings, now, force);
         }
       } catch (error) {
         status = error instanceof CalendarError && error.kind === "auth" ? "reauth" : "error";
@@ -121,9 +125,10 @@ async function syncDays(
   calendarId: string,
   settings: ScheduleSettings,
   now: Date,
+  force: boolean,
 ): Promise<void> {
   const today = zonedNow(settings.timeZone, now).day;
-  const from = toIsoDate(replanStart(settings, now));
+  const from = toIsoDate(force ? today : replanStart(settings, now));
   const to = toIsoDate(today + PLAN_DAYS - 1);
   const appUrl = getEnv().BETTER_AUTH_URL;
 
@@ -142,7 +147,7 @@ async function syncDays(
     .where(and(eq(calendarDay.userId, userId), between(calendarDay.date, from, to)));
 
   const overlaps = await findOverlaps(client, calendarId, desired, settings.timeZone, from, to);
-  const { puts, deletes } = planSync({ desired, stored, from, to });
+  const { puts, deletes } = planSync({ desired, stored, from, to, force });
 
   for (const day of deletes) {
     await client.deleteEvent(calendarId, day.eventId);
