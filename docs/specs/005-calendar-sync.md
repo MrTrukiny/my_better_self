@@ -26,6 +26,8 @@ Each criterion is testable and maps to at least one test.
   - Start at that day's start time, end after the total minutes, in my time zone.
   - Description: the cleaning tasks with their minutes and what each belongs to, then the day's routines under "Also today", then a link to the app.
   - Days that are off or have no cleaning tasks get no event.
+
+  > Superseded by [spec 007](007-fixed-session-and-resync.md) AC1: the event lasts the day's budget, is titled with the budget ("Cleaning, 45 min"), and its description opens with the planned minutes ("38 of 45 min planned").
 - [x] AC3: Given my calendar is connected, when the plan changes (I add, edit, or delete tasks, delete rooms or items, or change the schedule), then within that action the events of the changed days are updated in place, created, or deleted to match the plan. There is never more than one event per day. Events of past days are not changed.
 - [x] AC4: Given a day's session overlaps a busy time in any of my calendars (other than "Cleaning"), then that day on the plan says "Overlaps another event in your calendar" with the session's time, and the event is still placed at the start time. The app reads only busy times, never the details of other events. When the overlap goes away, so does the notice.
 - [x] AC5: Given the app is deployed, then once a day a scheduled job extends every connected owner's plan to the next 7 days and syncs their calendar, without the owner being present. The job's endpoint rejects any caller without the job secret, and one owner's failure doesn't stop the others.
