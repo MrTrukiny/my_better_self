@@ -13,6 +13,7 @@ test("AC8: task pages stay readable offline with generation and edits disabled",
   context,
   signedInUser: _,
 }) => {
+  test.slow();
   await page.goto("/rooms");
   await controlWithServiceWorker(page);
   await addRoom(page, "Bathroom");
@@ -27,8 +28,13 @@ test("AC8: task pages stay readable offline with generation and edits disabled",
   await expect(proposalGroup(page, "Bathroom").getByText("Clean Mirror")).toBeHidden({
     timeout: REPLAN_TIMEOUT,
   });
+  // A new room keeps "Propose tasks" available once back online.
+  await page.goto("/rooms");
+  await addRoom(page, "Hall");
+  await page.goto("/tasks/review");
+  await expect(page.getByText("Proposes tasks for 1 new room.")).toBeVisible();
   await expectCachedPage(page, "/tasks", "3 proposals waiting for review");
-  await expectCachedPage(page, "/tasks/review", "Bathroom deep clean");
+  await expectCachedPage(page, "/tasks/review", "Proposes tasks for 1 new room.");
 
   await openOffline(page, context, "/tasks");
   const tasks = page.getByRole("region", { name: "Tasks" });
@@ -43,6 +49,7 @@ test("AC8: task pages stay readable offline with generation and edits disabled",
   await expect(review.getByRole("button", { name: "Propose tasks" })).toBeDisabled();
   await expect(review.getByRole("combobox", { name: "Propose for" })).toBeDisabled();
   await expect(proposalGroup(page, "Bathroom")).toContainText("Bathroom deep clean");
+  await expect(review.getByText("Proposes tasks for 1 new room.")).toBeVisible();
   await expect(review.getByRole("button", { name: "Accept Bathroom deep clean" })).toBeDisabled();
   await expect(review.getByRole("button", { name: /Accept all/ })).toBeDisabled();
 

@@ -3,6 +3,7 @@ import { addItem, addRoom, openRoom } from "./support/inventory";
 import {
   acceptAllProposals,
   GENERATION_TIMEOUT,
+  NOTHING_NEW,
   proposalGroup,
   proposeTasks,
   REPLAN_TIMEOUT,
@@ -106,13 +107,9 @@ test.describe("AI task proposals", () => {
     await expect(page.getByRole("button", { name: "Accept all (3)" })).toBeVisible();
     await acceptAllProposals(page);
 
-    // The renamed and the discarded proposals come back; accepted tasks are not repeated.
-    await proposeTasks(page, "2 tasks proposed for the whole home.");
-    await expect(proposalGroup(page, "Bedroom").getByRole("listitem")).toHaveText([
-      /Bedroom deep clean/,
-      /Bedroom surface clean/,
-    ]);
-    await expect(page.getByRole("list", { name: "Whole home" })).toHaveCount(0);
+    // Spec 008: the bed, the bedroom, and the home all have tasks now, so nothing is new.
+    await expect(page.getByText(NOTHING_NEW)).toBeVisible();
+    await expect(page.getByRole("button", { name: "Propose tasks" })).toBeDisabled();
 
     await page
       .getByRole("navigation", { name: "Main" })

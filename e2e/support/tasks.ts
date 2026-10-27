@@ -25,6 +25,9 @@ export async function proposeTasks(page: Page, expected: string | RegExp) {
   });
 }
 
+export const NOTHING_NEW =
+  "Everything already has tasks. Add a room or an item, or discard proposals to get new ones.";
+
 /** Writes that run a transaction and then replan are slow under parallel workers too. */
 export const REPLAN_TIMEOUT = 20_000;
 
@@ -34,6 +37,13 @@ export async function acceptAllProposals(page: Page) {
   await expect(page.getByRole("region", { name: "Pending proposals" })).toBeHidden({
     timeout: REPLAN_TIMEOUT,
   });
+}
+
+/** Discards one pending proposal by name and waits until it's gone. */
+export async function discardProposal(page: Page, name: string) {
+  const pending = page.getByRole("region", { name: "Pending proposals" });
+  await pending.getByRole("button", { name: `Discard ${name}` }).click();
+  await expect(pending.getByText(name, { exact: true })).toBeHidden();
 }
 
 export function proposalGroup(page: Page, title: string) {

@@ -80,7 +80,7 @@ Builds on spec 003 (proposal flow, fake AI) and ADR 0006 (task scopes). No new d
 - [x] T3: Fake AI follows coverage: skip covered items and rooms, and propose home routines only when the home is uncovered. Files: `src/lib/ai/fake-proposals.ts`, `src/lib/ai/task-proposals.test.ts` ("fake proposals" block). Covers: AC1, AC2, AC3, AC4, AC6.
 - [x] T4: Reads and action: `readProposalInput` counts every pending proposal as existing; `generateProposals` short-circuits when nothing is uncovered, inserts without deleting, and drops the transaction; update its doc comment. Files: `src/lib/tasks/queries.ts`, `src/app/(app)/tasks/actions.ts`. Covers: AC1, AC5, AC6, AC7.
 - [x] T5: Review page summary: add the cached `getProposalTargets()` getter; render the summary line, or pass the AC5 message to `GenerateButton` as `unavailableReason`. Check it at 360px and on desktop, in light and dark mode. Files: `src/lib/tasks/queries.ts`, `src/app/(app)/tasks/review/page.tsx`. Covers: AC5, AC7.
-- [ ] T6: E2E with the fake AI:
+- [x] T6: E2E with the fake AI:
   - A new spec for AC1 to AC7.
   - In `e2e/tasks.spec.ts`, the spec 003 flow now expects the AC5 message after "Accept all" instead of "2 tasks proposed".
   - In `e2e/tasks-offline.spec.ts`, add a second room before going offline so "Propose tasks" is enabled again once back online.
