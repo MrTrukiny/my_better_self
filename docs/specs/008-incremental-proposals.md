@@ -1,6 +1,6 @@
 # 008: Incremental task proposals
 
-- **Status**: In progress
+- **Status**: Done
 - **Owner**: @mrtrukiny
 - **Created**: 2026-10-27
 
@@ -18,13 +18,13 @@ When the owner adds a room or an item and asks for proposals again, only the new
 
 Each criterion is testable and maps to at least one test.
 
-- [ ] AC1: Given some rooms and items already have tasks or pending proposals, when I propose for the whole home, then proposals appear only for rooms and items that have neither. Accepted tasks are unchanged, and every pending proposal from before is still there, unchanged.
-- [ ] AC2: Given I added an item to a room that already has room tasks (its quick and deep passes), when I propose, then I get proposals for the new item and none for the room itself. Given I added a new room with items, then I get room tasks for it and tasks for each of its items.
-- [ ] AC3: Given the whole home already has home-wide routines (tasks or pending proposals targeting "Whole home"), when I propose for the whole home, then no new home-wide routines are proposed.
-- [ ] AC4: Given I propose for a single room, then the same rule applies within that room: only its items, or the room itself, that have no tasks and no pending proposals get proposals.
-- [ ] AC5: Given every room and item already has tasks or pending proposals, when I open the proposals page, then "Propose tasks" explains "Everything already has tasks. Add a room or an item, or discard proposals to get new ones." and no AI request is made.
-- [ ] AC6: Given I discard all pending proposals of an item (or delete all its tasks), when I propose again, then that item gets new proposals, and nothing else changes.
-- [ ] AC7: Given the AI request fails, then I see "Try again", and the pending proposals from before are untouched. The busy, empty, and offline states, and keyboard and screen reader access, stay as in spec 003, at 360px and on desktop.
+- [x] AC1: Given some rooms and items already have tasks or pending proposals, when I propose for the whole home, then proposals appear only for rooms and items that have neither. Accepted tasks are unchanged, and every pending proposal from before is still there, unchanged.
+- [x] AC2: Given I added an item to a room that already has room tasks (its quick and deep passes), when I propose, then I get proposals for the new item and none for the room itself. Given I added a new room with items, then I get room tasks for it and tasks for each of its items.
+- [x] AC3: Given the whole home already has home-wide routines (tasks or pending proposals targeting "Whole home"), when I propose for the whole home, then no new home-wide routines are proposed.
+- [x] AC4: Given I propose for a single room, then the same rule applies within that room: only its items, or the room itself, that have no tasks and no pending proposals get proposals.
+- [x] AC5: Given every room and item already has tasks or pending proposals, when I open the proposals page, then "Propose tasks" explains "Everything already has tasks. Add a room or an item, or discard proposals to get new ones." and no AI request is made.
+- [x] AC6: Given I discard all pending proposals of an item (or delete all its tasks), when I propose again, then that item gets new proposals, and nothing else changes.
+- [x] AC7: Given the AI request fails, then I see "Try again", and the pending proposals from before are untouched. The busy, empty, and offline states, and keyboard and screen reader access, stay as in spec 003, at 360px and on desktop.
 
 ## UX notes
 
@@ -75,18 +75,18 @@ Builds on spec 003 (proposal flow, fake AI) and ADR 0006 (task scopes). No new d
 
 ### Tasks
 
-- [ ] T1: Coverage module: `findUncovered` for the whole home and for one room, `describeUncovered` with singular and plural parts, and the `NOTHING_NEW` copy. Files: `src/lib/tasks/coverage.ts`, `src/lib/tasks/coverage.test.ts`. Covers: AC1, AC2, AC3, AC4, AC5, AC6.
-- [ ] T2: Incremental prompt: list only uncovered targets with stable positional references, mark covered rooms, keep only uncovered targets in `refs`, state whether home routines are needed, list already-planned work by name, and adjust `INSTRUCTIONS`. Files: `src/lib/ai/task-proposals.ts`, `src/lib/ai/task-proposals.test.ts`. Covers: AC1, AC2, AC3, AC4.
-- [ ] T3: Fake AI follows coverage: skip covered items and rooms, and propose home routines only when the home is uncovered. Files: `src/lib/ai/fake-proposals.ts`, `src/lib/ai/task-proposals.test.ts` ("fake proposals" block). Covers: AC1, AC2, AC3, AC4, AC6.
-- [ ] T4: Reads and action: `readProposalInput` counts every pending proposal as existing; `generateProposals` short-circuits when nothing is uncovered, inserts without deleting, and drops the transaction; update its doc comment. Files: `src/lib/tasks/queries.ts`, `src/app/(app)/tasks/actions.ts`. Covers: AC1, AC5, AC6, AC7.
-- [ ] T5: Review page summary: add the cached `getProposalTargets()` getter; render the summary line, or pass the AC5 message to `GenerateButton` as `unavailableReason`. Check it at 360px and on desktop, in light and dark mode. Files: `src/lib/tasks/queries.ts`, `src/app/(app)/tasks/review/page.tsx`. Covers: AC5, AC7.
-- [ ] T6: E2E with the fake AI:
+- [x] T1: Coverage module: `findUncovered` for the whole home and for one room, `describeUncovered` with singular and plural parts, and the `NOTHING_NEW` copy. Files: `src/lib/tasks/coverage.ts`, `src/lib/tasks/coverage.test.ts`. Covers: AC1, AC2, AC3, AC4, AC5, AC6.
+- [x] T2: Incremental prompt: list only uncovered targets with stable positional references, mark covered rooms, keep only uncovered targets in `refs`, state whether home routines are needed, list already-planned work by name, and adjust `INSTRUCTIONS`. Files: `src/lib/ai/task-proposals.ts`, `src/lib/ai/task-proposals.test.ts`. Covers: AC1, AC2, AC3, AC4.
+- [x] T3: Fake AI follows coverage: skip covered items and rooms, and propose home routines only when the home is uncovered. Files: `src/lib/ai/fake-proposals.ts`, `src/lib/ai/task-proposals.test.ts` ("fake proposals" block). Covers: AC1, AC2, AC3, AC4, AC6.
+- [x] T4: Reads and action: `readProposalInput` counts every pending proposal as existing; `generateProposals` short-circuits when nothing is uncovered, inserts without deleting, and drops the transaction; update its doc comment. Files: `src/lib/tasks/queries.ts`, `src/app/(app)/tasks/actions.ts`. Covers: AC1, AC5, AC6, AC7.
+- [x] T5: Review page summary: add the cached `getProposalTargets()` getter; render the summary line, or pass the AC5 message to `GenerateButton` as `unavailableReason`. Check it at 360px and on desktop, in light and dark mode. Files: `src/lib/tasks/queries.ts`, `src/app/(app)/tasks/review/page.tsx`. Covers: AC5, AC7.
+- [x] T6: E2E with the fake AI:
   - A new spec for AC1 to AC7.
   - In `e2e/tasks.spec.ts`, the spec 003 flow now expects the AC5 message after "Accept all" instead of "2 tasks proposed".
   - In `e2e/tasks-offline.spec.ts`, add a second room before going offline so "Propose tasks" is enabled again once back online.
 
   Files: `e2e/tasks-incremental.spec.ts`, `e2e/tasks.spec.ts`, `e2e/tasks-offline.spec.ts`, `e2e/support/tasks.ts` (a `discardProposal` helper if needed). Covers: AC1, AC2, AC3, AC4, AC5, AC6, AC7.
-- [ ] T7: Docs: mark AC6 and the "Generating again for a scope replaces…" note in spec 003 as amended by spec 008, and update the proposal flow and the "Writes" row in `ARCHITECTURE.md`. Files: `docs/specs/003-ai-task-proposals.md`, `docs/ARCHITECTURE.md`. Covers: documentation for AC1.
+- [x] T7: Docs: mark AC6 and the "Generating again for a scope replaces…" note in spec 003 as amended by spec 008, and update the proposal flow and the "Writes" row in `ARCHITECTURE.md`. Files: `docs/specs/003-ai-task-proposals.md`, `docs/ARCHITECTURE.md`. Covers: documentation for AC1.
 
 ### Test plan
 

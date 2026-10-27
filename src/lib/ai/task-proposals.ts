@@ -3,6 +3,7 @@ import { z } from "zod";
 import { DAILY_CLEANING_MINUTES } from "@/lib/app-config";
 import { getItemType, ITEM_TYPE_IDS, type ItemTypeId } from "@/lib/inventory/item-types";
 import { CLEANING_GUIDE } from "@/lib/tasks/cleaning-guide";
+import { findUncovered } from "@/lib/tasks/coverage";
 import { getHelper, type HelperId } from "@/lib/tasks/helpers";
 import {
   CLEANING_MINUTES_MAX,
@@ -67,15 +68,15 @@ export const proposalOutputSchema = z.object({
 export type ProposalOutput = z.infer<typeof proposalOutputSchema>;
 
 const INSTRUCTIONS = `You plan household cleaning for one person who cleans in one session of about ${DAILY_CLEANING_MINUTES} minutes per day.
-Propose tasks for the home described below:
+Propose tasks for the new rooms and items described below. Only what has no tasks yet is listed; the rest of the home is already planned.
 - Item tasks: every item in the list gets at least one cleaning task. Follow the cleaning guide for its type: when the guide names a light and a deep clean, propose both as separate tasks with their own frequencies.
-- Room tasks: a quick pass and a deep pass for the work that belongs to no listed item (floors, baseboards, switches, general surfaces), unless a helper already covers it. Follow the helpers on this.
-- Routines: frequent upkeep that isn't cleaning, such as making a bed, laundry, taking out the trash, watering plants, or scooping a litter box. When the chore belongs to a listed item, target that item; otherwise, and only when proposing for the whole home, target "home". Never propose the same chore for both "home" and an item. When proposing for the whole home, include taking out the trash.
+- Room tasks: for every listed room not marked "room tasks already planned", a quick pass and a deep pass for the work that belongs to no item (floors, baseboards, switches, general surfaces), unless a helper already covers it. Follow the helpers on this. Rooms marked as planned get no room tasks.
+- Routines: frequent upkeep that isn't cleaning, such as making a bed, laundry, taking out the trash, watering plants, or scooping a litter box. When the chore belongs to a listed item, target that item; otherwise, and only when the scope says home-wide routines are needed, target "home". Never propose the same chore for both "home" and an item. When home-wide routines are needed, include taking out the trash.
 - Never propose washing the dishes: they're washed right after each use.
 - Items used only occasionally (for example a guest bed, as its note says) get no use-based chores such as making the bed or changing the sheets, only their periodic cleaning.
 
 Rules:
-- Every task targets "home", a room reference, or an item reference from the list. Never invent references.
+- Every task targets "home" (only when home-wide routines are needed), a room reference not marked as planned, or an item reference from the list. Never invent references.
 - One task covers exactly one item. Never combine several items in one task, and never name another item in a task's name; give each item its own task even when they sit together.
 - Follow the frequencies in the cleaning guide unless an item note says otherwise.
 - "cleaning" tasks take 1 to ${CLEANING_MINUTES_MAX} minutes. Split bigger jobs into several tasks (for example "first half" and "second half").
@@ -91,12 +92,25 @@ Rules:
 - Proofread every name before answering: correct spelling, grammar, and gender agreement (in Spanish, "de la alcoba", not "del alcoba"), and each verb must make sense for the chore.
 - Don't repeat the item's type when its name already says it ("Clean the main bathroom mirror", not "Clean mirror of Main Bathroom Mirror"). Keep them under ${TASK_NAME_MAX} characters.`;
 
-/** Builds the prompt and the reference map that turns model targets back into ids. */
+function scopeLine(forHome: boolean, homeNeeded: boolean): string {
+  if (!forHome) {
+    return "Scope: one room only. Don't propose home-wide routines.";
+  }
+  return homeNeeded
+    ? "Scope: the whole home. Home-wide routines are needed."
+    : "Scope: the whole home. Home-wide routines are already planned; don't propose any.";
+}
+
+/**
+ * Builds the prompt and the reference map that turns model targets back into ids. Only rooms and
+ * items with no tasks and no pending proposals are listed and get references; positions still
+ * count every room and item in scope, so a reference means the same thing either way.
+ */
 export function buildProposalRequest(input: ProposalInput) {
   const refs = new Map<string, Target>();
-  const keyOf = new Map<string, string>();
   const forHome = input.scopeRoomId === null;
-  if (forHome) {
+  const uncovered = findUncovered(input);
+  if (uncovered.home) {
     refs.set("home", { roomId: null, itemId: null });
   }
 
@@ -104,18 +118,28 @@ export function buildProposalRequest(input: ProposalInput) {
   const typesInHome = new Set<ItemTypeId>();
   const roomLines = rooms.flatMap((room, roomIndex) => {
     const roomRef = `r${roomIndex + 1}`;
-    refs.set(roomRef, { roomId: room.id, itemId: null });
-    keyOf.set(`${room.id}|`, roomRef);
-    const itemLines = room.items.map((item, itemIndex) => {
+    const roomNew = uncovered.roomIds.has(room.id);
+    if (roomNew) {
+      refs.set(roomRef, { roomId: room.id, itemId: null });
+    }
+    const itemLines = room.items.flatMap((item, itemIndex) => {
+      if (!uncovered.itemIds.has(item.id)) {
+        return [];
+      }
       const itemRef = `${roomRef}.i${itemIndex + 1}`;
       refs.set(itemRef, { roomId: room.id, itemId: item.id });
-      keyOf.set(`${room.id}|${item.id}`, itemRef);
       const typeId = getItemType(item.type)?.id ?? "other";
       typesInHome.add(typeId);
       const note = item.note ? ` (note: ${item.note})` : "";
-      return `  ${itemRef} ${typeId} "${item.name}" x${item.count}${note}`;
+      return [`  ${itemRef} ${typeId} "${item.name}" x${item.count}${note}`];
     });
-    return [`${roomRef} "${room.name}"`, ...(itemLines.length ? itemLines : ["  (no items)"])];
+    if (!roomNew) {
+      return itemLines.length
+        ? [`${roomRef} "${room.name}" (room tasks already planned)`, ...itemLines]
+        : [];
+    }
+    const empty = room.items.length ? "  (no new items)" : "  (no items)";
+    return [`${roomRef} "${room.name}"`, ...(itemLines.length ? itemLines : [empty])];
   });
 
   const helperLines = input.profile.helpers.map((id) => {
@@ -123,12 +147,20 @@ export function buildProposalRequest(input: ProposalInput) {
     return helper ? `- ${helper.label}: ${helper.guidance}` : null;
   });
   const existingLines = input.existing.flatMap((task) => {
-    const ref = task.roomId ? keyOf.get(`${task.roomId}|${task.itemId ?? ""}`) : "home";
-    return ref && refs.has(ref) ? [`- ${ref}: "${task.name}"`] : [];
+    if (!task.roomId) {
+      return [`- Whole home: "${task.name}"`];
+    }
+    const room = rooms.find((r) => r.id === task.roomId);
+    if (!room) {
+      return [];
+    }
+    const item = task.itemId ? room.items.find((i) => i.id === task.itemId) : null;
+    const label = item ? `${room.name} / ${item.name}` : room.name;
+    return [`- ${label}: "${task.name}"`];
   });
 
   const prompt = [
-    forHome ? "Scope: the whole home." : "Scope: one room only. Don't propose home-wide routines.",
+    scopeLine(forHome, uncovered.home),
     "",
     "Rooms and items:",
     ...roomLines,

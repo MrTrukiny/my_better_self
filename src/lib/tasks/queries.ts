@@ -1,11 +1,12 @@
 import "server-only";
-import { and, asc, eq, isNotNull, isNull, ne, or } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import { cacheTag } from "next/cache";
 import { db } from "@/db";
 import { homeProfile, item, room, scheduleSettings, task, taskProposal } from "@/db/schema";
 import type { ProposalInput } from "@/lib/ai/task-proposals";
 import { inventoryTag } from "@/lib/inventory/queries";
 import { getCurrentUser } from "@/lib/session";
+import type { CoverageInput } from "./coverage";
 import { HELPER_IDS, type HelperId } from "./helpers";
 import type { TaskKind } from "./limits";
 
@@ -44,7 +45,38 @@ export async function getProposals(): Promise<TaskEntry[]> {
   return proposalsForUser(user.id);
 }
 
+/** Rooms with their item ids and the targets of every task and pending proposal. */
+export async function getProposalTargets(): Promise<Omit<CoverageInput, "scopeRoomId">> {
+  const user = await getCurrentUser();
+  return proposalTargetsForUser(user.id);
+}
+
 // Not exported: callers must go through the getters above, which resolve the user first.
+async function proposalTargetsForUser(userId: string): Promise<Omit<CoverageInput, "scopeRoomId">> {
+  "use cache";
+  cacheTag(tasksTag(userId), inventoryTag(userId));
+
+  const [rooms, items, tasks, proposals] = await Promise.all([
+    db.select({ id: room.id }).from(room).where(eq(room.userId, userId)),
+    db.select({ id: item.id, roomId: item.roomId }).from(item).where(eq(item.userId, userId)),
+    db
+      .select({ roomId: task.roomId, itemId: task.itemId })
+      .from(task)
+      .where(eq(task.userId, userId)),
+    db
+      .select({ roomId: taskProposal.roomId, itemId: taskProposal.itemId })
+      .from(taskProposal)
+      .where(eq(taskProposal.userId, userId)),
+  ]);
+  return {
+    rooms: rooms.map((r) => ({
+      id: r.id,
+      items: items.filter((i) => i.roomId === r.id).map((i) => ({ id: i.id })),
+    })),
+    existing: [...tasks, ...proposals],
+  };
+}
+
 async function homeProfileForUser(userId: string): Promise<HomeProfile> {
   "use cache";
   cacheTag(tasksTag(userId));
@@ -108,15 +140,15 @@ async function readHomeProfile(userId: string): Promise<HomeProfile> {
 }
 
 /**
- * Everything the generator needs, read fresh for a Server Action. Pending proposals of other
- * scopes count as existing, so proposing for a room doesn't repeat what the home-wide batch has.
+ * Everything the generator needs, read fresh for a Server Action. Every pending proposal, of any
+ * scope, counts as existing: what already has a task or a proposal isn't proposed for again.
  */
 export async function readProposalInput(
   userId: string,
   scopeRoomId: string | null,
   language: string | null,
 ): Promise<ProposalInput> {
-  const [rooms, items, profile, tasks, otherProposals, [schedule]] = await Promise.all([
+  const [rooms, items, profile, tasks, proposals, [schedule]] = await Promise.all([
     db
       .select({ id: room.id, name: room.name })
       .from(room)
@@ -142,14 +174,7 @@ export async function readProposalInput(
     db
       .select({ roomId: taskProposal.roomId, itemId: taskProposal.itemId, name: taskProposal.name })
       .from(taskProposal)
-      .where(
-        and(
-          eq(taskProposal.userId, userId),
-          scopeRoomId === null
-            ? isNotNull(taskProposal.scopeRoomId)
-            : or(isNull(taskProposal.scopeRoomId), ne(taskProposal.scopeRoomId, scopeRoomId)),
-        ),
-      ),
+      .where(eq(taskProposal.userId, userId)),
     db
       .select({ timeZone: scheduleSettings.timeZone })
       .from(scheduleSettings)
@@ -161,7 +186,7 @@ export async function readProposalInput(
       items: items.filter((i) => i.roomId === r.id).map(({ roomId: _, ...i }) => i),
     })),
     profile,
-    existing: [...tasks, ...otherProposals],
+    existing: [...tasks, ...proposals],
     scopeRoomId,
     locale: { language, timeZone: schedule?.timeZone ?? null },
   };

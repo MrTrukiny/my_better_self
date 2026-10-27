@@ -36,6 +36,7 @@ Each criterion is testable and maps to at least one test.
 - [x] AC4: Given I marked helpers or wrote a note, when proposals are generated, then they reflect it. For example, with a robot vacuum marked, floor tasks cover only the spots it can't reach instead of full vacuuming. With a washing machine, laundry tasks are about loading it and hanging the clothes.
 - [x] AC5: Given a proposal list, when I accept, edit (name, minutes, frequency, cleaning task or routine), or discard each proposal, or choose "Accept all", then accepted proposals become tasks and discarded ones disappear. Nothing is accepted by default, and leaving the page keeps the pending proposals for later.
 - [x] AC6: Given I already have tasks, when I propose again, for the whole home or for a single room, then the new proposals don't repeat existing tasks, and the existing tasks are unchanged.
+  - Amended by [spec 008](008-incremental-proposals.md): proposing again only covers rooms and items with no tasks and no pending proposals, and pending proposals are never replaced.
 - [x] AC7: Given I have tasks, when I open the task list, then I see the cleaning tasks grouped by room and "Whole home", and the routines in their own section, each with minutes and frequency. I can edit or delete each task, and deleting asks for confirmation.
 - [x] AC8: Given the AI request fails, times out, or returns something invalid, then I see a message with "Try again" and nothing is saved. Given I am offline, "Propose tasks" and all edits are disabled with a visible reason, and the task list and pending proposals stay readable.
 - [x] AC9: The home profile, the proposal review, and the task list work at 360px wide and on desktop, in light and dark mode, and with the keyboard only. Every control and list has an accessible name, and completion of a generation is announced to screen readers.
@@ -85,7 +86,7 @@ Builds on specs 001 and 002 and on ADR 0003 (Gemini through the AI SDK).
     - Scheduling fields such as `lastDoneAt` arrive with specs 004 and 006.
   - `task_proposal`: pending proposals, with the same shape as `task` plus the scope it was generated for.
     - Accepting one inserts a `task` and deletes the proposal; discarding deletes it.
-    - Generating again for a scope replaces the pending proposals of that scope.
+    - Generating again for a scope replaces the pending proposals of that scope. Amended by [spec 008](008-incremental-proposals.md): new proposals join the pending ones and nothing is replaced.
 - **AI module** (`src/lib/ai/`):
   - `model.ts` picks the model from `AI_MODEL`, defaulting to `gemini-3.5-flash` (newer Flash models were listed but did not respond during T4).
   - `task-proposals.ts`:
