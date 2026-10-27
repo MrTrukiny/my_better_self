@@ -1,6 +1,6 @@
 # 009: Ordered session and actual time
 
-- **Status**: Approved
+- **Status**: In progress
 - **Owner**: @mrtrukiny
 - **Created**: 2026-10-27
 

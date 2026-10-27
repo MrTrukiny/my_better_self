@@ -54,12 +54,15 @@ export const occurrence = pgTable(
     date: date("date", { mode: "string" }).notNull(),
     status: text("status").$type<OccurrenceStatus>().notNull().default("scheduled"),
     completedAt: timestamp("completed_at", { withTimezone: true }),
+    // Minutes a done cleaning task actually took, as the owner noted it; null when not noted.
+    actualMinutes: integer("actual_minutes"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => [
     unique("occurrence_task_date").on(table.taskId, table.date),
     index("occurrence_user_date_idx").on(table.userId, table.date),
     check("occurrence_status", sql`${table.status} in ('scheduled', 'done', 'skipped')`),
+    check("occurrence_actual_minutes", sql`${table.actualMinutes} between 1 and 240`),
   ],
 );
 
