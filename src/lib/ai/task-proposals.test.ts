@@ -180,6 +180,13 @@ describe("proposeTasks", () => {
     });
   });
 
+  it("tells the model to keep the owner's room and item names as written", async () => {
+    const model = mockModel(JSON.stringify({ tasks: [] }));
+    await proposeTasks(input, { model });
+    const system = model.doGenerateCalls[0]?.prompt.find((message) => message.role === "system");
+    expect(system?.content).toMatch(/exactly as the owner wrote them/);
+  });
+
   it("AC8: reports a failure when the output is invalid", async () => {
     expect(await proposeTasks(input, { model: mockModel("not json") })).toEqual({
       ok: false,
