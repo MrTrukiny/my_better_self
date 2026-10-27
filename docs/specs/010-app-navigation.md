@@ -1,6 +1,6 @@
 # 010: App navigation and settings
 
-- **Status**: Draft
+- **Status**: In progress
 - **Owner**: @mrtrukiny
 - **Created**: 2026-10-27
 
@@ -50,10 +50,25 @@ The schedule and the calendar connection are hard to find: the only ways in are 
 
 ## Technical plan
 
-_Filled in by the `plan-feature` skill after the spec is approved._
-
 ### Approach
+
+- **Destinations (pure):** `src/lib/navigation.ts` holds `NAV_ITEMS` (Today `/`, Plan `/plan`, Tasks `/tasks`, Rooms `/rooms`, Settings `/settings`) and `sectionFor(pathname)`, which maps any path to its destination: `/rooms/*` to Rooms, `/tasks/*` to Tasks, and `/settings`, `/schedule`, and `/home-profile` to Settings.
+- **Navigation (client leaf):** `AppNav` in `src/components/app-nav.tsx` reads `usePathname()` and renders the destinations twice: a top-bar list (`hidden sm:flex`) and a bottom tab bar (`sm:hidden`, fixed, with `env(safe-area-inset-bottom)` padding). Only one is displayed at a time, so each is a `nav` landmark labeled "Main", and the current link gets `aria-current="page"`. Links stay `OfflineAwareLink`. With Cache Components, `usePathname` suspends on routes with unknown params (`/rooms/[roomId]`), so `AppShell` wraps it in `Suspense` with the same links and nothing marked current as the fallback. On mobile, `main` gets bottom padding so content clears the tab bar.
+- **Settings page (Server Component):** `/settings` in the `(app)` group shows three link rows. Each summary loads in its own Suspense boundary from the existing queries (`getScheduleSettings`, `getCalendarConnection`, `getHomeProfile`), and pure formatters in `src/lib/settings/summary.ts` turn them into one line. The Google Calendar row opens `/schedule#calendar`.
+- **Schedule summary rule:** "Not set" without saved settings; "No cleaning days" when every day is off; otherwise the days ("Every day", "Weekdays", "Weekends", or "N days a week"), the start time when every cleaning day shares it, and the minutes (one value, or "45–60 min" when weekday and weekend budgets both apply and differ).
+- **Back links:** the schedule and home profile pages get a "Settings" back link like the room page's "All rooms".
+- **Offline:** `/settings` joins `OFFLINE_DOCUMENT_ROUTES` in `sw.ts`. The settings page warms its own copy, and the schedule page and `TasksCacheWarmer` add `/settings` to the copies they refresh, so the summaries follow saved changes. The calendar summary refreshes the next time Settings is opened online.
+- No new dependencies, data, or ADR.
 
 ### Tasks
 
+- [ ] T1: Destinations and sections: `NAV_ITEMS` and `sectionFor`. Files: `src/lib/navigation.ts`, `src/lib/navigation.test.ts`. Covers: AC3.
+- [ ] T2: Navigation UI: `AppNav` with the top-bar list and the bottom tab bar, current marking, and `AppShell` using it with a Suspense fallback and mobile bottom padding. Files: `src/components/app-nav.tsx`, `src/components/app-nav.test.tsx`, `src/components/app-shell.tsx`. Covers: AC1, AC2, AC3, AC8.
+- [ ] T3: Settings summaries: schedule, calendar, and home profile one-liners. Files: `src/lib/settings/summary.ts`, `src/lib/settings/summary.test.ts`. Covers: AC4, AC5.
+- [ ] T4: Settings page and back links, plus its offline copy. Files: `src/app/(app)/settings/page.tsx`, `src/app/(app)/schedule/page.tsx`, `src/app/(app)/home-profile/page.tsx`, `src/components/calendar/calendar-section.tsx` (anchor id), `src/components/tasks/tasks-cache-warmer.tsx`, `src/app/sw.ts`. Covers: AC4, AC5, AC6, AC7.
+- [ ] T5: E2E and docs: tab bar on mobile and top links on desktop with the current section, Settings summaries and links, back links, Settings offline, keyboard and dark mode. `docs/ARCHITECTURE.md` (routes and the app shell). Files: `e2e/navigation.spec.ts`, `docs/ARCHITECTURE.md`. Covers: AC1–AC8.
+
 ### Test plan
+
+- Unit: `sectionFor` for every route, including nested ones (AC3); `AppNav` names, order, and `aria-current` (AC1, AC2, AC3, AC8); summaries for not set, all days off, every day, weekdays, mixed times and budgets, calendar states, and helper counts (AC4, AC5).
+- E2E: at 360px, the tab bar shows five tabs, marks the current one, and doesn't hide the page's last content; on desktop, the top bar has the links and there's no tab bar (AC1, AC2, AC3). Settings shows "Not set", "Not connected", and "No helpers" for a new owner, then the saved schedule's summary; each row opens its page, and the back link returns (AC4, AC5, AC6). Settings opens offline with its summaries (AC7). Tabbing through the navigation in dark mode without console errors (AC8).
