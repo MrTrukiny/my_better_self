@@ -4,7 +4,7 @@ import { getRooms } from "@/lib/inventory/queries";
 import { getScheduleSettings } from "@/lib/scheduler/queries";
 import { getHomeProfile, getProposals, getTasks } from "@/lib/tasks/queries";
 
-const TASK_PAGES = ["/tasks", "/tasks/review", "/home-profile"];
+const TASK_PAGES = ["/tasks", "/tasks/review", "/home-profile", "/settings"];
 
 /**
  * Keeps the offline copies of every task page current; they all show the same data. The plan

@@ -1,3 +1,4 @@
+import { ChevronLeft } from "lucide-react";
 import type { Metadata } from "next";
 import { io } from "next/cache";
 import { Suspense } from "react";
@@ -5,6 +6,7 @@ import { saveSchedule } from "@/app/(app)/schedule/actions";
 import { disconnectCalendar, syncCalendarNow } from "@/app/(app)/schedule/calendar-actions";
 import { CalendarSection } from "@/components/calendar/calendar-section";
 import { EditNotice } from "@/components/inventory/edit-guard";
+import { OfflineAwareLink } from "@/components/offline-aware-link";
 import { OfflineCacheWarmer } from "@/components/offline-cache-warmer";
 import { ScheduleForm } from "@/components/plan/schedule-form";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -20,6 +22,13 @@ export const metadata: Metadata = { title: "Schedule" };
 export default function SchedulePage({ searchParams }: PageProps<"/schedule">) {
   return (
     <section aria-labelledby="schedule-heading" className="mx-auto flex max-w-2xl flex-col gap-6">
+      <OfflineAwareLink
+        href="/settings"
+        className="text-muted-foreground hover:text-foreground focus-visible:ring-ring -mb-4 -ml-1 inline-flex h-11 w-fit items-center gap-1 rounded-md px-1 text-sm outline-none focus-visible:ring-2"
+      >
+        <ChevronLeft aria-hidden className="size-4" />
+        Settings
+      </OfflineAwareLink>
       <div className="flex flex-col gap-1">
         <h1
           id="schedule-heading"
@@ -48,7 +57,10 @@ async function ScheduleSection() {
   return (
     <>
       <ScheduleForm action={saveSchedule} settings={settings} />
-      <OfflineCacheWarmer urls={["/schedule", "/plan"]} version={cacheVersion(saved)} />
+      <OfflineCacheWarmer
+        urls={["/schedule", "/plan", "/settings"]}
+        version={cacheVersion(saved)}
+      />
     </>
   );
 }
