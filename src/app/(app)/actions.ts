@@ -5,7 +5,12 @@ import { db } from "@/db";
 import { occurrence, scheduleSettings, task } from "@/db/schema";
 import { toIsoDate, zonedNow } from "@/lib/scheduler/dates";
 import { getCurrentUser } from "@/lib/session";
-import { type CheckOffResult, checkOffDecision, checkOffInputSchema } from "@/lib/today/schemas";
+import {
+  actualMinutesUpdate,
+  type CheckOffResult,
+  checkOffDecision,
+  checkOffInputSchema,
+} from "@/lib/today/schemas";
 
 /**
  * Sets the status of one of today's occurrences. Setting rather than toggling makes a queued
@@ -17,7 +22,7 @@ export async function setOccurrenceStatus(input: unknown): Promise<CheckOffResul
   if (!parsed.success) {
     return "invalid";
   }
-  const { occurrenceId, status } = parsed.data;
+  const { occurrenceId, status, actualMinutes } = parsed.data;
   try {
     const [stored] = await db
       .select({ date: occurrence.date, kind: task.kind, timeZone: scheduleSettings.timeZone })
@@ -32,13 +37,18 @@ export async function setOccurrenceStatus(input: unknown): Promise<CheckOffResul
         : null,
       today,
       status,
+      actualMinutes,
     );
     if (decision !== "apply") {
       return decision;
     }
     await db
       .update(occurrence)
-      .set({ status, completedAt: status === "scheduled" ? null : new Date() })
+      .set({
+        status,
+        completedAt: status === "scheduled" ? null : new Date(),
+        ...actualMinutesUpdate(status, actualMinutes),
+      })
       .where(and(eq(occurrence.id, occurrenceId), eq(occurrence.userId, user.id)));
     return "ok";
   } catch (error) {

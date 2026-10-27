@@ -28,12 +28,33 @@ describe("progressOf", () => {
       task("c", 13, "scheduled"),
       task("bed", 2, "done", "routine"),
     ]);
-    expect(progress).toEqual({ doneMinutes: 15, totalMinutes: 38, complete: false });
+    expect(progress).toEqual({
+      doneMinutes: 15,
+      totalMinutes: 38,
+      tookMinutes: 0,
+      complete: false,
+    });
   });
 
   it("AC3: a skipped task leaves the session's total", () => {
     const progress = progressOf([task("a", 15, "done"), task("b", 10, "skipped")]);
-    expect(progress).toEqual({ doneMinutes: 15, totalMinutes: 15, complete: true });
+    expect(progress).toEqual({
+      doneMinutes: 15,
+      totalMinutes: 15,
+      tookMinutes: 0,
+      complete: true,
+    });
+  });
+
+  it("009 AC5: adds up the minutes noted on done cleaning tasks", () => {
+    const progress = progressOf([
+      { ...task("a", 10, "done"), actualMinutes: 12 },
+      { ...task("b", 15, "done"), actualMinutes: 20 },
+      task("c", 13, "done"),
+      { ...task("bed", 2, "done", "routine"), actualMinutes: 5 },
+    ]);
+    expect(progress.tookMinutes).toBe(32);
+    expect(progress.doneMinutes).toBe(38);
   });
 
   it("AC5: a day of only skips isn't complete", () => {
