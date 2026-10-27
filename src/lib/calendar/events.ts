@@ -95,8 +95,8 @@ export function buildEvent(
   if (day.off || startMinutes === null || day.cleaning.length === 0) {
     return null;
   }
-  const endMinutes = startMinutes + day.total;
-  const summary = `Cleaning, ${formatMinutes(day.total)}`;
+  const endMinutes = startMinutes + day.budget;
+  const summary = `Cleaning, ${formatMinutes(day.budget)}`;
   const description = eventDescription(day, appUrl);
   const start = { dateTime: localDateTime(day.date, startMinutes), timeZone };
   const end = { dateTime: localDateTime(day.date, endMinutes), timeZone };
@@ -116,9 +116,13 @@ export function buildEvent(
 }
 
 function eventDescription(day: PlanDayView, appUrl: string): string {
-  const lines = day.cleaning.map(
-    (task) => `${task.name} (${planTarget(task)}), ${formatMinutes(task.minutes)}`,
-  );
+  const lines = [
+    `${day.total} of ${formatMinutes(day.budget)} planned`,
+    "",
+    ...day.cleaning.map(
+      (task) => `${task.name} (${planTarget(task)}), ${formatMinutes(task.minutes)}`,
+    ),
+  ];
   if (day.routines.length > 0) {
     lines.push("", `Also today: ${day.routines.map((task) => task.name).join(", ")}`);
   }
