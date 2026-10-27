@@ -1,8 +1,10 @@
+import { findUncovered } from "@/lib/tasks/coverage";
 import type { ProposalInput, ProposalOutput } from "./task-proposals";
 
 /**
  * Deterministic stand-in for the model, enabled with `AI_FAKE=1` in e2e and CI.
- * It uses the same references as the real prompt, so the same validation runs on its output.
+ * It uses the same references as the real prompt, so the same validation runs on its output,
+ * and like the prompt it only proposes for rooms and items with nothing planned yet.
  * A home note containing "[fail]" makes it throw, to exercise the error path.
  */
 export function fakeProposalOutput(input: ProposalInput): ProposalOutput {
@@ -12,11 +14,15 @@ export function fakeProposalOutput(input: ProposalInput): ProposalOutput {
   const helpers = new Set(input.profile.helpers);
   const forHome = input.scopeRoomId === null;
   const rooms = forHome ? input.rooms : input.rooms.filter((r) => r.id === input.scopeRoomId);
+  const uncovered = findUncovered(input);
   const tasks: ProposalOutput["tasks"] = [];
 
   rooms.forEach((room, roomIndex) => {
     const roomRef = `r${roomIndex + 1}`;
     room.items.forEach((item, itemIndex) => {
+      if (!uncovered.itemIds.has(item.id)) {
+        return;
+      }
       const name =
         item.type === "floor" && helpers.has("robot-vacuum")
           ? `Vacuum the corners and edges of ${item.name}`
@@ -29,6 +35,9 @@ export function fakeProposalOutput(input: ProposalInput): ProposalOutput {
         frequencyDays: 14,
       });
     });
+    if (!uncovered.roomIds.has(room.id)) {
+      return;
+    }
     tasks.push(
       {
         target: roomRef,
@@ -47,7 +56,7 @@ export function fakeProposalOutput(input: ProposalInput): ProposalOutput {
     );
   });
 
-  if (forHome) {
+  if (uncovered.home) {
     const hasBed = rooms.some((room) => room.items.some((item) => item.type === "bed"));
     if (hasBed) {
       tasks.push({

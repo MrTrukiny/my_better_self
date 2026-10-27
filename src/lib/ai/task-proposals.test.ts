@@ -311,6 +311,36 @@ describe("fake proposals", () => {
     expect(names).not.toContain("Clean Window");
   });
 
+  it("spec 008 AC1, AC2: skips covered items and rooms", () => {
+    const targets = fakeProposalOutput({
+      ...input,
+      existing: [...input.existing, { roomId: "room-bedroom", itemId: null, name: "Dust" }],
+    }).tasks.map((task) => task.target);
+    expect(targets).not.toContain("r1.i1");
+    expect(targets).not.toContain("r2");
+    expect(targets).toEqual(expect.arrayContaining(["r1.i2", "r1", "r2.i1", "home"]));
+  });
+
+  it("spec 008 AC3: proposes no home routines when the home has them", () => {
+    const targets = fakeProposalOutput({
+      ...input,
+      existing: [{ roomId: null, itemId: null, name: "Take out the trash" }],
+    }).tasks.map((task) => task.target);
+    expect(targets).not.toContain("home");
+  });
+
+  it("spec 008 AC4, AC6: in one room, proposes only for its uncovered targets", () => {
+    const targets = fakeProposalOutput({
+      ...input,
+      existing: [
+        { roomId: "room-kitchen", itemId: null, name: "Kitchen deep clean" },
+        { roomId: "room-kitchen", itemId: "item-floor", name: "Clean Floor" },
+      ],
+      scopeRoomId: "room-kitchen",
+    }).tasks.map((task) => task.target);
+    expect(targets).toEqual(["r1.i1"]);
+  });
+
   it("AC8: fails when the home note asks it to", async () => {
     const failing = { ...input, profile: { ...input.profile, note: "[fail]" } };
     expect(await proposeTasks(failing, { fake: true })).toEqual({ ok: false, reason: "failed" });
