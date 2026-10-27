@@ -104,15 +104,16 @@ See [ADR 0007](decisions/0007-persisted-plan-and-replanning.md).
 
 A task's last completion is its latest done or skipped occurrence before the replanning date; a task that was planned but never handled is due on its first missed day, and a new task keeps the first due day the scheduler picked (`task.first_due`). See [ADR 0008](decisions/0008-check-off-and-offline-queue.md).
 
-### Today and habit (spec 006)
+### Today and habit (specs 006, 009)
 
-| Concern   | Where                                                  | Notes                                                                                                                                 |
-| --------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
-| Rules     | `src/lib/today/progress.ts`, `streak.ts`               | Pure: progress leaves skipped tasks out; a cleaning day is complete when all its tasks are done or skipped and at least one is done.  |
-| Reads     | `src/lib/today/queries.ts`                             | Today's occurrences with status, and per-day cleaning counts for the streak, uncached after `io()`.                                   |
-| Check-off | `src/app/(app)/actions.ts`, `src/lib/today/schemas.ts` | `setOccurrenceStatus` sets a status on one of today's occurrences; it doesn't replan.                                                 |
-| Offline   | `src/lib/today/queue.ts`, `src/components/today/`      | A `localStorage` queue per user, flushed in order on load, `online`, and visibility. The page overlays queued states on the server's. |
-| UI        | `src/app/(app)/page.tsx`, `src/components/today/`      | The home page (`/`). Readable and checkable offline (ADR 0005 amendment, ADR 0008).                                                   |
+| Concern   | Where                                                  | Notes                                                                                                                                                                           |
+| --------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Rules     | `src/lib/today/progress.ts`, `streak.ts`               | Pure: progress leaves skipped tasks out; a cleaning day is complete when all its tasks are done or skipped and at least one is done.                                            |
+| Order     | `src/lib/today/order.ts`, `slots.ts`                   | Pure: cleaning tasks by room, then zone (high, other, wet, floors, the room itself), then item; whole-home tasks last. Slots run back to back from the start time on estimates. |
+| Reads     | `src/lib/today/queries.ts`                             | Today's occurrences with status and actual minutes, in the recommended order, and per-day cleaning counts for the streak, uncached after `io()`.                                |
+| Check-off | `src/app/(app)/actions.ts`, `src/lib/today/schemas.ts` | `setOccurrenceStatus` sets a status, and optionally the minutes a done cleaning task took, on one of today's occurrences; it doesn't replan.                                    |
+| Offline   | `src/lib/today/queue.ts`, `src/components/today/`      | A `localStorage` queue per user, flushed in order on load, `online`, and visibility. The page overlays queued states and minutes on the server's.                               |
+| UI        | `src/app/(app)/page.tsx`, `src/components/today/`      | The home page (`/`). Readable and checkable offline (ADR 0005 amendment, ADR 0008).                                                                                             |
 
 ### Google Calendar sync (spec 005)
 

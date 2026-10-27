@@ -43,6 +43,13 @@
       "when": 1793052398794,
       "tag": "0005_calendar",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793134714370,
+      "tag": "0006_actual_minutes",
+      "breakpoints": true
     }
   ]
 }

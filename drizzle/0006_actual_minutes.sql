@@ -1,0 +1,2 @@
+ALTER TABLE "occurrence" ADD COLUMN "actual_minutes" integer;--> statement-breakpoint
+ALTER TABLE "occurrence" ADD CONSTRAINT "occurrence_actual_minutes" CHECK ("occurrence"."actual_minutes" between 1 and 240);

@@ -13,6 +13,7 @@ import { dayLabel } from "@/lib/scheduler/format";
 import { progressOf, type TodayTask } from "@/lib/today/progress";
 import type { FlushResult, QueuedChange } from "@/lib/today/queue";
 import type { CheckOffResult } from "@/lib/today/schemas";
+import { sessionSlots } from "@/lib/today/slots";
 import { streakLine } from "@/lib/today/streak";
 import { TaskRow } from "./task-row";
 import { useCheckOffQueue } from "./use-check-off-queue";
@@ -49,7 +50,9 @@ export function TodaySession({
 }: TodaySessionProps) {
   const router = useRouter();
   const isOffline = useIsOffline();
-  const [local, setLocal] = useState<Record<string, OccurrenceStatus>>({});
+  const [local, setLocal] = useState<
+    Record<string, { status: OccurrenceStatus; actualMinutes: number | null }>
+  >({});
   const [synced, setSynced] = useState(0);
   const [deviceDate, setDeviceDate] = useState<string | null>(null);
 
@@ -76,28 +79,35 @@ export function TodaySession({
   // An offline copy opened on a later day: its tasks can no longer be checked.
   const stale = deviceDate !== null && deviceDate !== date;
 
-  const queued = new Map(queue.map((c) => [c.occurrenceId, c.status]));
-  const current = tasks.map((t) => ({
-    ...t,
-    status: queued.get(t.occurrenceId) ?? local[t.occurrenceId] ?? t.status,
-  }));
+  const queued = new Map(queue.map((c) => [c.occurrenceId, c]));
+  const current = tasks.map((t) => {
+    const changed = queued.get(t.occurrenceId) ?? local[t.occurrenceId];
+    const status = changed?.status ?? t.status;
+    const minutes = changed?.actualMinutes === undefined ? t.actualMinutes : changed.actualMinutes;
+    return { ...t, status, actualMinutes: status === "done" ? minutes : null };
+  });
   const cleaning = current.filter((t) => t.kind === "cleaning");
   const routines = current.filter((t) => t.kind === "routine");
+  const slots = sessionSlots(start, cleaning);
   const progress = progressOf(current);
   const streak = pastStreak + (progress.complete ? 1 : 0);
   const startMinutes = start === null ? null : parseTime(start);
 
-  const update = (task: TodayTask, status: OccurrenceStatus) => {
-    setLocal((prev) => ({ ...prev, [task.occurrenceId]: status }));
-    change(task.occurrenceId, status);
+  // Checking a task starts it without minutes; any other status clears them on the server.
+  const update = (task: TodayTask, status: OccurrenceStatus, actualMinutes: number | null) => {
+    setLocal((prev) => ({ ...prev, [task.occurrenceId]: { status, actualMinutes } }));
+    change(task.occurrenceId, status, status === "done" ? actualMinutes : undefined);
   };
-  const row = (task: TodayTask) => (
+  const row = (task: TodayTask, index?: number) => (
     <TaskRow
       key={task.occurrenceId}
       task={task}
+      position={index === undefined ? undefined : index + 1}
+      slot={index === undefined ? undefined : slots[index]}
       pending={queued.has(task.occurrenceId) && (isOffline || failing)}
       disabled={stale}
-      onChange={(status) => update(task, status)}
+      onChange={(status) => update(task, status, null)}
+      onMinutes={task.kind === "cleaning" ? (minutes) => update(task, "done", minutes) : undefined}
     />
   );
 
@@ -177,8 +187,13 @@ export function TodaySession({
                 : Math.round((progress.doneMinutes / progress.totalMinutes) * 100)
             }
           />
+          {progress.tookMinutes > 0 ? (
+            <p className="text-muted-foreground text-sm tabular-nums">
+              Took {progress.tookMinutes} min so far
+            </p>
+          ) : null}
           <ul aria-label="Cleaning today" className="flex flex-col divide-y">
-            {cleaning.map(row)}
+            {cleaning.map((task, index) => row(task, index))}
           </ul>
         </section>
       )}
@@ -193,7 +208,7 @@ export function TodaySession({
             Also today
           </h2>
           <ul aria-label="Routines today" className="flex flex-col">
-            {routines.map(row)}
+            {routines.map((task) => row(task))}
           </ul>
         </section>
       ) : null}

@@ -1,7 +1,12 @@
 import type { OccurrenceStatus } from "@/db/schema";
 import type { PlanTask } from "@/lib/scheduler/format";
 
-export type TodayTask = PlanTask & { occurrenceId: string; status: OccurrenceStatus };
+export type TodayTask = PlanTask & {
+  occurrenceId: string;
+  status: OccurrenceStatus;
+  /** Minutes the owner noted for a done task, or null. */
+  actualMinutes: number | null;
+};
 
 export type DayCounts = { total: number; done: number; skipped: number };
 
@@ -14,15 +19,19 @@ export type Progress = {
   doneMinutes: number;
   /** The session's minutes without skipped tasks. */
   totalMinutes: number;
+  /** The minutes noted on done tasks; tasks without a note add nothing. */
+  tookMinutes: number;
   complete: boolean;
 };
 
 export function progressOf(tasks: readonly TodayTask[]): Progress {
   const cleaning = tasks.filter((t) => t.kind === "cleaning");
   const kept = cleaning.filter((t) => t.status !== "skipped");
+  const done = kept.filter((t) => t.status === "done");
   return {
-    doneMinutes: kept.filter((t) => t.status === "done").reduce((sum, t) => sum + t.minutes, 0),
+    doneMinutes: done.reduce((sum, t) => sum + t.minutes, 0),
     totalMinutes: kept.reduce((sum, t) => sum + t.minutes, 0),
+    tookMinutes: done.reduce((sum, t) => sum + (t.actualMinutes ?? 0), 0),
     complete: isComplete(countsOf(cleaning)),
   };
 }

@@ -4,14 +4,16 @@ import { weekdayFromToday } from "./plan";
 import { acceptAllProposals, proposeTasks, REPLAN_TIMEOUT } from "./tasks";
 
 /**
- * A kitchen with a floor, its proposed tasks, and a schedule whose start time today is late,
- * so today's session is still ahead whenever the test runs.
+ * A kitchen with a floor (or the given item types), its proposed tasks, and a schedule whose
+ * start time today is late, so today's session is still ahead whenever the test runs.
  */
-export async function setUpToday(page: Page) {
+export async function setUpToday(page: Page, itemTypes: string[] = ["Floor"]) {
   await page.goto("/rooms");
   await addRoom(page, "Kitchen");
   await openRoom(page, "Kitchen");
-  await addItem(page, { type: "Floor" });
+  for (const type of itemTypes) {
+    await addItem(page, { type });
+  }
   await page.goto("/tasks/review");
   await proposeTasks(page, /tasks proposed for the whole home/);
   await acceptAllProposals(page);
@@ -26,6 +28,10 @@ export async function setUpToday(page: Page) {
 
 export function cleaningToday(page: Page) {
   return page.getByRole("list", { name: "Cleaning today" });
+}
+
+export function tookField(page: Page) {
+  return cleaningToday(page).getByRole("textbox", { name: /^Minutes taken for / });
 }
 
 export const TODAY_OFFLINE_NOTICE =

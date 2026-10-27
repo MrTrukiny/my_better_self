@@ -93,8 +93,15 @@ export function useCheckOffQueue({ userId, send, onDropped, onSynced }: Options)
   }, [userId, flush]);
 
   const change = useCallback(
-    (occurrenceId: string, status: OccurrenceStatus) => {
-      setQueue(enqueue(localStorage, userId, { occurrenceId, status, queuedAt: Date.now() }));
+    (occurrenceId: string, status: OccurrenceStatus, actualMinutes?: number | null) => {
+      setQueue(
+        enqueue(localStorage, userId, {
+          occurrenceId,
+          status,
+          ...(actualMinutes === undefined ? {} : { actualMinutes }),
+          queuedAt: Date.now(),
+        }),
+      );
       void flush();
     },
     [userId, flush],
