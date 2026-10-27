@@ -29,6 +29,7 @@ function task(
     roomName: kind === "cleaning" ? "Kitchen" : null,
     itemName: null,
     status: "scheduled",
+    actualMinutes: null,
   };
 }
 

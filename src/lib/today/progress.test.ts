@@ -16,6 +16,7 @@ function task(
     roomName: null,
     itemName: null,
     status,
+    actualMinutes: null,
   };
 }
 

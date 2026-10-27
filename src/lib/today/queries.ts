@@ -7,6 +7,7 @@ import { byPlace } from "@/lib/scheduler/format";
 import { ensurePlan } from "@/lib/scheduler/plan";
 import type { ScheduleSettings } from "@/lib/scheduler/settings";
 import { getCurrentUser } from "@/lib/session";
+import { sessionOrder } from "./order";
 import type { DayCounts, TodayTask } from "./progress";
 
 /** How far back the streak looks. */
@@ -14,6 +15,7 @@ const STREAK_WINDOW_DAYS = 400;
 
 export type TodayData = {
   today: DayNumber;
+  /** Cleaning tasks in the recommended order (`sessionOrder`), then routines. */
   tasks: TodayTask[];
   /** Cleaning counts of past days, for the streak. */
   history: Map<DayNumber, DayCounts>;
@@ -36,8 +38,13 @@ export async function getToday(settings: ScheduleSettings, now: Date): Promise<T
         kind: task.kind,
         name: task.name,
         minutes: task.minutes,
+        actualMinutes: occurrence.actualMinutes,
+        roomId: room.id,
         roomName: room.name,
+        roomCreatedAt: room.createdAt,
         itemName: item.name,
+        itemType: item.type,
+        itemCreatedAt: item.createdAt,
       })
       .from(occurrence)
       .innerJoin(task, eq(task.id, occurrence.taskId))
@@ -62,14 +69,18 @@ export async function getToday(settings: ScheduleSettings, now: Date): Promise<T
       )
       .groupBy(occurrence.date),
   ]);
+  const tasks = rows.map(({ kind, roomCreatedAt, itemCreatedAt, ...rest }) => ({
+    ...rest,
+    kind: kind === "routine" ? ("routine" as const) : ("cleaning" as const),
+    roomAddedAt: roomCreatedAt?.getTime() ?? null,
+    itemAddedAt: itemCreatedAt?.getTime() ?? null,
+  }));
   return {
     today,
-    tasks: rows
-      .map(({ kind, ...rest }) => ({
-        ...rest,
-        kind: kind === "routine" ? ("routine" as const) : ("cleaning" as const),
-      }))
-      .sort(byPlace),
+    tasks: [
+      ...sessionOrder(tasks.filter((t) => t.kind === "cleaning")),
+      ...tasks.filter((t) => t.kind === "routine").sort(byPlace),
+    ],
     history: new Map(counts.map(({ date, ...c }) => [toDayNumber(date), c])),
   };
 }

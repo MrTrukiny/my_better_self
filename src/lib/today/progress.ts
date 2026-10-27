@@ -1,7 +1,12 @@
 import type { OccurrenceStatus } from "@/db/schema";
 import type { PlanTask } from "@/lib/scheduler/format";
 
-export type TodayTask = PlanTask & { occurrenceId: string; status: OccurrenceStatus };
+export type TodayTask = PlanTask & {
+  occurrenceId: string;
+  status: OccurrenceStatus;
+  /** Minutes the owner noted for a done task, or null. */
+  actualMinutes: number | null;
+};
 
 export type DayCounts = { total: number; done: number; skipped: number };
 
