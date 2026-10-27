@@ -1,6 +1,6 @@
 # 008: Incremental task proposals
 
-- **Status**: Approved
+- **Status**: In progress
 - **Owner**: @mrtrukiny
 - **Created**: 2026-10-27
 

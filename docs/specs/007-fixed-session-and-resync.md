@@ -1,6 +1,6 @@
 # 007: Fixed-length sessions and calendar resync
 
-- **Status**: Approved
+- **Status**: In progress
 - **Owner**: @mrtrukiny
 - **Created**: 2026-10-27
 
