@@ -23,3 +23,9 @@ Spec 006 lets the owner check off and skip the day's tasks, including offline, a
 - Background Sync isn't used, since iOS doesn't support it; queued changes wait for the app to be opened again.
 - Changes queued on a device the owner never opens again are lost. That is acceptable for a single-owner app.
 - Amends ADR 0005 (offline queue for the Today page) and ADR 0007 (history from statuses, daily replan).
+
+## Amendment (spec 009)
+
+- A done cleaning task can carry the minutes it actually took, `occurrence.actual_minutes` (1 to 240, nullable). `setOccurrenceStatus` takes an optional `actualMinutes`: a number sets it, `null` clears it, and leaving it out keeps it. Any status other than `done` clears it, and routines refuse it. Like check-offs, it doesn't replan.
+- Queued changes gain the same optional `actualMinutes`. One entry per occurrence still holds, since each entry carries the status too; older entries without the field stay valid.
+- The minutes are only recorded and shown for now. Using them to calibrate estimates is a separate, later decision.

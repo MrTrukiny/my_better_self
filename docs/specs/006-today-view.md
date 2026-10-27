@@ -44,7 +44,7 @@ Each criterion is testable and maps to at least one test.
 
 - Checking off or editing past days, including yesterday (a possible follow-up if forgetting to check off turns out to be common).
 - Checking off future days' tasks early, or moving a task to another day by hand.
-- Logging actual minutes (phase 2, time calibration) and room freshness.
+- Logging actual minutes (now [spec 009](009-ordered-session-and-actual-time.md); using them for time calibration is phase 2) and room freshness.
 - Updating the Google Calendar event when tasks are checked (spec 005 creates the events; this can follow).
 - Push notifications or reminders, and streak rewards beyond the count.
 
