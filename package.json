@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --port 4837",
     "build": "next build",
-    "start": "next start",
+    "start": "next start --port 4837",
     "typecheck": "next typegen && tsc --noEmit",
     "lint": "biome check .",
     "format": "biome check --write .",

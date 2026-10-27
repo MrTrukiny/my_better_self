@@ -13,7 +13,7 @@ A personal, installable PWA that plans household cleaning with AI and schedules 
 
 1. In [Google Cloud Console](https://console.cloud.google.com/), create a project and configure the OAuth consent screen (External, with your account as a test user while it is in Testing).
 2. Under **APIs & Services > Credentials**, create an **OAuth client ID** of type **Web application** and add these authorized redirect URIs:
-   - `http://localhost:3000/api/auth/callback/google`
+   - `http://localhost:4837/api/auth/callback/google` (`pnpm dev` and `pnpm start`)
    - `http://localhost:3100/api/auth/callback/google` (production build used by e2e)
    - `https://<your-domain>/api/auth/callback/google` when deployed
 3. Copy the client ID and secret.
@@ -27,7 +27,7 @@ pnpm db:migrate
 pnpm dev
 ```
 
-Open http://localhost:3000 and sign in with an email listed in `ALLOWED_EMAILS`. To test PWA behavior (service worker, offline), use a production build: `pnpm build && pnpm start`.
+Open http://localhost:4837 and sign in with an email listed in `ALLOWED_EMAILS`. To test PWA behavior (service worker, offline), use a production build: `pnpm build && pnpm start`.
 
 ### 4. AI task proposals (optional)
 
