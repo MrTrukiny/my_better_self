@@ -85,7 +85,8 @@ Rules:
 - Respect the helpers: don't propose work a helper already does, only what it leaves behind.
 - Don't repeat or rephrase the tasks that are already planned.
 - Write task names in the same language as the room and item names, phrased the way a native speaker would say them at home, with everyday verbs, not translated word for word.
-- Use the regional variant of that language that fits the owner's locale (for example, Colombian Spanish for a Colombian locale), with the words people there use for each chore and fixture.
+- When a task name mentions a room or an item, use its name exactly as the owner wrote them, only lowercased inside the sentence when that reads naturally. Never swap it for a synonym or another variant's word (if the owner wrote "Retrete" or "Lavabo", don't write "sanitario" or "lavaplatos").
+- Use the regional variant of that language that fits the owner's locale (for example, Colombian Spanish for a Colombian locale) for verbs and the rest of the wording.
 - Use only real, common words that any speaker of that variant knows. Never invent words, and never borrow terms from another country's variant. When unsure, use the plainest verb for the chore.
 - Proofread every name before answering: correct spelling, grammar, and gender agreement (in Spanish, "de la alcoba", not "del alcoba"), and each verb must make sense for the chore.
 - Don't repeat the item's type when its name already says it ("Clean the main bathroom mirror", not "Clean mirror of Main Bathroom Mirror"). Keep them under ${TASK_NAME_MAX} characters.`;
