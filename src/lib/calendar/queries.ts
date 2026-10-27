@@ -9,6 +9,7 @@ export type CalendarConnectionView = {
   status: CalendarStatus;
   calendarName: string;
   email: string;
+  lastSyncedAt: Date | null;
 };
 
 /**
@@ -18,7 +19,11 @@ export type CalendarConnectionView = {
 export async function getCalendarConnection(): Promise<CalendarConnectionView | null> {
   const user = await getCurrentUser();
   const [row] = await db
-    .select({ status: calendarConnection.status, calendarName: calendarConnection.calendarName })
+    .select({
+      status: calendarConnection.status,
+      calendarName: calendarConnection.calendarName,
+      lastSyncedAt: calendarConnection.lastSyncedAt,
+    })
     .from(calendarConnection)
     .where(eq(calendarConnection.userId, user.id));
   if (!row) {
@@ -28,6 +33,7 @@ export async function getCalendarConnection(): Promise<CalendarConnectionView | 
     status: row.status,
     calendarName: row.calendarName ?? CLEANING_CALENDAR_NAME,
     email: user.email,
+    lastSyncedAt: row.lastSyncedAt,
   };
 }
 

@@ -20,7 +20,12 @@ beforeEach(() => {
   offline.value = false;
 });
 
-const connected = { status: "ok" as const, calendarName: "Cleaning", email: "owner@example.com" };
+const connected = {
+  status: "ok" as const,
+  calendarName: "Cleaning",
+  email: "owner@example.com",
+  lastSyncedAt: new Date("2026-10-27T13:50:00Z"),
+};
 
 function renderSection(props: Partial<Parameters<typeof CalendarSection>[0]> = {}) {
   return render(
