@@ -11,12 +11,16 @@ export async function controlWithServiceWorker(page: Page) {
 }
 
 /**
- * Goes offline and waits for the current page to notice, so the next navigation doesn't race
- * with Next reloading the current page from cache.
+ * Goes offline and opens `path` as a full page load, the way `OfflineAwareLink` navigates offline.
+ *
+ * The current page is left before the network drops. If it is still streaming a Server Action
+ * result or an RSC payload when that happens, Next recovers by reloading the current URL, and that
+ * late reload can replace the navigation to `path`.
  */
-export async function goOffline(page: Page, context: BrowserContext) {
+export async function openOffline(page: Page, context: BrowserContext, path: string) {
+  await page.goto("about:blank");
   await context.setOffline(true);
-  await expect(page.getByText(OFFLINE_NOTICE).first()).toBeVisible();
+  await page.goto(path);
 }
 
 /** Waits until the service worker holds a copy of `path` that contains `text`. */

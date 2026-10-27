@@ -47,3 +47,7 @@ The pattern now covers the task pages too, under generic names:
 
 - `/` (the Today page) joins `OFFLINE_DOCUMENT_ROUTES` as an exact match, and refreshes its own copy and `/plan` after each check-off.
 - The Today page is the one exception to "nothing is queued": check-offs made offline are kept on the device and sent later. See ADR 0008.
+
+## Amendment (refresh ordering)
+
+- `OfflineCacheWarmer` runs one refresh per URL at a time. Overlapping refreshes could finish out of order, and the service worker keeps the last response it receives, so a render started before a change could replace the copy rendered after it. Changes made while a refresh is in flight collapse into one follow-up refresh.

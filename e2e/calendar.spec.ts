@@ -10,8 +10,8 @@ import { addItem, addRoom, openRoom } from "./support/inventory";
 import {
   controlWithServiceWorker,
   expectCachedPage,
-  goOffline,
   OFFLINE_NOTICE,
+  openOffline,
 } from "./support/offline";
 import { planDays, saveSchedule } from "./support/plan";
 import { acceptAllProposals, proposeTasks, REPLAN_TIMEOUT } from "./support/tasks";
@@ -133,8 +133,7 @@ test.describe("Google Calendar sync", () => {
     await connectCalendar(page);
     await expectCachedPage(page, "/schedule", "Connected: ");
 
-    await goOffline(page, context);
-    await page.goto("/schedule");
+    await openOffline(page, context, "/schedule");
     const schedule = page.getByRole("region", { name: "Schedule" });
     await expect(schedule.getByText(OFFLINE_NOTICE)).toBeVisible();
     const section = calendarSection(page);
