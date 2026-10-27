@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq, isNull, type SQL } from "drizzle-orm";
+import { and, eq, type SQL } from "drizzle-orm";
 import { updateTag } from "next/cache";
 import { headers } from "next/headers";
 import { db } from "@/db";
@@ -12,6 +12,7 @@ import type { ActionState } from "@/lib/inventory/action-state";
 import { parseInput } from "@/lib/inventory/schemas";
 import { replanAfterChange } from "@/lib/scheduler/plan";
 import { getCurrentUser } from "@/lib/session";
+import { findUncovered, hasUncovered } from "@/lib/tasks/coverage";
 import type { GenerateState } from "@/lib/tasks/generate-state";
 import { readProposalInput, tasksTag } from "@/lib/tasks/queries";
 import { homeProfileInputSchema, taskInputSchema } from "@/lib/tasks/schemas";
@@ -55,8 +56,9 @@ export async function saveHomeProfile(
 }
 
 /**
- * Proposes tasks for the whole home (`scopeRoomId` null) or one room, replacing the pending
- * proposals of that scope. Nothing is written when generation fails.
+ * Proposes tasks for the rooms and items in scope (the whole home when `scopeRoomId` is null, or
+ * one room) that have no tasks and no pending proposals. New proposals join the pending ones;
+ * nothing is replaced. Nothing is written when generation fails or there is nothing new.
  */
 export async function generateProposals(scopeRoomId: string | null): Promise<GenerateState> {
   const user = await getCurrentUser();
@@ -69,6 +71,10 @@ export async function generateProposals(scopeRoomId: string | null): Promise<Gen
     if (scopeRoomId !== null && !input.rooms.some((r) => r.id === scopeRoomId)) {
       return { status: "error", formError: NOT_FOUND };
     }
+    // The page disables the button when nothing is new; this covers a stale page.
+    if (!hasUncovered(findUncovered(input))) {
+      return { status: "success", count: 0 };
+    }
 
     const result = await proposeTasks(input, getProposalOptions());
     if (!result.ok) {
@@ -76,23 +82,11 @@ export async function generateProposals(scopeRoomId: string | null): Promise<Gen
       return { status: "error", formError };
     }
 
-    await db.transaction(async (tx) => {
-      await tx
-        .delete(taskProposal)
-        .where(
-          and(
-            eq(taskProposal.userId, user.id),
-            scopeRoomId === null
-              ? isNull(taskProposal.scopeRoomId)
-              : eq(taskProposal.scopeRoomId, scopeRoomId),
-          ),
-        );
-      if (result.proposals.length > 0) {
-        await tx
-          .insert(taskProposal)
-          .values(result.proposals.map((p) => ({ ...p, userId: user.id, scopeRoomId })));
-      }
-    });
+    if (result.proposals.length > 0) {
+      await db
+        .insert(taskProposal)
+        .values(result.proposals.map((p) => ({ ...p, userId: user.id, scopeRoomId })));
+    }
     updateTag(tasksTag(user.id));
     return { status: "success", count: result.proposals.length };
   } catch (error) {
