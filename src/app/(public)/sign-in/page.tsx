@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { SignInForm } from "@/components/sign-in-form";
@@ -24,6 +25,14 @@ export default function SignInPage({ searchParams }: PageProps<"/sign-in">) {
       <Suspense fallback={<SignInFormPlaceholder />}>
         <SignInPanel searchParams={searchParams} />
       </Suspense>
+      <nav aria-label="Legal" className="text-muted-foreground flex gap-4 text-xs">
+        <Link href="/privacy" className="underline underline-offset-4">
+          Privacy
+        </Link>
+        <Link href="/terms" className="underline underline-offset-4">
+          Terms
+        </Link>
+      </nav>
     </section>
   );
 }
