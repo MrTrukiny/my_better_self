@@ -1,6 +1,6 @@
 # 011: Time calibration
 
-- **Status**: Draft
+- **Status**: Approved
 - **Owner**: @mrtrukiny
 - **Created**: 2026-10-28
 
