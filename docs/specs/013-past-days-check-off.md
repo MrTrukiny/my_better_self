@@ -1,6 +1,6 @@
 # 013: Check off past days
 
-- **Status**: In progress
+- **Status**: Done
 - **Owner**: @mrtrukiny
 - **Created**: 2026-10-28
 
