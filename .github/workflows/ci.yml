@@ -39,6 +39,8 @@ jobs:
       AI_FAKE: "1"
       # In-memory Google Calendar instead of live calls; e2e passes the same job secret.
       CALENDAR_FAKE: "1"
+      # Notifications are offered, but nothing is queued in QStash or pushed.
+      PUSH_FAKE: "1"
       CRON_SECRET: e2e-only-cron-secret-not-used-anywhere-else
     steps:
       - uses: actions/checkout@v7

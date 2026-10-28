@@ -25,6 +25,22 @@ const envSchema = z
       .transform((value) => value === "1"),
     // Bearer secret for the daily job (/api/cron/daily); Vercel Cron sends it.
     CRON_SECRET: z.string().min(32, "must be at least 32 characters").optional(),
+    // Push notifications (ADR 0010). Without all of them, notifications aren't offered.
+    VAPID_PUBLIC_KEY: z.string().min(1).optional(),
+    VAPID_PRIVATE_KEY: z.string().min(1).optional(),
+    VAPID_SUBJECT: z
+      .string()
+      .regex(/^(mailto:|https:\/\/)/, "must be a mailto: or https:// URL")
+      .optional(),
+    QSTASH_TOKEN: z.string().min(1).optional(),
+    QSTASH_CURRENT_SIGNING_KEY: z.string().min(1).optional(),
+    QSTASH_NEXT_SIGNING_KEY: z.string().min(1).optional(),
+    QSTASH_URL: z.url().optional(),
+    // Test-only: notifications are offered, but nothing is queued or pushed.
+    PUSH_FAKE: z
+      .string()
+      .optional()
+      .transform((value) => value === "1"),
     VERCEL_ENV: z.string().optional(),
   })
   .superRefine((env, ctx) => {
@@ -35,12 +51,10 @@ const envSchema = z
         message: "is required in production",
       });
     }
-    if (env.VERCEL_ENV === "production" && env.CALENDAR_FAKE) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["CALENDAR_FAKE"],
-        message: "must not be set in production",
-      });
+    for (const flag of ["CALENDAR_FAKE", "PUSH_FAKE"] as const) {
+      if (env.VERCEL_ENV === "production" && env[flag]) {
+        ctx.addIssue({ code: "custom", path: [flag], message: "must not be set in production" });
+      }
     }
   });
 

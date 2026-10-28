@@ -6,6 +6,7 @@ import { scheduleSettings } from "@/db/schema";
 import { scheduleCalendarSync } from "@/lib/calendar/sync";
 import type { ActionState } from "@/lib/inventory/action-state";
 import { parseInput } from "@/lib/inventory/schemas";
+import { rescheduleReminders } from "@/lib/notifications/schedule-reminders";
 import { replan } from "@/lib/scheduler/plan";
 import { scheduleTag } from "@/lib/scheduler/queries";
 import { scheduleFormValues, scheduleInputSchema } from "@/lib/scheduler/schemas";
@@ -28,6 +29,7 @@ export async function saveSchedule(_prev: ActionState, formData: FormData): Prom
     updateTag(scheduleTag(user.id));
     await replan(user.id);
     scheduleCalendarSync(user.id);
+    rescheduleReminders(user.id);
     return { status: "success" };
   } catch (error) {
     console.error("saveSchedule failed", error);
