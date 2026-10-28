@@ -16,7 +16,7 @@ import { TaskRow } from "./task-row";
 import { useCheckOffs } from "./use-check-offs";
 
 /** Pages whose offline copies show today's check-offs. */
-const TODAY_PAGES = ["/", "/plan"];
+const TODAY_PAGES = ["/", "/plan", "/earlier-days"];
 
 export type TodaySessionProps = {
   userId: string;
