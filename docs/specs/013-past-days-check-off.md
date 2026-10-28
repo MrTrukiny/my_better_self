@@ -1,6 +1,6 @@
 # 013: Check off past days
 
-- **Status**: Approved
+- **Status**: In progress
 - **Owner**: @mrtrukiny
 - **Created**: 2026-10-28
 
@@ -46,10 +46,26 @@ Check-offs only work for today (spec 006). When the owner cleans but forgets to 
 
 ## Technical plan
 
-_Filled in by the `plan-feature` skill after the spec is approved._
-
 ### Approach
+
+- **Rule (pure):** `checkOffDecision` accepts occurrences from today back `EDITABLE_PAST_DAYS` (7) days; older or future ones stay `past`. `isEditableDay(date, today)` is shared by the server and the client.
+- **Action:** `setOccurrenceStatus` keeps its input. When the occurrence is before today, it calls `replanAfterChange` after the update, so the scheduler's history (`lastCompletions`, built from past occurrences) moves the task's next date; today's changes still don't replan (ADR 0008). Replans only touch days from `replanStart` on, so past calendar events stay as they are.
+- **Reads:** `getEarlierDays(settings, now)` in `src/lib/today/queries.ts` returns the last 7 days that have occurrences, newest first, each with its start time and its tasks in `sessionOrder` (routines after). The Today page counts unchecked recent days from the streak history it already reads.
+- **UI:** a new page `/earlier-days` (Server Component shell, uncached after `io()`) renders `EarlierDays`, a client leaf with one `details` section per day and `TaskRow`s without slots. The queue and the overlay of queued and local changes move out of `TodaySession` into a shared hook, `useCheckOffs`, used by both pages. `TaskRow` takes an optional `context` (the day) appended to the accessible names.
+- **Navigation:** Today's destination includes `/earlier-days`.
+- **Offline:** `/earlier-days` joins the offline document routes and is warmed with Today. A queued change for a day that left the window is refused as `past` and dropped with a notice, like today's.
+- No new data, dependencies, or ADR; ADR 0008 gets an amendment.
 
 ### Tasks
 
+- [ ] T1: Editable window: `EDITABLE_PAST_DAYS`, `isEditableDay`, and `checkOffDecision` accepting the last 7 days. Files: `src/lib/today/schemas.ts`, `src/lib/today/schemas.test.ts`. Covers: AC2.
+- [ ] T2: Replan after a past change. Files: `src/app/(app)/actions.ts`. Covers: AC3, AC4, AC5.
+- [ ] T3: Earlier days data: `getEarlierDays` and `uncheckedDays`. Files: `src/lib/today/queries.ts`, `src/lib/today/earlier.ts`, `src/lib/today/earlier.test.ts`. Covers: AC1, AC7.
+- [ ] T4: Shared check-off hook, extracted from `TodaySession`, and `TaskRow` context. Files: `src/components/today/use-check-offs.ts`, `src/components/today/today-session.tsx`, `src/components/today/task-row.tsx`. Covers: AC2, AC6.
+- [ ] T5: Earlier days page and Today's link. Files: `src/app/(app)/earlier-days/page.tsx`, `src/components/today/earlier-days.tsx`, `src/components/today/earlier-days.test.tsx`, `src/app/(app)/page.tsx`, `src/lib/navigation.ts`, `src/app/sw.ts`. Covers: AC1, AC2, AC6, AC7, AC8.
+- [ ] T6: E2E and docs. Files: `e2e/earlier-days.spec.ts`, `docs/decisions/0008-check-off-and-offline-queue.md`, `docs/ARCHITECTURE.md`, `docs/specs/006-today-view.md`. Covers: AC1–AC8.
+
 ### Test plan
+
+- Unit: the window (today, 7 days back, 8 days back, future) and the decision (AC2); unchecked-day counting and newest-first ordering (AC1, AC7); `EarlierDays` sections, progress text, day-off and read-only states, and accessible names with the date (AC1, AC2, AC8).
+- E2E: an owner with yesterday's session planned (seeded through the test database) checks it off from "Earlier days", sees the streak count it and the task leave tomorrow's plan (AC1–AC4); the calendar fake keeps yesterday's event unchanged (AC5); a change made offline syncs on reconnect (AC6); a new owner sees the empty state (AC7); keyboard at 360px in dark mode without console errors (AC8).
