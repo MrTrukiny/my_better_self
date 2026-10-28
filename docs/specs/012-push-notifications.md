@@ -60,7 +60,7 @@ See [ADR 0010](../decisions/0010-push-notifications.md). Web Push with VAPID key
 
 ### Tasks
 
-- [ ] T1: Schema, migration, and pure reminder rules. Files: `src/db/schema/notifications.ts`, `src/db/schema/index.ts`, `drizzle/0008_*.sql`, `src/lib/notifications/reminders.ts`, `src/lib/notifications/reminders.test.ts`. Covers: AC2, AC3, AC4, AC6.
+- [x] T1: Schema, migration, and pure reminder rules. Files: `src/db/schema/notifications.ts`, `src/db/schema/index.ts`, `drizzle/0008_*.sql`, `src/lib/notifications/reminders.ts`, `src/lib/notifications/reminders.test.ts`. Covers: AC2, AC3, AC4, AC6.
 - [ ] T2: Delivery and scheduling: env, Web Push and QStash wrappers with a test-only fake, scheduling, the send route, the daily job, and rescheduling on schedule save. Files: `src/lib/env.ts`, `.env.example`, `src/lib/notifications/{push,qstash,schedule-reminders,deliver,queries}.ts`, `src/app/api/notifications/send/route.ts`, `src/app/api/cron/daily/route.ts`, `src/app/(app)/schedule/actions.ts`, tests. Covers: AC3, AC4, AC6.
 - [ ] T3: Service worker handlers and unsubscribe on sign-out. Files: `src/lib/notifications/worker.ts`, `worker.test.ts`, `src/app/sw.ts`, `src/lib/notifications/browser.ts`, `src/components/account-menu.tsx`. Covers: AC5, AC7.
 - [ ] T4: Notifications page, actions, and Settings row. Files: `src/app/(app)/notifications/{page,actions}.ts(x)`, `src/components/notifications/notifications-panel.tsx` (+ test), `src/components/ui/switch.tsx`, `src/app/(app)/settings/page.tsx`, `src/lib/settings/summary.ts`, `src/lib/navigation.ts`, `src/app/sw.ts`. Covers: AC1, AC2, AC4, AC7, AC8.

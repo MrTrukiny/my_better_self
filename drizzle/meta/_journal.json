@@ -57,6 +57,13 @@
       "when": 1793223568182,
       "tag": "0007_time_calibration",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1793226696318,
+      "tag": "0008_push_notifications",
+      "breakpoints": true
     }
   ]
 }
