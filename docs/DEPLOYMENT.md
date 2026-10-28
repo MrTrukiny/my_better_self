@@ -52,7 +52,19 @@ In the project that holds the OAuth client used for sign-in ([Google Cloud Conso
    | `GOOGLE_GENERATIVE_AI_API_KEY` | Gemini key from Google AI Studio                                    |
    | `CRON_SECRET`                  | A new secret of at least 32 characters: `openssl rand -base64 32`   |
 
-   Don't set `AI_FAKE` or `CALENDAR_FAKE` in Vercel; they are for tests only. Without `CRON_SECRET`, the app fails its environment check in Vercel production.
+   For push notifications (spec 012, [ADR 0010](decisions/0010-push-notifications.md)), also set these. Without all six, the Notifications page says they aren't set up, and nothing else changes.
+
+   | Variable                     | Value                                                                                   |
+   | ---------------------------- | --------------------------------------------------------------------------------------- |
+   | `VAPID_PUBLIC_KEY`           | From `pnpm dlx web-push generate-vapid-keys` (run once; changing it drops every device) |
+   | `VAPID_PRIVATE_KEY`          | The private key from the same command                                                   |
+   | `VAPID_SUBJECT`              | `mailto:<your email>`                                                                   |
+   | `QSTASH_TOKEN`               | Upstash console > QStash > the token                                                    |
+   | `QSTASH_CURRENT_SIGNING_KEY` | Upstash console > QStash > Signing keys > Current                                       |
+   | `QSTASH_NEXT_SIGNING_KEY`    | Upstash console > QStash > Signing keys > Next                                          |
+   | `QSTASH_URL`                 | Only if the console shows a regional URL other than `https://qstash.upstash.io`         |
+
+   Don't set `AI_FAKE`, `CALENDAR_FAKE`, or `PUSH_FAKE` in Vercel; they are for tests only. Without `CRON_SECRET`, the app fails its environment check in Vercel production.
 3. Deploy. Vercel reads `vercel.json` and registers the daily job (`/api/cron/daily`, once a day at 09:00 UTC; on the Hobby plan it may run any time within that hour). Vercel sends `Authorization: Bearer <CRON_SECRET>` with each run.
 
 ## 4. Check it works
@@ -67,7 +79,8 @@ In the project that holds the OAuth client used for sign-in ([Google Cloud Conso
    curl -H "Authorization: Bearer $CRON_SECRET" https://<your-domain>/api/cron/daily
    ```
 
-   It answers with the number of owners, how many synced, and how many failed. Failures are logged with `calendar sync failed`.
+   It answers with the number of owners, how many synced, how many failed, and how many reminders it queued. Failures are logged with `calendar sync failed`.
+6. Notifications: on the phone, install the app, open **Settings > Notifications**, and turn them on. Set "Before my session" a few minutes ahead of today's start time (or the evening time a few minutes ahead) and save; the notification arrives within a minute or two of that time, and tapping it opens Today. QStash's console lists the queued and delivered messages.
 
 ## Troubleshooting
 

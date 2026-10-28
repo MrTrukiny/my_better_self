@@ -17,7 +17,23 @@ describe("parseEnv", () => {
       AI_MODEL: DEFAULT_AI_MODEL,
       AI_FAKE: false,
       CALENDAR_FAKE: false,
+      PUSH_FAKE: false,
     });
+  });
+
+  it("rejects a VAPID subject that isn't a mailto: or https:// URL", () => {
+    expect(() => parseEnv({ ...valid, VAPID_SUBJECT: "owner@example.com" })).toThrow(
+      /VAPID_SUBJECT/,
+    );
+    expect(parseEnv({ ...valid, VAPID_SUBJECT: "mailto:owner@example.com" }).VAPID_SUBJECT).toBe(
+      "mailto:owner@example.com",
+    );
+  });
+
+  it("refuses fake push in Vercel production", () => {
+    expect(() =>
+      parseEnv({ ...valid, VERCEL_ENV: "production", CRON_SECRET: "s".repeat(32), PUSH_FAKE: "1" }),
+    ).toThrow(/PUSH_FAKE/);
   });
 
   it("turns on the fake calendar only for CALENDAR_FAKE=1", () => {

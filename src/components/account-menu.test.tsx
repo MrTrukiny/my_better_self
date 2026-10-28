@@ -3,11 +3,15 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AccountMenu } from "./account-menu";
 
-const { signOut } = vi.hoisted(() => ({ signOut: vi.fn() }));
+const { signOut, unsubscribeDevice } = vi.hoisted(() => ({
+  signOut: vi.fn(),
+  unsubscribeDevice: vi.fn(),
+}));
 
 vi.mock("@/lib/auth-client", () => ({
   authClient: { signOut },
 }));
+vi.mock("@/lib/notifications/browser", () => ({ unsubscribeDevice }));
 
 const user = { name: "Ada Lovelace", email: "ada@example.com", image: null };
 const cacheNames = ["serwist-precache-v2", "pages", "pages-rsc"];
@@ -17,6 +21,7 @@ const originalLocation = window.location;
 
 beforeEach(() => {
   signOut.mockReset().mockResolvedValue({ data: { success: true } });
+  unsubscribeDevice.mockReset().mockResolvedValue(null);
   deleteCache.mockClear();
   replace.mockClear();
   vi.stubGlobal("caches", { keys: async () => cacheNames, delete: deleteCache });
@@ -60,5 +65,18 @@ describe("AccountMenu", () => {
     expect(deleteCache).toHaveBeenCalledWith("pages");
     expect(deleteCache).toHaveBeenCalledWith("pages-rsc");
     expect(deleteCache).not.toHaveBeenCalledWith("serwist-precache-v2");
+  });
+
+  it("stops this device's push subscription before signing out", async () => {
+    render(<AccountMenu user={user} />);
+
+    await userEvent.click(trigger());
+    await userEvent.click(await screen.findByRole("menuitem", { name: "Sign out" }));
+
+    await vi.waitFor(() => expect(signOut).toHaveBeenCalledTimes(1));
+    expect(unsubscribeDevice).toHaveBeenCalledTimes(1);
+    expect(unsubscribeDevice.mock.invocationCallOrder[0]).toBeLessThan(
+      signOut.mock.invocationCallOrder[0] ?? 0,
+    );
   });
 });

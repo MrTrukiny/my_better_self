@@ -250,6 +250,7 @@ test.describe("Daily job", () => {
       owners: expect.any(Number),
       synced: expect.any(Number),
       failed: expect.any(Number),
+      reminders: expect.any(Number),
     });
   });
 });

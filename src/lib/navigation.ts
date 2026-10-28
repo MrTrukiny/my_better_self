@@ -13,7 +13,11 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { href: "/plan", label: "Plan" },
   { href: "/tasks", label: "Tasks" },
   { href: "/rooms", label: "Rooms" },
-  { href: "/settings", label: "Settings", includes: ["/schedule", "/home-profile"] },
+  {
+    href: "/settings",
+    label: "Settings",
+    includes: ["/schedule", "/notifications", "/home-profile"],
+  },
 ];
 
 function within(pathname: string, route: string): boolean {

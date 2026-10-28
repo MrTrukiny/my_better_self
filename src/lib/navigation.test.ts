@@ -24,6 +24,7 @@ describe("sectionFor", () => {
     expect(sectionFor("/settings")).toBe("/settings");
     expect(sectionFor("/schedule")).toBe("/settings");
     expect(sectionFor("/home-profile")).toBe("/settings");
+    expect(sectionFor("/notifications")).toBe("/settings");
     expect(sectionFor("/earlier-days")).toBe("/");
   });
 

@@ -35,11 +35,12 @@ export default defineConfig({
     timeout: 180_000,
     // Sessions created by the e2e auth instance are bound to this origin. AI_FAKE swaps Gemini
     // for deterministic proposals and CALENDAR_FAKE swaps Google Calendar for an in-memory fake,
-    // so e2e never calls Google.
+    // so e2e never calls Google. PUSH_FAKE offers notifications without QStash or a push service.
     env: {
       BETTER_AUTH_URL: baseURL,
       AI_FAKE: "1",
       CALENDAR_FAKE: "1",
+      PUSH_FAKE: "1",
       CRON_SECRET: E2E_CRON_SECRET,
     },
   },
