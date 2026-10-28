@@ -1,6 +1,6 @@
 # 011: Time calibration
 
-- **Status**: In progress
+- **Status**: Done
 - **Owner**: @mrtrukiny
 - **Created**: 2026-10-28
 
@@ -16,14 +16,14 @@ Spec 009 records how long a done cleaning task actually took, but estimates stil
 
 ## Acceptance criteria
 
-- [ ] AC1: Given a cleaning task has at least 3 recorded times since its estimate was last set by hand, when I record a new time, then its estimate becomes the median of its last 5 recorded times, rounded to whole minutes and kept within the task's minute limits.
-- [ ] AC2: Given the median differs from the current estimate by less than 2 minutes and less than 20%, then the estimate stays as it is.
-- [ ] AC3: Given an estimate changed by calibration, then the plan is rebuilt from the next replannable day as after any task change, and the Google Calendar events follow. Today's session and its slots don't change mid-day.
-- [ ] AC4: Given an estimate was calibrated, then the tasks page shows it with a note ("Adjusted from 10 to 15 min from your last 3 times"), and the task's edit form shows the same note.
-- [ ] AC5: Given I edit a task's minutes by hand, then my value is kept, and only times recorded after that edit count toward the next calibration.
-- [ ] AC6: Given I clear or change a recorded time (spec 009), then calibration uses the corrected values the next time it runs; a time that was cleared doesn't count.
-- [ ] AC7: Routines and tasks with fewer than 3 recorded times are never calibrated.
-- [ ] AC8: The note is readable at 360px and on desktop, in light and dark mode, and is announced as part of the task's row for screen readers.
+- [x] AC1: Given a cleaning task has at least 3 recorded times since its estimate was last set by hand, when I record a new time, then its estimate becomes the median of its last 5 recorded times, rounded to whole minutes and kept within the task's minute limits.
+- [x] AC2: Given the median differs from the current estimate by less than 2 minutes and less than 20%, then the estimate stays as it is.
+- [x] AC3: Given an estimate changed by calibration, then the plan is rebuilt from the next replannable day as after any task change, and the Google Calendar events follow. Today's session and its slots don't change mid-day.
+- [x] AC4: Given an estimate was calibrated, then the tasks page shows it with a note ("Adjusted from 10 to 15 min from your last 3 times"), and the task's edit form shows the same note.
+- [x] AC5: Given I edit a task's minutes by hand, then my value is kept, and only times recorded after that edit count toward the next calibration.
+- [x] AC6: Given I clear or change a recorded time (spec 009), then calibration uses the corrected values the next time it runs; a time that was cleared doesn't count.
+- [x] AC7: Routines and tasks with fewer than 3 recorded times are never calibrated.
+- [x] AC8: The note is readable at 360px and on desktop, in light and dark mode, and is announced as part of the task's row for screen readers.
 
 ## UX notes
 
@@ -57,14 +57,14 @@ Spec 009 records how long a done cleaning task actually took, but estimates stil
 
 ### Tasks
 
-- [ ] T1: ADR 0009 (calibration rule, baseline, planned minutes on occurrences). Files: `docs/decisions/0009-time-calibration.md`. Covers: AC1–AC3, AC5.
-- [ ] T2: Schema and migration. Files: `src/db/schema/tasks.ts`, `src/db/schema/schedule.ts`, `drizzle/0007_*.sql`, `drizzle/meta/*`. Covers: AC1, AC3, AC5.
-- [ ] T3: Calibration rule. Files: `src/lib/tasks/calibration.ts`, `src/lib/tasks/calibration.test.ts`. Covers: AC1, AC2, AC7.
-- [ ] T4: Planned minutes: written by `planRange`, read by Today, the plan, and calendar sync. Files: `src/lib/scheduler/plan.ts`, `src/lib/scheduler/queries.ts`, `src/lib/today/queries.ts`, `src/lib/calendar/sync.ts`. Covers: AC3.
-- [ ] T5: Calibrate after check-offs. Files: `src/lib/tasks/calibrate.ts`, `src/app/(app)/actions.ts`. Covers: AC1, AC3, AC6, AC7.
-- [ ] T6: Manual edits reset the baseline. Files: `src/app/(app)/tasks/actions.ts`. Covers: AC5.
-- [ ] T7: The note on the tasks page and in the edit form. Files: `src/lib/tasks/queries.ts`, `src/lib/tasks/format.ts`, `src/components/tasks/proposal-card.tsx`, `src/components/tasks/task-row.tsx`, `src/components/tasks/task-form.tsx`, tests. Covers: AC4, AC8.
-- [ ] T8: E2E and docs. Files: `e2e/calibration.spec.ts`, `docs/ARCHITECTURE.md`. Covers: AC1–AC8.
+- [x] T1: ADR 0009 (calibration rule, baseline, planned minutes on occurrences). Files: `docs/decisions/0009-time-calibration.md`. Covers: AC1–AC3, AC5.
+- [x] T2: Schema and migration. Files: `src/db/schema/tasks.ts`, `src/db/schema/schedule.ts`, `drizzle/0007_*.sql`, `drizzle/meta/*`. Covers: AC1, AC3, AC5.
+- [x] T3: Calibration rule. Files: `src/lib/tasks/calibration.ts`, `src/lib/tasks/calibration.test.ts`. Covers: AC1, AC2, AC7.
+- [x] T4: Planned minutes: written by `planRange`, read by Today, the plan, and calendar sync. Files: `src/lib/scheduler/plan.ts`, `src/lib/scheduler/queries.ts`, `src/lib/today/queries.ts`, `src/lib/calendar/sync.ts`. Covers: AC3.
+- [x] T5: Calibrate after check-offs. Files: `src/lib/tasks/calibrate.ts`, `src/app/(app)/actions.ts`. Covers: AC1, AC3, AC6, AC7.
+- [x] T6: Manual edits reset the baseline. Files: `src/app/(app)/tasks/actions.ts`. Covers: AC5.
+- [x] T7: The note on the tasks page and in the edit form. Files: `src/lib/tasks/queries.ts`, `src/lib/tasks/format.ts`, `src/components/tasks/proposal-card.tsx`, `src/components/tasks/task-row.tsx`, `src/components/tasks/task-form.tsx`, tests. Covers: AC4, AC8.
+- [x] T8: E2E and docs. Files: `e2e/calibration.spec.ts`, `docs/ARCHITECTURE.md`. Covers: AC1–AC8.
 
 ### Test plan
 
