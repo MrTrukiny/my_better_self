@@ -13,6 +13,7 @@ import { FormError } from "@/components/inventory/form-messages";
 import { ResponsiveDialog } from "@/components/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import type { ActionState } from "@/lib/inventory/action-state";
+import { calibrationNote } from "@/lib/tasks/calibration";
 import { formatFrequency, formatMinutes, targetLabel } from "@/lib/tasks/format";
 import type { TaskEntry } from "@/lib/tasks/queries";
 import { TaskForm } from "./task-form";
@@ -41,6 +42,11 @@ export function TaskSummary({ entry }: { entry: TaskEntry }) {
         {formatFrequency(entry.frequencyDays)}
         {entry.kind === "routine" ? " · Routine" : null}
       </span>
+      {entry.calibration ? (
+        <span className="text-muted-foreground text-xs">
+          {calibrationNote({ ...entry.calibration, minutes: entry.minutes })}
+        </span>
+      ) : null}
     </div>
   );
 }
