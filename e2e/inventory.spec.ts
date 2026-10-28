@@ -27,7 +27,10 @@ test.describe("home inventory", () => {
     await addRoom(page, "Bathroom");
 
     const rooms = page.getByRole("list", { name: "Rooms" });
-    await expect(rooms.getByRole("listitem")).toHaveText([/Kitchen\s*No items/, /Bathroom/]);
+    await expect(rooms.getByRole("listitem")).toHaveText([
+      /Kitchen\s*No tasks yet\s*No items/,
+      /Bathroom/,
+    ]);
 
     await openRoom(page, "Kitchen");
     await addItem(page, { type: "Window", count: 2 });
@@ -39,7 +42,9 @@ test.describe("home inventory", () => {
     await expect(page.getByRole("heading", { level: 1, name: "Main kitchen" })).toBeVisible();
 
     await page.goto("/rooms");
-    await expect(rooms.getByRole("listitem").first()).toHaveText(/Main kitchen\s*1 item/);
+    await expect(rooms.getByRole("listitem").first()).toHaveText(
+      /Main kitchen\s*No tasks yet\s*1 item/,
+    );
   });
 
   test("AC3 and AC4: adds an item with defaults, then edits every field", async ({

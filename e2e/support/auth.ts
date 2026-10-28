@@ -73,6 +73,14 @@ export function createTestAuth({ baseURL }: { baseURL: string }) {
         where t.user_id = ${userId} and t.name = ${taskName}
       `);
     },
+    /** Moves when the owner's tasks were added `days` back, as if they had been added then. */
+    ageTasks: async (userId: string, days: number) => {
+      await db.execute(sql`
+        update ${schema.task}
+        set created_at = created_at - make_interval(days => ${days}::int)
+        where user_id = ${userId}
+      `);
+    },
     close: () => pool.end(),
   };
 }

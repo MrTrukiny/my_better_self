@@ -1,20 +1,26 @@
 import { DoorOpen, Sparkles } from "lucide-react";
+import { io } from "next/cache";
 import { OfflineAwareLink } from "@/components/offline-aware-link";
 import { OfflineCacheWarmer } from "@/components/offline-cache-warmer";
 import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cacheVersion } from "@/lib/cache-version";
 import { itemCountLabel } from "@/lib/inventory/format";
+import { getRoomFreshness } from "@/lib/inventory/freshness-queries";
 import { getRooms } from "@/lib/inventory/queries";
+import { FreshnessBadge, freshnessLabel } from "./freshness-badge";
 import { AddRoomButton } from "./room-form";
 import { RoomNavLink } from "./room-nav-link";
 
 export async function RoomList() {
   const rooms = await getRooms();
+  await io();
+  const { rooms: freshness } = await getRoomFreshness(new Date());
+  const states = rooms.map((room) => freshness.get(room.id)?.state ?? null);
   const warmer = (
     <OfflineCacheWarmer
       urls={["/rooms", ...rooms.map((room) => `/rooms/${room.id}`)]}
-      version={cacheVersion(rooms)}
+      version={cacheVersion([rooms, states])}
     />
   );
 
@@ -37,12 +43,18 @@ export async function RoomList() {
     <div className="flex flex-col gap-4">
       {warmer}
       <ul aria-label="Rooms" className="flex flex-col divide-y overflow-hidden rounded-xl border">
-        {rooms.map((room) => (
+        {rooms.map((room, index) => (
           <li key={room.id}>
-            <RoomNavLink href={`/rooms/${room.id}`}>
+            <RoomNavLink
+              href={`/rooms/${room.id}`}
+              label={`${room.name}, ${freshnessLabel(states[index] ?? null)}, ${itemCountLabel(room.itemCount)}`}
+            >
               <span className="truncate font-medium">{room.name}</span>
-              <span className="text-muted-foreground shrink-0 text-sm">
-                {itemCountLabel(room.itemCount)}
+              <span className="flex shrink-0 items-center gap-2">
+                <FreshnessBadge state={states[index] ?? null} />
+                <span className="text-muted-foreground text-sm">
+                  {itemCountLabel(room.itemCount)}
+                </span>
               </span>
             </RoomNavLink>
           </li>
