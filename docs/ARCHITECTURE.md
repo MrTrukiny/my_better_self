@@ -66,16 +66,17 @@ flowchart LR
 - Every user-owned record carries a `userId`, so sharing can be added later.
 - **Home is implicit for now**: with one home per user, the user is the home. A `home` table can be added with sharing without moving data.
 
-### Inventory (spec 002)
+### Inventory (specs 002, 014)
 
-| Concern    | Where                             | Notes                                                                                                                    |
-| ---------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| Tables     | `src/db/schema/inventory.ts`      | `room` (unique `(user_id, lower(name))`) and `item` (`type`, `name`, `count`, `note`), cascade-deleted with their owner. |
-| Item types | `src/lib/inventory/item-types.ts` | A fixed list with labels and icons. Stored as `text` and validated in code, so adding a type needs no migration.         |
-| Validation | `src/lib/inventory/schemas.ts`    | Zod schemas shared by forms and actions; duplicate room names map to a field error.                                      |
-| Reads      | `src/lib/inventory/queries.ts`    | Getters resolve the user, then call `"use cache"` functions keyed by `userId` and tagged `inventory:<userId>`.           |
-| Writes     | `src/app/(app)/rooms/actions.ts`  | Server Actions scope every query by `userId`, return typed results, and call `updateTag` on the user's inventory tag.    |
-| UI         | `src/components/inventory/`       | Forms use a sheet on mobile and a dialog on desktop (`src/components/responsive-dialog.tsx`).                            |
+| Concern    | Where                                                    | Notes                                                                                                                                                                                                                                     |
+| ---------- | -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Tables     | `src/db/schema/inventory.ts`                             | `room` (unique `(user_id, lower(name))`) and `item` (`type`, `name`, `count`, `note`), cascade-deleted with their owner.                                                                                                                  |
+| Item types | `src/lib/inventory/item-types.ts`                        | A fixed list with labels and icons. Stored as `text` and validated in code, so adding a type needs no migration.                                                                                                                          |
+| Validation | `src/lib/inventory/schemas.ts`                           | Zod schemas shared by forms and actions; duplicate room names map to a field error.                                                                                                                                                       |
+| Reads      | `src/lib/inventory/queries.ts`                           | Getters resolve the user, then call `"use cache"` functions keyed by `userId` and tagged `inventory:<userId>`.                                                                                                                            |
+| Writes     | `src/app/(app)/rooms/actions.ts`                         | Server Actions scope every query by `userId`, return typed results, and call `updateTag` on the user's inventory tag.                                                                                                                     |
+| UI         | `src/components/inventory/`                              | Forms use a sheet on mobile and a dialog on desktop (`src/components/responsive-dialog.tsx`).                                                                                                                                             |
+| Freshness  | `src/lib/inventory/freshness.ts`, `freshness-queries.ts` | Pure: a room's state (Fresh, Good, Due, Overdue) from its most behind cleaning task, days since last done over frequency, counting never-done tasks from when they were added. Read uncached after `io()` in the room list and room page. |
 
 ### Tasks and AI proposals (spec 003)
 

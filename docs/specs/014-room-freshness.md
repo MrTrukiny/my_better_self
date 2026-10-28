@@ -1,6 +1,6 @@
 # 014: Room freshness
 
-- **Status**: In progress
+- **Status**: Done
 - **Owner**: @mrtrukiny
 - **Created**: 2026-10-28
 
@@ -15,14 +15,14 @@ The plan says what to clean each day, but not how the home is doing overall. Thi
 
 ## Acceptance criteria
 
-- [ ] AC1: Given a room has cleaning tasks, then the rooms list and the room page show its freshness as one of four states, with a label and an icon, not color alone: Fresh, Good, Due, or Overdue.
-- [ ] AC2: A room's state comes from its most behind cleaning task, the room's own and its items': with the time since its last completion divided by its frequency, below 0.5 is Fresh, below 1 is Good, below 1.5 is Due, and 1.5 or more is Overdue.
-- [ ] AC3: Given the most behind task was never done, then its time counts from when the task was added.
-- [ ] AC4: Given I check off a task (today or a past day, spec 013), then its room's freshness updates when I next see the rooms list or the room page. Unchecking reverts it.
-- [ ] AC5: The room page also says when the room was last cleaned ("Last cleaned 2 days ago", or "Not cleaned yet"), counting any done cleaning task of the room or its items.
-- [ ] AC6: Given a room has no cleaning tasks, then it shows "No tasks yet" instead of a state.
-- [ ] AC7: Given I'm offline, then the rooms pages show the freshness from their last saved copy.
-- [ ] AC8: The states read well at 360px and on desktop, in light and dark mode, and screen readers announce each room's state with its name ("Kitchen, Due").
+- [x] AC1: Given a room has cleaning tasks, then the rooms list and the room page show its freshness as one of four states, with a label and an icon, not color alone: Fresh, Good, Due, or Overdue.
+- [x] AC2: A room's state comes from its most behind cleaning task, the room's own and its items': with the time since its last completion divided by its frequency, below 0.5 is Fresh, below 1 is Good, below 1.5 is Due, and 1.5 or more is Overdue.
+- [x] AC3: Given the most behind task was never done, then its time counts from when the task was added.
+- [x] AC4: Given I check off a task (today or a past day, spec 013), then its room's freshness updates when I next see the rooms list or the room page. Unchecking reverts it.
+- [x] AC5: The room page also says when the room was last cleaned ("Last cleaned 2 days ago", or "Not cleaned yet"), counting any done cleaning task of the room or its items.
+- [x] AC6: Given a room has no cleaning tasks, then it shows "No tasks yet" instead of a state.
+- [x] AC7: Given I'm offline, then the rooms pages show the freshness from their last saved copy.
+- [x] AC8: The states read well at 360px and on desktop, in light and dark mode, and screen readers announce each room's state with its name ("Kitchen, Due").
 
 ## UX notes
 
@@ -54,10 +54,10 @@ The plan says what to clean each day, but not how the home is doing overall. Thi
 
 ### Tasks
 
-- [ ] T1: Freshness rule and labels. Files: `src/lib/inventory/freshness.ts`, `src/lib/inventory/freshness.test.ts`. Covers: AC2, AC3, AC5, AC6.
-- [ ] T2: Freshness query. Files: `src/lib/inventory/freshness-queries.ts`. Covers: AC2–AC5.
-- [ ] T3: Badge, rooms list, and room page. Files: `src/components/inventory/freshness-badge.tsx`, `src/components/inventory/freshness-badge.test.tsx`, `src/components/inventory/room-list.tsx`, `src/app/(app)/rooms/[roomId]/page.tsx`. Covers: AC1, AC5–AC8.
-- [ ] T4: E2E and docs. Files: `e2e/freshness.spec.ts`, `e2e/support/auth.ts`, `docs/ARCHITECTURE.md`. Covers: AC1–AC8.
+- [x] T1: Freshness rule and labels. Files: `src/lib/inventory/freshness.ts`, `src/lib/inventory/freshness.test.ts`. Covers: AC2, AC3, AC5, AC6.
+- [x] T2: Freshness query. Files: `src/lib/inventory/freshness-queries.ts`. Covers: AC2–AC5.
+- [x] T3: Badge, rooms list, and room page. Files: `src/components/inventory/freshness-badge.tsx`, `src/components/inventory/freshness-badge.test.tsx`, `src/components/inventory/room-list.tsx`, `src/app/(app)/rooms/[roomId]/page.tsx`. Covers: AC1, AC5–AC8.
+- [x] T4: E2E and docs. Files: `e2e/freshness.spec.ts`, `e2e/support/auth.ts`, `docs/ARCHITECTURE.md`. Covers: AC1–AC8.
 
 ### Test plan
 
