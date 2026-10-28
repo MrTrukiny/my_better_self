@@ -1,6 +1,6 @@
 # 012: Push notifications
 
-- **Status**: Approved
+- **Status**: In progress
 - **Owner**: @mrtrukiny
 - **Created**: 2026-10-28
 
@@ -46,10 +46,28 @@ Today the only reminder is the Google Calendar event, and nothing nudges the own
 
 ## Technical plan
 
-_Filled in by the `plan-feature` skill after the spec is approved._
-
 ### Approach
+
+See [ADR 0010](../decisions/0010-push-notifications.md). Web Push with VAPID keys delivers; QStash delayed messages time each reminder.
+
+- **Data**: `push_subscription` (endpoint, keys, owner, and the device's session, cascade-deleted with it), `notification_settings` (one row per owner; no row means the defaults), and `notification_log` (owner, date, kind) for once a day. Migration `0008`.
+- **Rules** (`src/lib/notifications/reminders.ts`, pure): the reminders of a day from the schedule and the preferences, their UTC instants in the owner's time zone, and the send-time decision with its text. A day off has no "before" reminder; a day without cleaning tasks sends nothing.
+- **Scheduling** (`schedule-reminders.ts`): for an owner with at least one subscription, publish the reminders of the next 26 hours to QStash with `notBefore` and a deduplication id. Runs from the daily job for every subscribed owner, and in `after()` when the schedule or the notification settings are saved and when a device subscribes.
+- **Sending** (`/api/notifications/send`): verify the QStash signature, plan the owner's day, recompute the reminder, record it in `notification_log` (conflict means already sent), and push it to every subscription, deleting the ones the push service reports gone (404, 410).
+- **Worker**: `push` shows the notification; `notificationclick` focuses an open window on Today or opens one. Handlers live in `src/lib/notifications/worker.ts` so they are unit-tested; `sw.ts` registers them.
+- **UI**: a Server Component page `/notifications` passes the saved preferences, whether this session has a subscription, and the VAPID public key to a client `NotificationsPanel`, which reads the permission, subscribes or unsubscribes the browser, and calls Server Actions. Preferences use a form with Save, like Schedule, disabled offline. Settings gets a "Notifications" row summarizing this device. Signing out unsubscribes the browser first.
+- **Offline**: the page is an offline document route like the other settings pages; controls are disabled offline.
 
 ### Tasks
 
+- [ ] T1: Schema, migration, and pure reminder rules. Files: `src/db/schema/notifications.ts`, `src/db/schema/index.ts`, `drizzle/0008_*.sql`, `src/lib/notifications/reminders.ts`, `src/lib/notifications/reminders.test.ts`. Covers: AC2, AC3, AC4, AC6.
+- [ ] T2: Delivery and scheduling: env, Web Push and QStash wrappers with a test-only fake, scheduling, the send route, the daily job, and rescheduling on schedule save. Files: `src/lib/env.ts`, `.env.example`, `src/lib/notifications/{push,qstash,schedule-reminders,deliver,queries}.ts`, `src/app/api/notifications/send/route.ts`, `src/app/api/cron/daily/route.ts`, `src/app/(app)/schedule/actions.ts`, tests. Covers: AC3, AC4, AC6.
+- [ ] T3: Service worker handlers and unsubscribe on sign-out. Files: `src/lib/notifications/worker.ts`, `worker.test.ts`, `src/app/sw.ts`, `src/lib/notifications/browser.ts`, `src/components/account-menu.tsx`. Covers: AC5, AC7.
+- [ ] T4: Notifications page, actions, and Settings row. Files: `src/app/(app)/notifications/{page,actions}.ts(x)`, `src/components/notifications/notifications-panel.tsx` (+ test), `src/components/ui/switch.tsx`, `src/app/(app)/settings/page.tsx`, `src/lib/settings/summary.ts`, `src/lib/navigation.ts`, `src/app/sw.ts`. Covers: AC1, AC2, AC4, AC7, AC8.
+- [ ] T5: E2E and docs. Files: `e2e/notifications.spec.ts`, `e2e/support/auth.ts`, `docs/ARCHITECTURE.md`. Covers: AC1, AC2, AC4, AC7, AC8.
+
 ### Test plan
+
+- Unit: reminder times per day, day off, lead at the start time, time zone and daylight saving conversion; the send decision (stale time, off, nothing to clean, already handled, late) and its text (AC2, AC3, AC4, AC6). Signature rejection in the send route (AC6). Worker push and click handlers (AC5). Panel states: unsupported, denied, on, off, offline (AC1, AC8).
+- E2E with a stubbed `PushManager`: turning on stores a subscription and shows the reminders; saving preferences updates the Settings summary; denied permission shows the help text; turning off and signing out remove the subscription (AC1, AC2, AC4, AC7); 360px dark mode, keyboard, and no console errors (AC8).
+- Not automated: real delivery through a push service and QStash timing; checked by hand once credentials exist.
