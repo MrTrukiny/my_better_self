@@ -15,6 +15,7 @@ import {
 import { authClient } from "@/lib/auth-client";
 import { SIGN_IN_PATH } from "@/lib/callback-url";
 import { clearAppCaches } from "@/lib/clear-app-caches";
+import { unsubscribeDevice } from "@/lib/notifications/browser";
 
 type AccountMenuUser = {
   name: string;
@@ -27,6 +28,8 @@ export function AccountMenu({ user }: { user: AccountMenuUser }) {
 
   async function signOut() {
     setIsSigningOut(true);
+    // The server drops the subscription with the session; this stops the browser's side.
+    await unsubscribeDevice();
     await authClient.signOut();
     await clearAppCaches();
     // A full replace drops the router cache, so Back can't show signed-in content.

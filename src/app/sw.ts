@@ -3,6 +3,7 @@
 import { defaultCache } from "@serwist/turbopack/worker";
 import type { PrecacheEntry, SerwistGlobalConfig } from "serwist";
 import { NetworkOnly, Serwist } from "serwist";
+import { openToday, parsePush, showReminder } from "@/lib/notifications/worker";
 
 declare global {
   interface WorkerGlobalScope extends SerwistGlobalConfig {
@@ -57,3 +58,12 @@ const serwist = new Serwist({
 });
 
 serwist.addEventListeners();
+
+self.addEventListener("push", (event) => {
+  event.waitUntil(showReminder(self.registration, parsePush(event.data)));
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  event.waitUntil(openToday(self.clients, self.location.origin));
+});
