@@ -136,6 +136,19 @@ See [ADR 0002](decisions/0002-google-calendar.md) and [`DEPLOYMENT.md`](DEPLOYME
 
 Event ids derive from the user and the date (base32hex), so writing a day again updates the same event and a lost row can't duplicate it. A deleted "Cleaning" calendar is created again on the next sync, with every day re-put.
 
+### Push notifications (spec 012)
+
+See [ADR 0010](decisions/0010-push-notifications.md).
+
+| Concern    | Where                                                           | Notes                                                                                                                                                                                                  |
+| ---------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Tables     | `src/db/schema/notifications.ts`                                | `push_subscription` (per device, cascade-deleted with its Better Auth session), `notification_settings` (per owner; no row means the defaults), and `notification_log` (owner, date, kind: sent once). |
+| Rules      | `src/lib/notifications/reminders.ts`                            | Pure: a day's reminder times from the schedule and preferences, their UTC instants in the owner's time zone, and the send-time decision and text.                                                      |
+| Scheduling | `schedule-reminders.ts`, `qstash.ts`                            | Queues the next 26 hours of reminders as QStash delayed messages with deduplication ids: in the daily job, and via `after()` when the schedule, the preferences, or a device subscription is saved.    |
+| Sending    | `src/app/api/notifications/send/`, `deliver.ts`, `push.ts`      | Verifies QStash's signature, plans the day, recomputes the reminder (stale, late, nothing to clean, already handled are dropped), logs it, and pushes to every device; gone subscriptions are deleted. |
+| Worker     | `src/lib/notifications/worker.ts`, `src/app/sw.ts`              | `push` shows the notification (one per kind, by tag); `notificationclick` focuses or opens Today.                                                                                                      |
+| UI         | `src/app/(app)/notifications/`, `src/components/notifications/` | The browser's subscription is the device's truth; the page re-registers or drops the server copy to match. Sign-out unsubscribes the browser first. `PUSH_FAKE=1` stubs QStash and Web Push in e2e.    |
+
 ## Responsibilities: AI vs code
 
 | Concern                                   | Owner                                          | Why                                      |
@@ -168,6 +181,7 @@ See ADRs [0002](decisions/0002-google-calendar.md), [0003](decisions/0003-ai-pro
 - **Auth:** Better Auth with Google sign-in (`src/lib/auth.ts`, mounted at `/api/auth/*`), restricted to an email allowlist. Connecting Google Calendar adds the calendar scopes and a refresh token to the same account row.
 - **AI:** Gemini through the Vercel AI SDK, server-only. Prompts and schemas live in `src/lib/ai/`.
 - **Calendar:** Google Calendar API with the `calendar.app.created`, `calendar.calendarlist.readonly`, and `calendar.freebusy` scopes. The app writes only to its own calendar and reads only busy times from the others.
+- **Push:** Web Push with VAPID keys (`web-push`), timed by Upstash QStash delayed messages; see [ADR 0010](decisions/0010-push-notifications.md).
 - **Hosting:** Vercel, with Vercel Cron for the daily job (`/api/cron/daily`). Setup steps are in [`DEPLOYMENT.md`](DEPLOYMENT.md).
 
 ### Route protection

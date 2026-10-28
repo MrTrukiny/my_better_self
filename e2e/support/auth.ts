@@ -81,6 +81,14 @@ export function createTestAuth({ baseURL }: { baseURL: string }) {
         where user_id = ${userId}
       `);
     },
+    /** How many devices of the owner have a push subscription. */
+    pushSubscriptionCount: async (userId: string) => {
+      const rows = await db
+        .select({ id: schema.pushSubscription.id })
+        .from(schema.pushSubscription)
+        .where(eq(schema.pushSubscription.userId, userId));
+      return rows.length;
+    },
     close: () => pool.end(),
   };
 }

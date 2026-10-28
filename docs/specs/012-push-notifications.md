@@ -16,14 +16,14 @@ Today the only reminder is the Google Calendar event, and nothing nudges the own
 
 ## Acceptance criteria
 
-- [ ] AC1: Given I open Settings, then a Notifications entry lets me turn notifications on for this device. Turning them on asks the browser for permission; if I deny it, the page says so and how to allow it later. Given the browser can't receive push (for example iOS without installing the app), the page explains that it must be installed first.
-- [ ] AC2: Given notifications are on, then I can turn on or off "Before my session" and choose how long before: at the start time, or 5, 15, or 30 minutes before (default 15).
-- [ ] AC3: Given "Before my session" is on and today has cleaning tasks, then at the chosen time I get one notification ("Cleaning in 15 min: 4 tasks, 45 min"). Days off and days with nothing to clean send nothing.
-- [ ] AC4: Given notifications are on, then I can turn on or off "Evening reminder" and choose its time (default 20:00). Given that time arrives and no cleaning task of today is done or skipped, then I get one notification ("Your streak is waiting: 4 tasks left today"). Given I already handled today, nothing is sent.
-- [ ] AC5: Given I tap a notification, then the app opens on Today.
-- [ ] AC6: Each notification is sent at most once per day and kind, in my time zone, and arrives within 5 minutes of its time.
-- [ ] AC7: Given I turn notifications off on a device, or sign out there, then that device stops receiving them; other devices keep theirs.
-- [ ] AC8: The settings work at 360px and on desktop, in light and dark mode, and with the keyboard only; switches have accessible names and the permission state is announced.
+- [x] AC1: Given I open Settings, then a Notifications entry lets me turn notifications on for this device. Turning them on asks the browser for permission; if I deny it, the page says so and how to allow it later. Given the browser can't receive push (for example iOS without installing the app), the page explains that it must be installed first.
+- [x] AC2: Given notifications are on, then I can turn on or off "Before my session" and choose how long before: at the start time, or 5, 15, or 30 minutes before (default 15).
+- [x] AC3: Given "Before my session" is on and today has cleaning tasks, then at the chosen time I get one notification ("Cleaning in 15 min: 4 tasks, 45 min"). Days off and days with nothing to clean send nothing.
+- [x] AC4: Given notifications are on, then I can turn on or off "Evening reminder" and choose its time (default 20:00). Given that time arrives and no cleaning task of today is done or skipped, then I get one notification ("Your streak is waiting: 4 tasks left today"). Given I already handled today, nothing is sent.
+- [x] AC5: Given I tap a notification, then the app opens on Today.
+- [x] AC6: Each notification is sent at most once per day and kind, in my time zone, and arrives within 5 minutes of its time.
+- [x] AC7: Given I turn notifications off on a device, or sign out there, then that device stops receiving them; other devices keep theirs.
+- [x] AC8: The settings work at 360px and on desktop, in light and dark mode, and with the keyboard only; switches have accessible names and the permission state is announced.
 
 ## UX notes
 
@@ -64,7 +64,7 @@ See [ADR 0010](../decisions/0010-push-notifications.md). Web Push with VAPID key
 - [x] T2: Delivery and scheduling: env, Web Push and QStash wrappers with a test-only fake, scheduling, the send route, the daily job, and rescheduling on schedule save. Files: `src/lib/env.ts`, `.env.example`, `src/lib/notifications/{push,qstash,schedule-reminders,deliver,queries}.ts`, `src/app/api/notifications/send/route.ts`, `src/app/api/cron/daily/route.ts`, `src/app/(app)/schedule/actions.ts`, tests. Covers: AC3, AC4, AC6.
 - [x] T3: Service worker handlers and unsubscribe on sign-out. Files: `src/lib/notifications/worker.ts`, `worker.test.ts`, `src/app/sw.ts`, `src/lib/notifications/browser.ts`, `src/components/account-menu.tsx`. Covers: AC5, AC7.
 - [x] T4: Notifications page, actions, and Settings row. Files: `src/app/(app)/notifications/{page,actions}.ts(x)`, `src/components/notifications/notifications-panel.tsx` (+ test), `src/components/ui/switch.tsx`, `src/app/(app)/settings/page.tsx`, `src/lib/settings/summary.ts`, `src/lib/navigation.ts`, `src/app/sw.ts`. Covers: AC1, AC2, AC4, AC7, AC8.
-- [ ] T5: E2E and docs. Files: `e2e/notifications.spec.ts`, `e2e/support/auth.ts`, `docs/ARCHITECTURE.md`. Covers: AC1, AC2, AC4, AC7, AC8.
+- [x] T5: E2E and docs. Files: `e2e/notifications.spec.ts`, `e2e/support/auth.ts`, `docs/ARCHITECTURE.md`. Covers: AC1, AC2, AC4, AC7, AC8.
 
 ### Test plan
 

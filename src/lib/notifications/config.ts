@@ -1,8 +1,9 @@
 import "server-only";
 import { getEnv } from "@/lib/env";
 
-/** Any string works with the stubbed browser subscription that e2e uses. */
-const FAKE_PUBLIC_KEY = "fake-vapid-public-key";
+/** A well-formed P-256 public key with no private key anywhere; push is stubbed in e2e. */
+const FAKE_PUBLIC_KEY =
+  "BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U";
 
 export function isPushFake(): boolean {
   return getEnv().PUSH_FAKE;
