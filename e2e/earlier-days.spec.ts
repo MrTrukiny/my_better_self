@@ -1,6 +1,6 @@
 import { expect, test } from "./fixtures";
 import { REPLAN_TIMEOUT } from "./support/tasks";
-import { setUpToday, TODAY_OFFLINE_NOTICE, waitForSync } from "./support/today";
+import { cleaningToday, setUpToday, TODAY_OFFLINE_NOTICE, waitForSync } from "./support/today";
 
 const DAY_NAME = /^(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday), /;
 
@@ -59,6 +59,7 @@ test.describe("Earlier days", () => {
       await expect(boxes.nth(i)).toBeChecked();
     }
     await waitForSync(page);
+
     await context.setOffline(true);
     const earlier = page.getByRole("region", { name: "Earlier days" });
     await expect(earlier.getByText(TODAY_OFFLINE_NOTICE, { exact: true })).toBeVisible();
@@ -79,9 +80,30 @@ test.describe("Earlier days", () => {
       await expect(boxes.nth(i)).toBeChecked();
     }
 
+    // AC4: unchecking a past task plans it again from today; checking it takes it back out.
+    const taskName = (
+      await boxes.first().evaluate((box) => {
+        const label = document.getElementById(box.getAttribute("aria-labelledby") ?? "");
+        return label?.textContent ?? "";
+      })
+    ).split(",")[0];
+    const todayPage = await context.newPage();
+    await boxes.first().uncheck();
+    await waitForSync(page);
+    await todayPage.goto("/");
+    await expect(cleaningToday(todayPage)).toContainText(taskName, { timeout: REPLAN_TIMEOUT });
+    await boxes.first().check();
+    await waitForSync(page);
+    await todayPage.reload();
+    await expect(todayPage.getByText("Nothing to clean today, enjoy the day.")).toBeVisible({
+      timeout: REPLAN_TIMEOUT,
+    });
+    await todayPage.close();
+
     // The completed day counts toward the streak, and the link has nothing left to check.
     await page.goto("/");
     await expect(page.getByText("1-day streak")).toBeVisible({ timeout: REPLAN_TIMEOUT });
+    await expect(page.getByText("Nothing to clean today, enjoy the day.")).toBeVisible();
     await expect(page.getByRole("link", { name: "Earlier days", exact: true })).toBeVisible();
 
     await expect(page.locator("html")).toHaveClass(/dark/);
