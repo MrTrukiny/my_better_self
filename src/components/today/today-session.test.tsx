@@ -141,7 +141,7 @@ describe("TodaySession", () => {
     await user.click(screen.getByRole("checkbox", { name: /Sweep floor/ }));
     await waitFor(() =>
       expect(toastError).toHaveBeenCalledWith(
-        `"Sweep floor" is no longer in today's plan, so that change wasn't saved.`,
+        `"Sweep floor" is no longer in the plan, so that change wasn't saved.`,
       ),
     );
     expect(refresh).toHaveBeenCalled();
