@@ -25,10 +25,12 @@ export async function getRoomFreshness(
       createdAt: task.createdAt,
       lastDone: sql<
         string | null
-      >`(select max(${occurrence.date})::text from ${occurrence} where ${occurrence.taskId} = ${task.id} and ${occurrence.status} = 'done')`,
+      >`max(${occurrence.date}) filter (where ${occurrence.status} = 'done')`,
     })
     .from(task)
-    .where(and(eq(task.userId, user.id), eq(task.kind, "cleaning"), isNotNull(task.roomId)));
+    .leftJoin(occurrence, eq(occurrence.taskId, task.id))
+    .where(and(eq(task.userId, user.id), eq(task.kind, "cleaning"), isNotNull(task.roomId)))
+    .groupBy(task.id);
 
   const byRoom = new Map<string, FreshnessTask[]>();
   for (const { roomId, frequencyDays, createdAt, lastDone } of rows) {

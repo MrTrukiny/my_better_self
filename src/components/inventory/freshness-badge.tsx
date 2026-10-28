@@ -12,10 +12,16 @@ const STATES: Record<
   overdue: { label: "Overdue", Icon: TriangleAlert, variant: "destructive" },
 };
 
+const NO_TASKS = "No tasks yet";
+
+export function freshnessLabel(state: FreshnessState | null): string {
+  return state === null ? NO_TASKS : STATES[state].label;
+}
+
 /** A room's freshness (spec 014), or "No tasks yet" for a room without cleaning tasks. */
 export function FreshnessBadge({ state }: { state: FreshnessState | null }) {
   if (state === null) {
-    return <span className="text-muted-foreground text-sm">No tasks yet</span>;
+    return <span className="text-muted-foreground text-sm">{NO_TASKS}</span>;
   }
   const { label, Icon, variant } = STATES[state];
   return (

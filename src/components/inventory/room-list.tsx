@@ -8,7 +8,7 @@ import { cacheVersion } from "@/lib/cache-version";
 import { itemCountLabel } from "@/lib/inventory/format";
 import { getRoomFreshness } from "@/lib/inventory/freshness-queries";
 import { getRooms } from "@/lib/inventory/queries";
-import { FreshnessBadge } from "./freshness-badge";
+import { FreshnessBadge, freshnessLabel } from "./freshness-badge";
 import { AddRoomButton } from "./room-form";
 import { RoomNavLink } from "./room-nav-link";
 
@@ -45,14 +45,13 @@ export async function RoomList() {
       <ul aria-label="Rooms" className="flex flex-col divide-y overflow-hidden rounded-xl border">
         {rooms.map((room, index) => (
           <li key={room.id}>
-            <RoomNavLink href={`/rooms/${room.id}`}>
-              <span className="truncate font-medium">
-                {room.name}
-                <span className="sr-only">,</span>
-              </span>
+            <RoomNavLink
+              href={`/rooms/${room.id}`}
+              label={`${room.name}, ${freshnessLabel(states[index] ?? null)}, ${itemCountLabel(room.itemCount)}`}
+            >
+              <span className="truncate font-medium">{room.name}</span>
               <span className="flex shrink-0 items-center gap-2">
                 <FreshnessBadge state={states[index] ?? null} />
-                <span className="sr-only">,</span>
                 <span className="text-muted-foreground text-sm">
                   {itemCountLabel(room.itemCount)}
                 </span>
