@@ -1,5 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { lastSyncedLine } from "./format";
+import { calendarSyncSelectUrl, googleCalendarUrl, lastSyncedLine } from "./format";
+
+describe("Google Calendar links", () => {
+  it("open the owner's own account", () => {
+    expect(googleCalendarUrl("owner+home@example.com")).toBe(
+      "https://calendar.google.com/calendar/r?authuser=owner%2Bhome%40example.com",
+    );
+    expect(calendarSyncSelectUrl("owner@example.com")).toBe(
+      "https://calendar.google.com/calendar/syncselect?authuser=owner%40example.com",
+    );
+  });
+});
 
 const now = new Date("2026-10-27T14:00:00Z");
 const ago = (ms: number) => new Date(now.getTime() - ms);
