@@ -22,6 +22,7 @@ const OFFLINE_DOCUMENT_ROUTES = [
   "/home-profile",
   "/plan",
   "/schedule",
+  "/notifications",
   "/settings",
 ];
 

@@ -1,4 +1,5 @@
 import type { CalendarStatus } from "@/db/schema/calendar";
+import type { NotificationPrefs } from "@/lib/notifications/reminders";
 import type { Budgets } from "@/lib/scheduler/settings";
 
 const WEEKEND = new Set([5, 6]);
@@ -51,4 +52,20 @@ export function homeProfileSummary(profile: { helpers: readonly string[]; note: 
   const count = profile.helpers.length;
   const helpers = count === 0 ? "No helpers" : `${count} ${count === 1 ? "helper" : "helpers"}`;
   return profile.note ? `${helpers} · Note added` : helpers;
+}
+
+/** Whether this device receives notifications, and which reminders are on. */
+export function notificationsSummary(prefs: NotificationPrefs, deviceOn: boolean): string {
+  if (!deviceOn) {
+    return "Off on this device";
+  }
+  const parts = [
+    ...(prefs.beforeEnabled
+      ? [
+          `Before my session, ${prefs.beforeMinutes === 0 ? "at start" : `${prefs.beforeMinutes} min`}`,
+        ]
+      : []),
+    ...(prefs.eveningEnabled ? [`Evening, ${prefs.eveningTime}`] : []),
+  ];
+  return parts.length > 0 ? parts.join(" · ") : "On, no reminders";
 }

@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { calendarSummary, homeProfileSummary, scheduleSummary } from "./summary";
+import {
+  calendarSummary,
+  homeProfileSummary,
+  notificationsSummary,
+  scheduleSummary,
+} from "./summary";
 
 const WEEKDAYS_ONLY = ["06:30", "06:30", "06:30", "06:30", "06:30", null, null];
 
@@ -50,5 +55,28 @@ describe("homeProfileSummary", () => {
     expect(homeProfileSummary({ helpers: ["dishwasher", "dryer"], note: "Cat at home" })).toBe(
       "2 helpers · Note added",
     );
+  });
+});
+
+describe("notificationsSummary", () => {
+  const prefs = {
+    beforeEnabled: true,
+    beforeMinutes: 15,
+    eveningEnabled: true,
+    eveningTime: "20:00",
+  };
+
+  it("says when this device is off", () => {
+    expect(notificationsSummary(prefs, false)).toBe("Off on this device");
+  });
+
+  it("lists the reminders that are on", () => {
+    expect(notificationsSummary(prefs, true)).toBe("Before my session, 15 min · Evening, 20:00");
+    expect(notificationsSummary({ ...prefs, beforeMinutes: 0, eveningEnabled: false }, true)).toBe(
+      "Before my session, at start",
+    );
+    expect(
+      notificationsSummary({ ...prefs, beforeEnabled: false, eveningEnabled: false }, true),
+    ).toBe("On, no reminders");
   });
 });
