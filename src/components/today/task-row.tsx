@@ -13,6 +13,7 @@ import { TookField } from "./took-field";
 
 export function TaskRow({
   task,
+  context,
   position,
   slot,
   pending,
@@ -21,6 +22,8 @@ export function TaskRow({
   onMinutes,
 }: {
   task: TodayTask;
+  /** Added to the controls' accessible names when the day isn't today, such as "Monday, Oct 26". */
+  context?: string;
   /** The task's place in the recommended order, for cleaning tasks. */
   position?: number;
   slot?: Slot | null;
@@ -34,6 +37,7 @@ export function TaskRow({
   const done = task.status === "done";
   const skipped = task.status === "skipped";
   const cleaning = task.kind === "cleaning";
+  const name = context ? `${task.name}, ${context}` : task.name;
   return (
     <li className="flex flex-col gap-1 py-2">
       {position === undefined ? null : (
@@ -58,7 +62,10 @@ export function TaskRow({
           <span
             className={cn("flex min-w-0 flex-col", (done || skipped) && "text-muted-foreground")}
           >
-            <span className={cn("text-base", done && "line-through")}>{task.name}</span>
+            <span className={cn("text-base", done && "line-through")}>
+              {task.name}
+              {context ? <span className="sr-only">, {context}</span> : null}
+            </span>
             {cleaning ? (
               <span className="text-muted-foreground text-sm">{planTarget(task)}</span>
             ) : null}
@@ -77,7 +84,7 @@ export function TaskRow({
                 variant="ghost"
                 disabled={disabled || done}
                 onClick={() => onChange(skipped ? "scheduled" : "skipped")}
-                aria-label={skipped ? `Undo skipping ${task.name}` : `Skip ${task.name}`}
+                aria-label={skipped ? `Undo skipping ${name}` : `Skip ${name}`}
                 className="h-11 px-3"
               >
                 {skipped ? "Undo" : "Skip"}
@@ -95,7 +102,7 @@ export function TaskRow({
       {cleaning && done && onMinutes ? (
         <div className="pl-8">
           <TookField
-            taskName={task.name}
+            taskName={name}
             value={task.actualMinutes}
             estimate={task.minutes}
             disabled={disabled}

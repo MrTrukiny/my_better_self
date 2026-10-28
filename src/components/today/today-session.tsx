@@ -1,25 +1,22 @@
 "use client";
 
 import { Coffee, Flame, PartyPopper, Repeat, WifiOff } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
-import { toast } from "sonner";
+import { useEffect, useState } from "react";
 import { OfflineCacheWarmer } from "@/components/offline-cache-warmer";
 import { Progress } from "@/components/ui/progress";
-import type { OccurrenceStatus } from "@/db/schema/schedule";
 import { useIsOffline } from "@/hooks/use-is-offline";
 import { formatTime, parseTime, toIsoDate, zonedNow } from "@/lib/scheduler/dates";
 import { dayLabel } from "@/lib/scheduler/format";
 import { progressOf, type TodayTask } from "@/lib/today/progress";
-import type { FlushResult, QueuedChange } from "@/lib/today/queue";
+import type { QueuedChange } from "@/lib/today/queue";
 import type { CheckOffResult } from "@/lib/today/schemas";
 import { sessionSlots } from "@/lib/today/slots";
 import { streakLine } from "@/lib/today/streak";
 import { TaskRow } from "./task-row";
-import { useCheckOffQueue } from "./use-check-off-queue";
+import { useCheckOffs } from "./use-check-offs";
 
 /** Pages whose offline copies show today's check-offs. */
-const TODAY_PAGES = ["/", "/plan"];
+const TODAY_PAGES = ["/", "/plan", "/earlier-days"];
 
 export type TodaySessionProps = {
   userId: string;
@@ -48,30 +45,10 @@ export function TodaySession({
   version,
   send,
 }: TodaySessionProps) {
-  const router = useRouter();
   const isOffline = useIsOffline();
-  const [local, setLocal] = useState<
-    Record<string, { status: OccurrenceStatus; actualMinutes: number | null }>
-  >({});
-  const [synced, setSynced] = useState(0);
   const [deviceDate, setDeviceDate] = useState<string | null>(null);
 
-  const onDropped = useCallback(
-    (dropped: FlushResult["dropped"]) => {
-      for (const { change, result } of dropped) {
-        const name = tasks.find((t) => t.occurrenceId === change.occurrenceId)?.name;
-        toast.error(
-          result === "gone" && name
-            ? `"${name}" is no longer in today's plan, so that change wasn't saved.`
-            : "A change from an earlier day couldn't be saved.",
-        );
-      }
-      router.refresh();
-    },
-    [tasks, router],
-  );
-  const onSynced = useCallback(() => setSynced((n) => n + 1), []);
-  const { queue, failing, change } = useCheckOffQueue({ userId, send, onDropped, onSynced });
+  const { withChanges, update, isQueued, failing, synced } = useCheckOffs({ userId, tasks, send });
 
   useEffect(() => {
     setDeviceDate(toIsoDate(zonedNow(timeZone, new Date()).day));
@@ -79,13 +56,7 @@ export function TodaySession({
   // An offline copy opened on a later day: its tasks can no longer be checked.
   const stale = deviceDate !== null && deviceDate !== date;
 
-  const queued = new Map(queue.map((c) => [c.occurrenceId, c]));
-  const current = tasks.map((t) => {
-    const changed = queued.get(t.occurrenceId) ?? local[t.occurrenceId];
-    const status = changed?.status ?? t.status;
-    const minutes = changed?.actualMinutes === undefined ? t.actualMinutes : changed.actualMinutes;
-    return { ...t, status, actualMinutes: status === "done" ? minutes : null };
-  });
+  const current = withChanges(tasks);
   const cleaning = current.filter((t) => t.kind === "cleaning");
   const routines = current.filter((t) => t.kind === "routine");
   const slots = sessionSlots(start, cleaning);
@@ -93,18 +64,13 @@ export function TodaySession({
   const streak = pastStreak + (progress.complete ? 1 : 0);
   const startMinutes = start === null ? null : parseTime(start);
 
-  // Checking a task starts it without minutes; any other status clears them on the server.
-  const update = (task: TodayTask, status: OccurrenceStatus, actualMinutes: number | null) => {
-    setLocal((prev) => ({ ...prev, [task.occurrenceId]: { status, actualMinutes } }));
-    change(task.occurrenceId, status, status === "done" ? actualMinutes : undefined);
-  };
   const row = (task: TodayTask, index?: number) => (
     <TaskRow
       key={task.occurrenceId}
       task={task}
       position={index === undefined ? undefined : index + 1}
       slot={index === undefined ? undefined : slots[index]}
-      pending={queued.has(task.occurrenceId) && (isOffline || failing)}
+      pending={isQueued(task.occurrenceId) && (isOffline || failing)}
       disabled={stale}
       onChange={(status) => update(task, status, null)}
       onMinutes={task.kind === "cleaning" ? (minutes) => update(task, "done", minutes) : undefined}

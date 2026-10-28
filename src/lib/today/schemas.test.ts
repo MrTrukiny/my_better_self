@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { actualMinutesUpdate, checkOffDecision, checkOffInputSchema } from "./schemas";
+import {
+  actualMinutesUpdate,
+  checkOffDecision,
+  checkOffInputSchema,
+  isEditableDay,
+} from "./schemas";
 
 const TODAY = "2026-10-26";
 
@@ -37,8 +42,11 @@ describe("checkOffDecision", () => {
     expect(checkOffDecision({ date: TODAY, kind: "routine" }, TODAY, "scheduled")).toBe("apply");
   });
 
-  it("AC4: past days can't be changed", () => {
-    expect(checkOffDecision({ date: "2026-10-25", kind: "cleaning" }, TODAY, "done")).toBe("past");
+  it("spec 013 AC2: the last 7 days can be changed; older and future days can't", () => {
+    expect(checkOffDecision({ date: "2026-10-25", kind: "cleaning" }, TODAY, "done")).toBe("apply");
+    expect(checkOffDecision({ date: "2026-10-19", kind: "cleaning" }, TODAY, "done")).toBe("apply");
+    expect(checkOffDecision({ date: "2026-10-18", kind: "cleaning" }, TODAY, "done")).toBe("past");
+    expect(checkOffDecision({ date: "2026-10-27", kind: "cleaning" }, TODAY, "done")).toBe("past");
   });
 
   it("AC6: an occurrence the plan dropped is gone", () => {
@@ -59,6 +67,15 @@ describe("checkOffDecision", () => {
     expect(checkOffDecision(cleaning, TODAY, "scheduled", 12)).toBe("invalid");
     expect(checkOffDecision(routine, TODAY, "done", 2)).toBe("invalid");
     expect(checkOffDecision(routine, TODAY, "done", null)).toBe("apply");
+  });
+});
+
+describe("isEditableDay", () => {
+  it("spec 013 AC2: today and the 7 days before it", () => {
+    expect(isEditableDay(TODAY, TODAY)).toBe(true);
+    expect(isEditableDay("2026-10-19", TODAY)).toBe(true);
+    expect(isEditableDay("2026-10-18", TODAY)).toBe(false);
+    expect(isEditableDay("2026-10-27", TODAY)).toBe(false);
   });
 });
 

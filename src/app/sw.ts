@@ -15,6 +15,7 @@ declare const self: ServiceWorkerGlobalScope;
 // `/` only matches the Today page itself: the check below adds a slash for nested routes.
 const OFFLINE_DOCUMENT_ROUTES = [
   "/",
+  "/earlier-days",
   "/rooms",
   "/tasks",
   "/home-profile",

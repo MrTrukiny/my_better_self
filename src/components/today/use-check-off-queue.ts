@@ -16,6 +16,13 @@ const RETRY_DELAYS_MS = [2_000, 10_000, 30_000];
 /** A notice appears only once this many tries in a row have failed. */
 const FAILURES_BEFORE_NOTICE = 2;
 
+/**
+ * Every mounted queue flushes through this chain, one at a time: Next keeps the previous page
+ * mounted while hidden, so Today and Earlier days can both hold a queue for the same owner, and
+ * two flushes at once could send an older copy of a change after a newer one.
+ */
+let flushes: Promise<void> = Promise.resolve();
+
 type Options = {
   userId: string;
   send: (change: QueuedChange) => Promise<CheckOffResult>;
@@ -45,8 +52,8 @@ export function useCheckOffQueue({ userId, send, onDropped, onSynced }: Options)
     }
     flushing.current = true;
     clearTimeout(retryTimer.current);
-    let sent = false;
-    try {
+    const run = flushes.then(async () => {
+      let sent = false;
       // Changes queued while sending are picked up by the next round.
       while (readQueue(localStorage, userId).length > 0) {
         sent = true;
@@ -66,11 +73,16 @@ export function useCheckOffQueue({ userId, send, onDropped, onSynced }: Options)
           return;
         }
       }
+      setQueue([]);
       failures.current = 0;
       setFailing(false);
       if (sent) {
         callbacks.current.onSynced();
       }
+    });
+    flushes = run.catch(() => {});
+    try {
+      await run;
     } finally {
       flushing.current = false;
     }

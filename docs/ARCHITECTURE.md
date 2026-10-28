@@ -37,7 +37,7 @@ There are three layers of offline behavior:
 1. **Inside a running app**: Next's `useOffline` keeps failed soft navigations and Server Actions pending and retries them when the connection returns. `useIsOffline()` adds `navigator.onLine`, so a page loaded from the cache while offline also knows it is offline. The offline banner tells the user.
 2. **Cold loads without network**: the service worker serves precached assets and runtime-cached pages; uncached documents get the `/~offline` fallback.
 3. **Inventory** (`/rooms`): read-only offline. Inventory RSC payloads are not cached, because their cache keys depend on the router state and go stale. Instead, `OfflineCacheWarmer` refreshes the cached documents whenever the data changes online, and `OfflineAwareLink` does full page loads while offline. Task pages (`/tasks`, `/tasks/review`, `/home-profile`) and `/settings` follow the same pattern (ADR 0005 amendment). Edit controls are disabled offline (`useEditsDisabled()`), so no Server Action is ever queued.
-4. **Today** (`/`): the one page that accepts changes offline. Check-offs go to a device queue and are sent when the connection returns (ADR 0008).
+4. **Today** (`/`) and **Earlier days** (`/earlier-days`): the only pages that accept changes offline. Check-offs go to a device queue and are sent when the connection returns (ADR 0008).
 
 ## UI
 
@@ -106,16 +106,16 @@ See [ADR 0007](decisions/0007-persisted-plan-and-replanning.md).
 
 A task's last completion is its latest done or skipped occurrence before the replanning date; a task that was planned but never handled is due on its first missed day, and a new task keeps the first due day the scheduler picked (`task.first_due`). See [ADR 0008](decisions/0008-check-off-and-offline-queue.md).
 
-### Today and habit (specs 006, 009)
+### Today and habit (specs 006, 009, 013)
 
-| Concern   | Where                                                  | Notes                                                                                                                                                                           |
-| --------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Rules     | `src/lib/today/progress.ts`, `streak.ts`               | Pure: progress leaves skipped tasks out; a cleaning day is complete when all its tasks are done or skipped and at least one is done.                                            |
-| Order     | `src/lib/today/order.ts`, `slots.ts`                   | Pure: cleaning tasks by room, then zone (high, other, wet, floors, the room itself), then item; whole-home tasks last. Slots run back to back from the start time on estimates. |
-| Reads     | `src/lib/today/queries.ts`                             | Today's occurrences with status and actual minutes, in the recommended order, and per-day cleaning counts for the streak, uncached after `io()`.                                |
-| Check-off | `src/app/(app)/actions.ts`, `src/lib/today/schemas.ts` | `setOccurrenceStatus` sets a status, and optionally the minutes a done cleaning task took, on one of today's occurrences; it doesn't replan.                                    |
-| Offline   | `src/lib/today/queue.ts`, `src/components/today/`      | A `localStorage` queue per user, flushed in order on load, `online`, and visibility. The page overlays queued states and minutes on the server's.                               |
-| UI        | `src/app/(app)/page.tsx`, `src/components/today/`      | The home page (`/`). Readable and checkable offline (ADR 0005 amendment, ADR 0008).                                                                                             |
+| Concern   | Where                                                  | Notes                                                                                                                                                                            |
+| --------- | ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Rules     | `src/lib/today/progress.ts`, `streak.ts`               | Pure: progress leaves skipped tasks out; a cleaning day is complete when all its tasks are done or skipped and at least one is done.                                             |
+| Order     | `src/lib/today/order.ts`, `slots.ts`                   | Pure: cleaning tasks by room, then zone (high, other, wet, floors, the room itself), then item; whole-home tasks last. Slots run back to back from the start time on estimates.  |
+| Reads     | `src/lib/today/queries.ts`, `earlier.ts`               | Today's occurrences with status and actual minutes, in the recommended order, and per-day cleaning counts for the streak; the last 7 days grouped by day; uncached after `io()`. |
+| Check-off | `src/app/(app)/actions.ts`, `src/lib/today/schemas.ts` | `setOccurrenceStatus` sets a status, and optionally the minutes a done cleaning task took, on an occurrence from today or the 7 days before; it replans only after past days.    |
+| Offline   | `src/lib/today/queue.ts`, `src/components/today/`      | A `localStorage` queue per user, flushed in order on load, `online`, and visibility, one page at a time. `useCheckOffs` overlays queued states and minutes on the server's.      |
+| UI        | `src/app/(app)/page.tsx`, `earlier-days/page.tsx`      | The home page (`/`) and Earlier days (`/earlier-days`). Readable and checkable offline (ADR 0005 amendment, ADR 0008).                                                           |
 
 ### Google Calendar sync (spec 005)
 
@@ -179,5 +179,5 @@ See ADRs [0002](decisions/0002-google-calendar.md), [0003](decisions/0003-ai-pro
 ## Testing
 
 - Unit and component tests: Vitest + Testing Library + jsdom, colocated as `*.test.ts(x)`.
-- End-to-end: Playwright against a production build on desktop and mobile (Pixel 7) projects. Covers the manifest, service worker registration, offline fallback, auth flows, the inventory (including offline reading and data isolation between owners), tasks, the plan, and Today (including offline check-off). `E2E_PORT` overrides the server port so several checkouts can run the suite at once.
+- End-to-end: Playwright against a production build on desktop and mobile (Pixel 7) projects. Covers the manifest, service worker registration, offline fallback, auth flows, the inventory (including offline reading and data isolation between owners), tasks, the plan, and Today and earlier days (including offline check-off). `E2E_PORT` overrides the server port so several checkouts can run the suite at once.
 - E2E needs a Postgres database (`DATABASE_URL`). The `signedInUser` fixture in `e2e/fixtures.ts` creates a user and session cookies through a test-only auth instance, so tests never go through Google. CI runs a Postgres service container.

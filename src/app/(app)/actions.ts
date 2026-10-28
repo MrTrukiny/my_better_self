@@ -4,6 +4,7 @@ import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { occurrence, scheduleSettings, task } from "@/db/schema";
 import { toIsoDate, zonedNow } from "@/lib/scheduler/dates";
+import { replanAfterChange } from "@/lib/scheduler/plan";
 import { getCurrentUser } from "@/lib/session";
 import {
   actualMinutesUpdate,
@@ -13,8 +14,9 @@ import {
 } from "@/lib/today/schemas";
 
 /**
- * Sets the status of one of today's occurrences. Setting rather than toggling makes a queued
- * change safe to send twice. Doesn't replan: see ADR 0008.
+ * Sets the status of an occurrence from today or the 7 days before (spec 013). Setting rather
+ * than toggling makes a queued change safe to send twice. Today's changes don't replan (ADR 0008);
+ * a past day's do, since they move the task's last completion.
  */
 export async function setOccurrenceStatus(input: unknown): Promise<CheckOffResult> {
   const user = await getCurrentUser();
@@ -50,6 +52,10 @@ export async function setOccurrenceStatus(input: unknown): Promise<CheckOffResul
         ...actualMinutesUpdate(status, actualMinutes),
       })
       .where(and(eq(occurrence.id, occurrenceId), eq(occurrence.userId, user.id)));
+    if (stored && stored.date < today) {
+      // A past day changes the task's last completion, so the coming days are planned again.
+      await replanAfterChange(user.id);
+    }
     return "ok";
   } catch (error) {
     console.error("setOccurrenceStatus failed", error);
