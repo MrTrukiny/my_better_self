@@ -1,6 +1,6 @@
 # 012: Push notifications
 
-- **Status**: Draft
+- **Status**: Approved
 - **Owner**: @mrtrukiny
 - **Created**: 2026-10-28
 
@@ -40,7 +40,7 @@ Today the only reminder is the Google Calendar event, and nothing nudges the own
 
 ## Open questions
 
-- Sending at a given minute needs a job that runs every few minutes, and Vercel's Hobby plan only allows cron once a day. Options: a GitHub Actions scheduled workflow calling a protected endpoint every 5 minutes (free, recommended), an external scheduler such as Upstash QStash, or upgrading Vercel to Pro. Which one?
+- None. Decided with the owner: the reminder times are known ahead, so the daily job schedules each of the day's notifications as a delayed message in Upstash QStash at its exact time, and saving the schedule or the notification settings reschedules that day's messages. Vercel's Hobby cron runs only once a day, and polling (for example a GitHub Actions workflow every 5 minutes) can run 10 to 15 minutes late. The new service needs an ADR.
 
 ---
 
