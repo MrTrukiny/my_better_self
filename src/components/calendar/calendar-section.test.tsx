@@ -88,6 +88,27 @@ describe("CalendarSection", () => {
     expect(screen.queryByRole("button", { name: "Connect Google Calendar" })).toBeNull();
   });
 
+  it("tells how to show the calendar and links to it in the owner's account", () => {
+    renderSection({ connection: connected });
+    expect(screen.getByText(/make sure the Cleaning calendar is checked/)).toBeInTheDocument();
+    const open = screen.getByRole("link", { name: /Open Google Calendar/ });
+    expect(open).toHaveAttribute(
+      "href",
+      "https://calendar.google.com/calendar/r?authuser=owner%40example.com",
+    );
+    expect(open).toHaveAttribute("target", "_blank");
+    expect(open).toHaveAttribute("rel", "noopener noreferrer");
+    expect(screen.getByRole("link", { name: /iPhone or Mac/ })).toHaveAttribute(
+      "href",
+      "https://calendar.google.com/calendar/syncselect?authuser=owner%40example.com",
+    );
+  });
+
+  it("doesn't show the hint before connecting", () => {
+    renderSection();
+    expect(screen.queryByRole("link", { name: /Open Google Calendar/ })).toBeNull();
+  });
+
   it("AC6: disconnects only after confirming", async () => {
     renderSection({ connection: connected });
     await userEvent.click(screen.getByRole("button", { name: "Disconnect" }));

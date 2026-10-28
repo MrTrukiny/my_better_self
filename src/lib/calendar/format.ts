@@ -20,6 +20,16 @@ export function lastSyncedLine(lastSyncedAt: Date | null, now: Date): string {
   return `Last synced ${plural(Math.floor(elapsed / DAY), "day")} ago`;
 }
 
+/** Google Calendar on the web, in the owner's account rather than whichever one is signed in first. */
+export function googleCalendarUrl(email: string): string {
+  return `https://calendar.google.com/calendar/r?authuser=${encodeURIComponent(email)}`;
+}
+
+/** Where Apple Calendar users choose which Google calendars sync to their devices. */
+export function calendarSyncSelectUrl(email: string): string {
+  return `https://calendar.google.com/calendar/syncselect?authuser=${encodeURIComponent(email)}`;
+}
+
 function plural(count: number, unit: string): string {
   return `${count} ${unit}${count === 1 ? "" : "s"}`;
 }

@@ -1,6 +1,7 @@
-import { CalendarCheck } from "lucide-react";
+import { CalendarCheck, ExternalLink } from "lucide-react";
+import type { ReactNode } from "react";
 import { ScrollToHash } from "@/components/scroll-to-hash";
-import { lastSyncedLine } from "@/lib/calendar/format";
+import { calendarSyncSelectUrl, googleCalendarUrl, lastSyncedLine } from "@/lib/calendar/format";
 import type { CalendarConnectionView } from "@/lib/calendar/queries";
 import type { ActionState } from "@/lib/inventory/action-state";
 import { CalendarSyncNotice } from "./calendar-sync-notice";
@@ -49,6 +50,20 @@ export function CalendarSection({
             </div>
           </div>
           <CalendarSyncNotice status={connection.status} fake={fake} email={email} />
+          <div className="bg-muted/50 flex flex-col gap-2 rounded-lg px-3 py-2 text-sm">
+            <p className="text-muted-foreground">
+              Can't see the sessions? In Google Calendar, make sure the {connection.calendarName}{" "}
+              calendar is checked under My calendars.
+            </p>
+            <div className="flex flex-wrap gap-x-4">
+              <ExternalCalendarLink href={googleCalendarUrl(connection.email)}>
+                Open Google Calendar
+              </ExternalCalendarLink>
+              <ExternalCalendarLink href={calendarSyncSelectUrl(connection.email)}>
+                Show it on iPhone or Mac
+              </ExternalCalendarLink>
+            </div>
+          </div>
           <SyncNowButton action={syncNow} lastSynced={lastSyncedLine(connection.lastSyncedAt, now)}>
             <DisconnectButton action={disconnect} />
           </SyncNowButton>
@@ -71,5 +86,20 @@ export function CalendarSection({
         </>
       )}
     </section>
+  );
+}
+
+function ExternalCalendarLink({ href, children }: { href: string; children: ReactNode }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="focus-visible:ring-ring inline-flex min-h-11 items-center gap-1 rounded-md font-medium underline underline-offset-4 outline-none focus-visible:ring-2"
+    >
+      {children}
+      <ExternalLink aria-hidden className="size-3.5" />
+      <span className="sr-only">(opens in a new tab)</span>
+    </a>
   );
 }
