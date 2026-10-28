@@ -1,9 +1,11 @@
 import { ChevronLeft, Sparkles } from "lucide-react";
 import type { Metadata } from "next";
+import { io } from "next/cache";
 import { Suspense } from "react";
 import { deleteRoom } from "@/app/(app)/rooms/actions";
 import { DeleteConfirm } from "@/components/inventory/delete-confirm";
 import { EditNotice } from "@/components/inventory/edit-guard";
+import { FreshnessBadge } from "@/components/inventory/freshness-badge";
 import { ItemList, RoomDetailSkeleton } from "@/components/inventory/item-list";
 import { RenameRoomButton } from "@/components/inventory/room-form";
 import { OfflineAwareLink } from "@/components/offline-aware-link";
@@ -11,6 +13,8 @@ import { OfflineCacheWarmer } from "@/components/offline-cache-warmer";
 import { buttonVariants } from "@/components/ui/button";
 import { cacheVersion } from "@/lib/cache-version";
 import { itemCountLabel } from "@/lib/inventory/format";
+import { lastCleanedLabel } from "@/lib/inventory/freshness";
+import { getRoomFreshness } from "@/lib/inventory/freshness-queries";
 import { getRoom } from "@/lib/inventory/queries";
 
 export const metadata: Metadata = { title: "Room" };
@@ -35,6 +39,9 @@ export default function RoomPage({ params }: PageProps<"/rooms/[roomId]">) {
 async function RoomDetailSection({ params }: Pick<PageProps<"/rooms/[roomId]">, "params">) {
   const { roomId } = await params;
   const room = await getRoom(roomId);
+  await io();
+  const { today, rooms } = await getRoomFreshness(new Date());
+  const freshness = rooms.get(room.id) ?? null;
   const itemCount = room.items.length;
   const itemsClause =
     itemCount === 0 ? "" : ` and its ${itemCount === 1 ? "item" : `${itemCount} items`}`;
@@ -50,6 +57,10 @@ async function RoomDetailSection({ params }: Pick<PageProps<"/rooms/[roomId]">, 
             {room.name}
           </h1>
           <p className="text-muted-foreground text-sm">{itemCountLabel(itemCount)}</p>
+          <p className="text-muted-foreground flex flex-wrap items-center gap-2 text-sm">
+            <FreshnessBadge state={freshness?.state ?? null} />
+            {freshness ? <span>{lastCleanedLabel(freshness.lastCleaned, today)}</span> : null}
+          </p>
         </div>
         <div className="flex shrink-0 flex-wrap gap-2">
           <OfflineAwareLink
@@ -70,7 +81,10 @@ async function RoomDetailSection({ params }: Pick<PageProps<"/rooms/[roomId]">, 
       </div>
       <EditNotice />
       <ItemList room={room} />
-      <OfflineCacheWarmer urls={["/rooms", `/rooms/${room.id}`]} version={cacheVersion(room)} />
+      <OfflineCacheWarmer
+        urls={["/rooms", `/rooms/${room.id}`]}
+        version={cacheVersion([room, freshness, today])}
+      />
     </section>
   );
 }
