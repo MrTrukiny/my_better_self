@@ -45,6 +45,18 @@ export function createTestAuth({ baseURL }: { baseURL: string }) {
           ),
         );
     },
+    /**
+     * Moves the owner's first planned day `days` back, so a test can work with a past session.
+     * Sessions can't be planned in the past through the app.
+     */
+    moveFirstDayBack: async (userId: string, days: number) => {
+      await db.execute(sql`
+        update ${schema.occurrence}
+        set date = date - ${days}::int
+        where user_id = ${userId}
+          and date = (select min(date) from ${schema.occurrence} where user_id = ${userId})
+      `);
+    },
     close: () => pool.end(),
   };
 }

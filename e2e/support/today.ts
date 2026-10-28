@@ -37,14 +37,17 @@ export function tookField(page: Page) {
 export const TODAY_OFFLINE_NOTICE =
   "You're offline. What you check is saved on this device and syncs when you're back.";
 
-/** Waits until every check-off on this device has reached the server. */
+/**
+ * Waits until every check-off on this device has reached the server. Next reloads the page when
+ * the connection comes back, so a read that lands mid-navigation just polls again.
+ */
 export async function waitForSync(page: Page) {
   await expect
     .poll(
       () =>
-        page.evaluate(() =>
-          Object.keys(localStorage).some((key) => key.startsWith("mbs:check-off:")),
-        ),
+        page
+          .evaluate(() => Object.keys(localStorage).some((key) => key.startsWith("mbs:check-off:")))
+          .catch(() => true),
       { timeout: REPLAN_TIMEOUT },
     )
     .toBe(false);
