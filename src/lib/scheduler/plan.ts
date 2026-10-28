@@ -168,8 +168,14 @@ async function planRange(
         eq(occurrence.status, "scheduled"),
       ),
     );
+  const minutesOf = new Map(tasks.map((t) => [t.id, t.minutes]));
   const rows = days.flatMap(({ day, taskIds }) =>
-    taskIds.map((taskId) => ({ userId, taskId, date: toIsoDate(day) })),
+    taskIds.map((taskId) => ({
+      userId,
+      taskId,
+      date: toIsoDate(day),
+      plannedMinutes: minutesOf.get(taskId) ?? null,
+    })),
   );
   if (rows.length > 0) {
     await tx.insert(occurrence).values(rows).onConflictDoNothing();

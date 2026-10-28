@@ -3,6 +3,7 @@ import { and, between, eq } from "drizzle-orm";
 import { cacheTag } from "next/cache";
 import { db } from "@/db";
 import { item, occurrence, room, scheduleSettings, task } from "@/db/schema";
+import { plannedMinutes } from "@/lib/scheduler/planned-minutes";
 import { getCurrentUser } from "@/lib/session";
 import { type DayNumber, toIsoDate, zonedNow } from "./dates";
 import type { PlanOccurrence } from "./format";
@@ -37,7 +38,7 @@ export async function getPlanWeek(
       id: task.id,
       kind: task.kind,
       name: task.name,
-      minutes: task.minutes,
+      minutes: plannedMinutes,
       roomName: room.name,
       itemName: item.name,
     })
