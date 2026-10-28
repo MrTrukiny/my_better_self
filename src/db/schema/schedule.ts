@@ -56,6 +56,8 @@ export const occurrence = pgTable(
     completedAt: timestamp("completed_at", { withTimezone: true }),
     // Minutes a done cleaning task actually took, as the owner noted it; null when not noted.
     actualMinutes: integer("actual_minutes"),
+    /** The task's minutes when this day was planned; null for rows planned before ADR 0009. */
+    plannedMinutes: integer("planned_minutes"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => [
