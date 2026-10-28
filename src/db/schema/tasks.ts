@@ -54,6 +54,12 @@ export const task = pgTable(
     ...taskColumns(),
     /** The first date the scheduler picked while the task was never done. See ADR 0008. */
     firstDue: date("first_due", { mode: "string" }),
+    /** When the owner last set the minutes by hand; only times saved after it calibrate. */
+    minutesSetAt: timestamp("minutes_set_at", { withTimezone: true }),
+    /** The estimate before the last calibration, for its note; null when not calibrated. */
+    calibratedFrom: integer("calibrated_from"),
+    /** How many recorded times the last calibration used. See ADR 0009. */
+    calibratedSamples: integer("calibrated_samples"),
   },
   (table) => [
     index("task_user_id_idx").on(table.userId),

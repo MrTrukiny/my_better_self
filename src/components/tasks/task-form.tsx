@@ -19,10 +19,17 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { type ActionState, IDLE } from "@/lib/inventory/action-state";
+import { calibrationNote } from "@/lib/tasks/calibration";
 import { FREQUENCY_DAYS_MAX, minutesMax, TASK_NAME_MAX, type TaskKind } from "@/lib/tasks/limits";
 
 type TaskAction = (prev: ActionState, formData: FormData) => Promise<ActionState>;
-export type TaskDefaults = { name: string; kind: TaskKind; minutes: number; frequencyDays: number };
+export type TaskDefaults = {
+  name: string;
+  kind: TaskKind;
+  minutes: number;
+  frequencyDays: number;
+  calibration?: { from: number; samples: number } | null;
+};
 
 const KIND_OPTIONS: { value: TaskKind; label: string; hint: string }[] = [
   { value: "cleaning", label: "Cleaning task", hint: "Counts against the daily cleaning time." },
@@ -151,6 +158,9 @@ export function TaskForm({
           {errors.minutes ? null : (
             <p id={ids.minutesHint} className="text-muted-foreground text-xs">
               Up to {minutesMax(kind)}.
+              {defaults.calibration
+                ? ` ${calibrationNote({ ...defaults.calibration, minutes: defaults.minutes })}.`
+                : null}
             </p>
           )}
           <FieldError id={ids.minutesError} message={errors.minutes} />

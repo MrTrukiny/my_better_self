@@ -35,3 +35,7 @@ Spec 006 lets the owner check off and skip the day's tasks, including offline, a
 - Check-off accepts occurrences from today and the 7 days before it, in the owner's time zone (`EDITABLE_PAST_DAYS`); older and future ones are still refused as `past`. Days that left the window drop their queued changes with a notice.
 - A change on a past day moves the task's last completion, so `setOccurrenceStatus` replans after it, from the first replannable day as usual. Today's changes still don't replan. Replans never touch past days, so past calendar events stay as they were written.
 - The Earlier days page (`/earlier-days`) uses the same device queue as Today, and also accepts changes offline. Next keeps the previous page mounted while hidden, so both pages can hold the queue at once; flushes from every mounted page run one at a time, so a stale copy of a change is never sent after a newer one.
+
+## Amendment (spec 011)
+
+- Cleaning check-offs recalibrate the task's estimate from its recorded times, and replan when it changes. See ADR 0009.

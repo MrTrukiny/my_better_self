@@ -23,6 +23,8 @@ export type TaskEntry = {
   roomName: string | null;
   itemId: string | null;
   itemName: string | null;
+  /** Set when the minutes come from the owner's recorded times (spec 011); tasks only. */
+  calibration?: { from: number; samples: number } | null;
 };
 
 /** Cache tag for one user's home profile, tasks, and proposals. */
@@ -88,13 +90,25 @@ async function tasksForUser(userId: string): Promise<TaskEntry[]> {
   cacheTag(tasksTag(userId), inventoryTag(userId));
 
   const rows = await db
-    .select({ ...entryColumns(task), roomName: room.name, itemName: item.name })
+    .select({
+      ...entryColumns(task),
+      roomName: room.name,
+      itemName: item.name,
+      calibratedFrom: task.calibratedFrom,
+      calibratedSamples: task.calibratedSamples,
+    })
     .from(task)
     .leftJoin(room, eq(room.id, task.roomId))
     .leftJoin(item, eq(item.id, task.itemId))
     .where(eq(task.userId, userId))
     .orderBy(asc(task.createdAt), asc(task.name), asc(task.id));
-  return rows.map(toEntry);
+  return rows.map(({ calibratedFrom, calibratedSamples, ...row }) => ({
+    ...toEntry(row),
+    calibration:
+      calibratedFrom === null || calibratedSamples === null
+        ? null
+        : { from: calibratedFrom, samples: calibratedSamples },
+  }));
 }
 
 async function proposalsForUser(userId: string): Promise<TaskEntry[]> {

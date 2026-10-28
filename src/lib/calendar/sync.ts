@@ -15,6 +15,7 @@ import {
 import { getEnv } from "@/lib/env";
 import { toDayNumber, toIsoDate, zonedNow } from "@/lib/scheduler/dates";
 import { buildWeek, type PlanOccurrence } from "@/lib/scheduler/format";
+import { plannedMinutes } from "@/lib/scheduler/planned-minutes";
 import { replanStart } from "@/lib/scheduler/replan-start";
 import { PLAN_DAYS, type ScheduleSettings } from "@/lib/scheduler/settings";
 import { getCalendarClient } from "./client";
@@ -228,7 +229,7 @@ async function readOccurrences(
       id: task.id,
       kind: task.kind,
       name: task.name,
-      minutes: task.minutes,
+      minutes: plannedMinutes,
       roomName: room.name,
       itemName: item.name,
     })

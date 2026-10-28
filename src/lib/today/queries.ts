@@ -5,6 +5,7 @@ import { item, occurrence, room, task } from "@/db/schema";
 import { type DayNumber, toDayNumber, toIsoDate, zonedNow } from "@/lib/scheduler/dates";
 import { byPlace } from "@/lib/scheduler/format";
 import { ensurePlan } from "@/lib/scheduler/plan";
+import { plannedMinutes } from "@/lib/scheduler/planned-minutes";
 import { budgetFor, type ScheduleSettings } from "@/lib/scheduler/settings";
 import { getCurrentUser } from "@/lib/session";
 import { type EarlierDay, type EarlierTask, earlierDays } from "./earlier";
@@ -94,7 +95,7 @@ async function occurrenceRows(
       id: task.id,
       kind: task.kind,
       name: task.name,
-      minutes: task.minutes,
+      minutes: plannedMinutes,
       actualMinutes: occurrence.actualMinutes,
       roomId: room.id,
       roomName: room.name,

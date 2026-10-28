@@ -32,6 +32,19 @@ describe("TaskForm", () => {
     });
   });
 
+  it("spec 011 AC4, AC8: describes a calibrated estimate on the minutes field", () => {
+    render(
+      <TaskForm
+        action={vi.fn<Action>()}
+        onSuccess={vi.fn()}
+        defaults={{ ...MIRROR, minutes: 5, calibration: { from: 3, samples: 4 } }}
+      />,
+    );
+    expect(screen.getByRole("spinbutton", { name: "Minutes" })).toHaveAccessibleDescription(
+      "Up to 30. Adjusted from 3 to 5 min from your last 4 times.",
+    );
+  });
+
   it("shows the minutes cap for the chosen kind", async () => {
     render(<TaskForm action={vi.fn<Action>()} onSuccess={vi.fn()} defaults={MIRROR} />);
     const minutes = screen.getByRole("spinbutton", { name: "Minutes" });

@@ -57,6 +57,22 @@ export function createTestAuth({ baseURL }: { baseURL: string }) {
           and date = (select min(date) from ${schema.occurrence} where user_id = ${userId})
       `);
     },
+    /**
+     * Records done times for a task on the days before the owner's first planned day, newest
+     * first, as if they had been checked off then.
+     */
+    recordPastTimes: async (userId: string, taskName: string, minutes: number[]) => {
+      await db.execute(sql`
+        insert into ${schema.occurrence}
+          (id, user_id, task_id, date, status, completed_at, actual_minutes, planned_minutes)
+        select gen_random_uuid()::text, t.user_id, t.id,
+          (select min(date) from ${schema.occurrence} where user_id = ${userId}) - n.i::int,
+          'done', now(), n.m, t.minutes
+        from ${schema.task} t,
+          unnest(${`{${minutes.join(",")}}`}::int[]) with ordinality as n(m, i)
+        where t.user_id = ${userId} and t.name = ${taskName}
+      `);
+    },
     close: () => pool.end(),
   };
 }
