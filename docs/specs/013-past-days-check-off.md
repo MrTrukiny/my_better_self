@@ -15,14 +15,14 @@ Check-offs only work for today (spec 006). When the owner cleans but forgets to 
 
 ## Acceptance criteria
 
-- [ ] AC1: Given I'm on Today, then a link "Earlier days" opens the last 7 days before today, each with its date, its cleaning tasks, and how many are done ("2 of 5 done").
-- [ ] AC2: Given a past day within the last 7 days, then I can check, uncheck, or skip its cleaning tasks and check its routines, and record or change the minutes a done task took (spec 009), the same way as on Today. Older days are read-only.
-- [ ] AC3: Given I complete a past day, then the streak counts it, as if I had checked it on that day.
-- [ ] AC4: Given I mark a past task done or skipped, then its last completion is that day, and the plan is rebuilt from the next replannable day, so the task isn't planned again too soon. Given I uncheck it, then the plan is rebuilt the same way.
-- [ ] AC5: Changing a past day never changes its Google Calendar event.
-- [ ] AC6: Given I'm offline, then changes on past days are kept on the device and sent when the connection returns, as on Today. Given a queued change is for a day that has meanwhile become older than 7 days, it is dropped with a notice.
-- [ ] AC7: Given there are no past days with tasks (a new owner, or only days off), then the page says so.
-- [ ] AC8: The page works at 360px and on desktop, in light and dark mode, and with the keyboard only; each day is a labeled section and each control has an accessible name that includes the task and the date.
+- [x] AC1: Given I'm on Today, then a link "Earlier days" opens the last 7 days before today, each with its date, its cleaning tasks, and how many are done ("2 of 5 done").
+- [x] AC2: Given a past day within the last 7 days, then I can check, uncheck, or skip its cleaning tasks and check its routines, and record or change the minutes a done task took (spec 009), the same way as on Today. Older days are read-only.
+- [x] AC3: Given I complete a past day, then the streak counts it, as if I had checked it on that day.
+- [x] AC4: Given I mark a past task done or skipped, then its last completion is that day, and the plan is rebuilt from the next replannable day, so the task isn't planned again too soon. Given I uncheck it, then the plan is rebuilt the same way.
+- [x] AC5: Changing a past day never changes its Google Calendar event.
+- [x] AC6: Given I'm offline, then changes on past days are kept on the device and sent when the connection returns, as on Today. Given a queued change is for a day that has meanwhile become older than 7 days, it is dropped with a notice.
+- [x] AC7: Given there are no past days with tasks (a new owner, or only days off), then the page says so.
+- [x] AC8: The page works at 360px and on desktop, in light and dark mode, and with the keyboard only; each day is a labeled section and each control has an accessible name that includes the task and the date.
 
 ## UX notes
 
@@ -58,12 +58,12 @@ Check-offs only work for today (spec 006). When the owner cleans but forgets to 
 
 ### Tasks
 
-- [ ] T1: Editable window: `EDITABLE_PAST_DAYS`, `isEditableDay`, and `checkOffDecision` accepting the last 7 days. Files: `src/lib/today/schemas.ts`, `src/lib/today/schemas.test.ts`. Covers: AC2.
-- [ ] T2: Replan after a past change. Files: `src/app/(app)/actions.ts`. Covers: AC3, AC4, AC5.
-- [ ] T3: Earlier days data: `getEarlierDays` and `uncheckedDays`. Files: `src/lib/today/queries.ts`, `src/lib/today/earlier.ts`, `src/lib/today/earlier.test.ts`. Covers: AC1, AC7.
-- [ ] T4: Shared check-off hook, extracted from `TodaySession`, and `TaskRow` context. Files: `src/components/today/use-check-offs.ts`, `src/components/today/today-session.tsx`, `src/components/today/task-row.tsx`. Covers: AC2, AC6.
-- [ ] T5: Earlier days page and Today's link. Files: `src/app/(app)/earlier-days/page.tsx`, `src/components/today/earlier-days.tsx`, `src/components/today/earlier-days.test.tsx`, `src/app/(app)/page.tsx`, `src/lib/navigation.ts`, `src/app/sw.ts`. Covers: AC1, AC2, AC6, AC7, AC8.
-- [ ] T6: E2E and docs. Files: `e2e/earlier-days.spec.ts`, `docs/decisions/0008-check-off-and-offline-queue.md`, `docs/ARCHITECTURE.md`, `docs/specs/006-today-view.md`. Covers: AC1–AC8.
+- [x] T1: Editable window: `EDITABLE_PAST_DAYS`, `isEditableDay`, and `checkOffDecision` accepting the last 7 days. Files: `src/lib/today/schemas.ts`, `src/lib/today/schemas.test.ts`. Covers: AC2.
+- [x] T2: Replan after a past change. Files: `src/app/(app)/actions.ts`. Covers: AC3, AC4, AC5.
+- [x] T3: Earlier days data: `getEarlierDays` and `uncheckedDays`. Files: `src/lib/today/queries.ts`, `src/lib/today/earlier.ts`, `src/lib/today/earlier.test.ts`. Covers: AC1, AC7.
+- [x] T4: Shared check-off hook, extracted from `TodaySession`, and `TaskRow` context. Files: `src/components/today/use-check-offs.ts`, `src/components/today/today-session.tsx`, `src/components/today/task-row.tsx`. Covers: AC2, AC6.
+- [x] T5: Earlier days page and Today's link. Files: `src/app/(app)/earlier-days/page.tsx`, `src/components/today/earlier-days.tsx`, `src/components/today/earlier-days.test.tsx`, `src/app/(app)/page.tsx`, `src/lib/navigation.ts`, `src/app/sw.ts`. Covers: AC1, AC2, AC6, AC7, AC8.
+- [x] T6: E2E and docs. Files: `e2e/earlier-days.spec.ts`, `docs/decisions/0008-check-off-and-offline-queue.md`, `docs/ARCHITECTURE.md`, `docs/specs/006-today-view.md`. Covers: AC1–AC8.
 
 ### Test plan
 
