@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq, type SQL, sql } from "drizzle-orm";
+import { and, eq, type SQL } from "drizzle-orm";
 import { updateTag } from "next/cache";
 import { headers } from "next/headers";
 import { db } from "@/db";
@@ -14,6 +14,7 @@ import { replanAfterChange } from "@/lib/scheduler/plan";
 import { getCurrentUser } from "@/lib/session";
 import { findUncovered, hasUncovered } from "@/lib/tasks/coverage";
 import type { GenerateState } from "@/lib/tasks/generate-state";
+import { manualEditSet } from "@/lib/tasks/manual-edit";
 import { readProposalInput, tasksTag } from "@/lib/tasks/queries";
 import { homeProfileInputSchema, taskInputSchema } from "@/lib/tasks/schemas";
 
@@ -191,19 +192,10 @@ export async function updateTask(
   if (!parsed.ok) {
     return { status: "error", fieldErrors: parsed.fieldErrors, values };
   }
-  // Minutes set by hand restart calibration from this edit and drop its note (ADR 0009).
-  const sameMinutes = sql`${task.minutes} = ${parsed.data.minutes}`;
   try {
     const updated = await db
       .update(task)
-      // The frequency may change, so a task that was never done gets its first date picked again.
-      .set({
-        ...parsed.data,
-        firstDue: null,
-        minutesSetAt: sql`case when ${sameMinutes} then ${task.minutesSetAt} else now() end`,
-        calibratedFrom: sql`case when ${sameMinutes} then ${task.calibratedFrom} end`,
-        calibratedSamples: sql`case when ${sameMinutes} then ${task.calibratedSamples} end`,
-      })
+      .set(manualEditSet(parsed.data))
       .where(and(eq(task.id, taskId), eq(task.userId, user.id)))
       .returning({ id: task.id });
     if (updated.length === 0) {

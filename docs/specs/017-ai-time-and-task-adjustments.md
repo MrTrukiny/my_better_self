@@ -61,7 +61,7 @@ Each criterion is testable and maps to at least one test.
 
 - [x] T1: Data and rules: the `task_adjustment` table and migration `0010`; pure helpers for qualification, the evidence line, and change labels ("10 → 15 min", "Every 7 → 14 days", "New: ..., 30 min, every 30 days"); a query reading the qualifying tasks with their times and notes. Files: `src/db/schema/tasks.ts`, `drizzle/0010_*.sql`, `src/lib/tasks/adjustments.ts` (+ test), `src/lib/tasks/adjustment-queries.ts`. Covers: AC1, AC3.
 - [x] T2: AI request, validation, and fake. Files: `src/lib/ai/task-adjustments.ts` (+ test), `src/lib/ai/fake-adjustments.ts`. Covers: AC2, AC3.
-- [ ] T3: Server Actions and pending suggestions read. Files: `src/app/(app)/tasks/adjustments/actions.ts`, `src/lib/tasks/queries.ts` (`getAdjustments`). Covers: AC4, AC5, AC6.
+- [x] T3: Server Actions and pending suggestions read. Files: `src/app/(app)/tasks/adjustments/actions.ts`, `src/lib/tasks/queries.ts` (`getAdjustments`). Covers: AC4, AC5, AC6.
 - [ ] T4: UI: the Adjustments page, a configurable `GenerateButton`, adjustment cards with accept, edit (task form in a dialog), and discard, links on the Tasks page, and the offline warmer. Files: `src/app/(app)/tasks/adjustments/page.tsx`, `src/app/(app)/tasks/page.tsx`, `src/components/tasks/{generate-button,adjustment-list,adjustment-card,tasks-cache-warmer}.tsx` (+ tests). Covers: AC1, AC3, AC4, AC5, AC7.
 - [ ] T5: E2E and docs. Files: `e2e/adjustments.spec.ts`, `e2e/support/auth.ts` (record notes), `docs/ARCHITECTURE.md`. Covers: AC1 to AC7.
 

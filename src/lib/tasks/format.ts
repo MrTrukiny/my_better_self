@@ -28,12 +28,14 @@ export function targetLabel(entry: TaskEntry): string {
   return entry.roomId ? "Whole room" : "Whole home";
 }
 
-export type TaskGroup = { id: string; title: string; entries: TaskEntry[] };
+type Placed = Pick<TaskEntry, "roomId" | "roomName">;
+
+export type TaskGroup<T extends Placed = TaskEntry> = { id: string; title: string; entries: T[] };
 
 /** Groups by room, with the whole home first and rooms in `roomOrder` (inventory order). */
-export function groupByTarget(entries: TaskEntry[], roomOrder: string[]): TaskGroup[] {
-  const home: TaskGroup = { id: "home", title: "Whole home", entries: [] };
-  const rooms = new Map<string, TaskGroup>();
+export function groupByTarget<T extends Placed>(entries: T[], roomOrder: string[]): TaskGroup<T>[] {
+  const home: TaskGroup<T> = { id: "home", title: "Whole home", entries: [] };
+  const rooms = new Map<string, TaskGroup<T>>();
   for (const entry of entries) {
     if (!entry.roomId) {
       home.entries.push(entry);
