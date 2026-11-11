@@ -20,6 +20,19 @@ export type TaskHistory = {
   notes: { date: string; note: string }[];
 };
 
+/** A cleaning task with its history, as the AI reviews it. */
+export type ReviewTask = {
+  id: string;
+  name: string;
+  minutes: number;
+  frequencyDays: number;
+  roomId: string | null;
+  roomName: string | null;
+  itemId: string | null;
+  itemName: string | null;
+  history: TaskHistory;
+};
+
 export function qualifies(history: TaskHistory): boolean {
   return history.times.length >= ADJUSTMENTS.minTimes || history.notes.length > 0;
 }

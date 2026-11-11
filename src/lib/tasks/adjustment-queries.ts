@@ -2,19 +2,7 @@ import "server-only";
 import { and, desc, eq, gt, isNotNull, isNull, or } from "drizzle-orm";
 import { db } from "@/db";
 import { item, occurrence, room, task } from "@/db/schema";
-import { ADJUSTMENTS, qualifies, type TaskHistory } from "./adjustments";
-
-export type ReviewTask = {
-  id: string;
-  name: string;
-  minutes: number;
-  frequencyDays: number;
-  roomId: string | null;
-  roomName: string | null;
-  itemId: string | null;
-  itemName: string | null;
-  history: TaskHistory;
-};
+import { ADJUSTMENTS, qualifies, type ReviewTask } from "./adjustments";
 
 /**
  * The owner's cleaning tasks worth reviewing (spec 017): 3 or more recorded times or a note on
