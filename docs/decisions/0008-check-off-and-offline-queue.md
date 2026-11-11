@@ -39,3 +39,9 @@ Spec 006 lets the owner check off and skip the day's tasks, including offline, a
 ## Amendment (spec 011)
 
 - Cleaning check-offs recalibrate the task's estimate from its recorded times, and replan when it changes. See ADR 0009.
+
+## Amendment (spec 016)
+
+- A done change carries an optional note (up to 200 characters) with the same keep, set, or clear meaning as the minutes; other statuses clear both.
+- The queue still holds one entry per occurrence, but a done change queued on top of a done one now merges into it, keeping the minutes or note it leaves out. Otherwise a note saved offline after a time would drop the time.
+- Task timers live only on the device (`mbs:timer:<userId>` in `localStorage`); stopping one sends an ordinary done change with the measured minutes through this queue.

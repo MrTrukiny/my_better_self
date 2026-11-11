@@ -80,9 +80,11 @@ export function EarlierDays({ userId, timeZone, days, version, send }: EarlierDa
             context={label}
             pending={isQueued(task.occurrenceId) && (isOffline || failing)}
             disabled={disabled}
-            onChange={(status) => update(task, status, null)}
+            onChange={(status) => update(task, status, { actualMinutes: null, note: null })}
             onMinutes={
-              task.kind === "cleaning" ? (minutes) => update(task, "done", minutes) : undefined
+              task.kind === "cleaning"
+                ? (minutes) => update(task, "done", { actualMinutes: minutes })
+                : undefined
             }
           />
         );

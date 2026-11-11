@@ -56,6 +56,8 @@ export const occurrence = pgTable(
     completedAt: timestamp("completed_at", { withTimezone: true }),
     // Minutes a done cleaning task actually took, as the owner noted it; null when not noted.
     actualMinutes: integer("actual_minutes"),
+    /** The owner's note on a done cleaning task (spec 016). */
+    note: text("note"),
     /** The task's minutes when this day was planned; null for rows planned before ADR 0009. */
     plannedMinutes: integer("planned_minutes"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
@@ -65,6 +67,7 @@ export const occurrence = pgTable(
     index("occurrence_user_date_idx").on(table.userId, table.date),
     check("occurrence_status", sql`${table.status} in ('scheduled', 'done', 'skipped')`),
     check("occurrence_actual_minutes", sql`${table.actualMinutes} between 1 and 240`),
+    check("occurrence_note_length", sql`char_length(${table.note}) <= 200`),
   ],
 );
 

@@ -72,8 +72,12 @@ export function TodaySession({
       slot={index === undefined ? undefined : slots[index]}
       pending={isQueued(task.occurrenceId) && (isOffline || failing)}
       disabled={stale}
-      onChange={(status) => update(task, status, null)}
-      onMinutes={task.kind === "cleaning" ? (minutes) => update(task, "done", minutes) : undefined}
+      onChange={(status) => update(task, status, { actualMinutes: null, note: null })}
+      onMinutes={
+        task.kind === "cleaning"
+          ? (minutes) => update(task, "done", { actualMinutes: minutes })
+          : undefined
+      }
     />
   );
 

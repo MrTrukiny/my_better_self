@@ -37,6 +37,7 @@ function task(
     itemAddedAt: null,
     status,
     actualMinutes: null,
+    note: null,
   };
 }
 

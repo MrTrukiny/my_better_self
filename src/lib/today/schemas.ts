@@ -15,11 +15,21 @@ export function isEditableDay(date: string, today: string): boolean {
 /** Bounds of the minutes a done task took; the database checks them too. */
 export const ACTUAL_MINUTES = { min: 1, max: 240 } as const;
 
+/** A done task's note is at most this long; the database checks it too. */
+export const NOTE_MAX_LENGTH = 200;
+
 export const checkOffInputSchema = z.object({
   occurrenceId: z.string().min(1).max(64),
   status: z.enum(OCCURRENCE_STATUSES),
   /** A number sets the minutes, null clears them, and leaving it out keeps them. */
   actualMinutes: z.number().int().min(ACTUAL_MINUTES.min).max(ACTUAL_MINUTES.max).nullish(),
+  /** Like `actualMinutes`; a blank note clears it. */
+  note: z
+    .string()
+    .trim()
+    .max(NOTE_MAX_LENGTH)
+    .transform((note) => note || null)
+    .nullish(),
 });
 
 export type CheckOffInput = z.infer<typeof checkOffInputSchema>;
@@ -37,6 +47,7 @@ export function checkOffDecision(
   today: string,
   status: OccurrenceStatus,
   actualMinutes?: number | null,
+  note?: string | null,
 ): "apply" | Exclude<CheckOffResult, "ok" | "failed"> {
   if (!stored) {
     return "gone";
@@ -47,19 +58,24 @@ export function checkOffDecision(
   if (status === "skipped" && stored.kind !== "cleaning") {
     return "invalid";
   }
-  if (typeof actualMinutes === "number" && (status !== "done" || stored.kind !== "cleaning")) {
+  const details = typeof actualMinutes === "number" || typeof note === "string";
+  if (details && (status !== "done" || stored.kind !== "cleaning")) {
     return "invalid";
   }
   return "apply";
 }
 
-/** The minutes to write with a status: only a done task keeps or gets them. */
-export function actualMinutesUpdate(
+/** The minutes and note to write with a status: only a done task keeps or gets them. */
+export function completionUpdate(
   status: OccurrenceStatus,
   actualMinutes: number | null | undefined,
-): { actualMinutes?: number | null } {
+  note: string | null | undefined,
+): { actualMinutes?: number | null; note?: string | null } {
   if (status !== "done") {
-    return { actualMinutes: null };
+    return { actualMinutes: null, note: null };
   }
-  return actualMinutes === undefined ? {} : { actualMinutes };
+  return {
+    ...(actualMinutes === undefined ? {} : { actualMinutes }),
+    ...(note === undefined ? {} : { note }),
+  };
 }

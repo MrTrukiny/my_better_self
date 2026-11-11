@@ -17,6 +17,7 @@ function task(
     itemName: null,
     status,
     actualMinutes: null,
+    note: null,
   };
 }
 

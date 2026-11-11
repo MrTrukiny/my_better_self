@@ -64,6 +64,13 @@
       "when": 1793226696318,
       "tag": "0008_push_notifications",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1794373153035,
+      "tag": "0009_occurrence_note",
+      "breakpoints": true
     }
   ]
 }

@@ -30,6 +30,7 @@ function task(
     itemName: null,
     status: "scheduled",
     actualMinutes: null,
+    note: null,
   };
 }
 

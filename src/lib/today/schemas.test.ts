@@ -1,10 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  actualMinutesUpdate,
-  checkOffDecision,
-  checkOffInputSchema,
-  isEditableDay,
-} from "./schemas";
+import { checkOffDecision, checkOffInputSchema, completionUpdate, isEditableDay } from "./schemas";
 
 const TODAY = "2026-10-26";
 
@@ -79,12 +74,52 @@ describe("isEditableDay", () => {
   });
 });
 
-describe("actualMinutesUpdate", () => {
+describe("completionUpdate", () => {
   it("009 AC3, AC4: sets, clears, or keeps the minutes", () => {
-    expect(actualMinutesUpdate("done", 12)).toEqual({ actualMinutes: 12 });
-    expect(actualMinutesUpdate("done", null)).toEqual({ actualMinutes: null });
-    expect(actualMinutesUpdate("done", undefined)).toEqual({});
-    expect(actualMinutesUpdate("scheduled", undefined)).toEqual({ actualMinutes: null });
-    expect(actualMinutesUpdate("skipped", undefined)).toEqual({ actualMinutes: null });
+    expect(completionUpdate("done", 12, undefined)).toEqual({ actualMinutes: 12 });
+    expect(completionUpdate("done", null, undefined)).toEqual({ actualMinutes: null });
+    expect(completionUpdate("done", undefined, undefined)).toEqual({});
+    expect(completionUpdate("scheduled", undefined, undefined)).toEqual({
+      actualMinutes: null,
+      note: null,
+    });
+    expect(completionUpdate("skipped", undefined, undefined)).toEqual({
+      actualMinutes: null,
+      note: null,
+    });
+  });
+
+  it("016 AC6: sets, clears, or keeps the note like the minutes", () => {
+    expect(completionUpdate("done", undefined, "Deep clean")).toEqual({ note: "Deep clean" });
+    expect(completionUpdate("done", 12, null)).toEqual({ actualMinutes: 12, note: null });
+    expect(completionUpdate("scheduled", undefined, "Deep clean")).toEqual({
+      actualMinutes: null,
+      note: null,
+    });
+  });
+});
+
+describe("notes", () => {
+  const parseNote = (note: unknown) =>
+    checkOffInputSchema.safeParse({ occurrenceId: "o1", status: "done", note });
+
+  it("016 AC6: takes up to 200 characters, trims them, and a blank note clears it", () => {
+    expect(parseNote("  Full deep clean  ").data?.note).toBe("Full deep clean");
+    expect(parseNote("   ").data?.note).toBeNull();
+    expect(parseNote(null).data?.note).toBeNull();
+    expect(parseNote(undefined).data?.note).toBeUndefined();
+    expect(parseNote("x".repeat(200)).success).toBe(true);
+    expect(parseNote("x".repeat(201)).success).toBe(false);
+  });
+
+  it("016 AC6: notes go only on done cleaning tasks", () => {
+    const cleaning = { date: TODAY, kind: "cleaning" } as const;
+    const routine = { date: TODAY, kind: "routine" } as const;
+    expect(checkOffDecision(cleaning, TODAY, "done", undefined, "Took longer")).toBe("apply");
+    expect(checkOffDecision(cleaning, TODAY, "scheduled", undefined, "Took longer")).toBe(
+      "invalid",
+    );
+    expect(checkOffDecision(routine, TODAY, "done", undefined, "Took longer")).toBe("invalid");
+    expect(checkOffDecision(routine, TODAY, "done", undefined, null)).toBe("apply");
   });
 });

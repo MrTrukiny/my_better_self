@@ -6,6 +6,8 @@ export type TodayTask = PlanTask & {
   status: OccurrenceStatus;
   /** Minutes the owner noted for a done task, or null. */
   actualMinutes: number | null;
+  /** The owner's note on a done cleaning task, or null. */
+  note: string | null;
 };
 
 export type DayCounts = { total: number; done: number; skipped: number };

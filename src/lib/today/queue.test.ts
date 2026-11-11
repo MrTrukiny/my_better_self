@@ -57,6 +57,31 @@ describe("queue", () => {
     ]);
   });
 
+  it("016 AC7: a later done change merges into a queued done change, keeping what it leaves out", () => {
+    enqueue(storage, USER, { ...change("a", "done", 1), actualMinutes: 12 });
+    enqueue(storage, USER, { ...change("a", "done", 2), note: "Deep clean" });
+    expect(readQueue(storage, USER)).toEqual([
+      { ...change("a", "done", 2), actualMinutes: 12, note: "Deep clean" },
+    ]);
+    enqueue(storage, USER, { ...change("a", "done", 3), actualMinutes: null });
+    expect(readQueue(storage, USER)).toEqual([
+      { ...change("a", "done", 3), actualMinutes: null, note: "Deep clean" },
+    ]);
+    enqueue(storage, USER, change("a", "scheduled", 4));
+    expect(readQueue(storage, USER)).toEqual([change("a", "scheduled", 4)]);
+  });
+
+  it("016 AC7: drops entries with a malformed note", () => {
+    storage.setItem(
+      queueKey(USER),
+      JSON.stringify([
+        { ...change("a", "done", 1), note: 5 },
+        { ...change("b", "done", 2), note: "ok" },
+      ]),
+    );
+    expect(readQueue(storage, USER)).toEqual([{ ...change("b", "done", 2), note: "ok" }]);
+  });
+
   it("009 AC6: drops entries with malformed minutes", () => {
     storage.setItem(
       queueKey(USER),

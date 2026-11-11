@@ -12,6 +12,7 @@ function task(date: number, name: string, status: TodayTask["status"] = "schedul
       occurrenceId: `${date}-${name}`,
       status,
       actualMinutes: null,
+      note: null,
       id: name,
       kind: "cleaning" as const,
       name,
