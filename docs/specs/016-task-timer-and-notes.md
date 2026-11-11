@@ -62,7 +62,7 @@ Each criterion is testable and maps to at least one test.
 ### Tasks
 
 - [x] T1: Note column, check-off input, action, queries, and queue merge. Files: `src/db/schema/schedule.ts`, `drizzle/0009_*.sql`, `src/lib/today/{schemas,queue,progress,queries}.ts` (+ tests), `src/app/(app)/actions.ts`, `src/components/today/{use-check-offs,use-check-off-queue}.ts`, `docs/decisions/0008-check-off-and-offline-queue.md`. Covers: AC5, AC6, AC7.
-- [ ] T2: Timer rules and storage hook. Files: `src/lib/today/timers.ts`, `timers.test.ts`, `src/components/today/use-timers.ts`. Covers: AC2, AC3, AC4, AC7.
+- [x] T2: Timer rules and storage hook. Files: `src/lib/today/timers.ts`, `timers.test.ts`, `src/components/today/use-timers.ts`. Covers: AC2, AC3, AC4, AC7.
 - [ ] T3: Timer controls, banner, announcements, and clearing on uncheck or skip. Files: `src/components/today/{timer-controls,timer-banner,task-row,today-session}.tsx`, `today-session.test.tsx`. Covers: AC1, AC2, AC3, AC4, AC5, AC7, AC8.
 - [ ] T4: Note field in Today and Earlier days. Files: `src/components/today/{note-field,task-row,earlier-days,today-session}.tsx` (+ tests). Covers: AC6, AC8.
 - [ ] T5: E2E and docs. Files: `e2e/timer-notes.spec.ts`, `docs/ARCHITECTURE.md`. Covers: AC1 to AC8.
