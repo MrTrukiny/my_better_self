@@ -1,6 +1,6 @@
 "use client";
 
-import { LoaderCircle, Trash2 } from "lucide-react";
+import { LoaderCircle, type LucideIcon, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import {
@@ -27,6 +27,12 @@ type DeleteConfirmProps = {
   /** Show only the icon in the trigger; `triggerLabel` still names it. */
   iconOnly?: boolean;
   redirectTo?: string;
+  /** The confirm button, e.g. "Remove". Defaults to "Delete", with "Deleting..." while pending. */
+  confirmLabel?: string;
+  pendingLabel?: string;
+  icon?: LucideIcon;
+  /** Runs after the action succeeds, instead of only closing the dialog. */
+  onDone?: () => void | Promise<void>;
 };
 
 export function DeleteConfirm({
@@ -36,6 +42,10 @@ export function DeleteConfirm({
   triggerLabel = "Delete",
   iconOnly = false,
   redirectTo,
+  confirmLabel = "Delete",
+  pendingLabel = "Deleting...",
+  icon: Icon = Trash2,
+  onDone,
 }: DeleteConfirmProps) {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string>();
@@ -48,6 +58,10 @@ export function DeleteConfirm({
       const result = await action();
       if (result.status === "error") {
         setError(result.formError);
+        return;
+      }
+      if (onDone) {
+        await onDone();
         return;
       }
       setOpen(false);
@@ -74,7 +88,7 @@ export function DeleteConfirm({
         onClick={() => setOpen(true)}
         disabled={editsDisabled}
       >
-        <Trash2 aria-hidden />
+        <Icon aria-hidden />
         {iconOnly ? null : triggerLabel}
       </Button>
       <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -98,10 +112,10 @@ export function DeleteConfirm({
               {isPending ? (
                 <>
                   <LoaderCircle aria-hidden className="motion-safe:animate-spin" />
-                  Deleting...
+                  {pendingLabel}
                 </>
               ) : (
-                "Delete"
+                confirmLabel
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

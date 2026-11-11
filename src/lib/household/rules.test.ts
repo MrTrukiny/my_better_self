@@ -5,6 +5,7 @@ import {
   inviteInputSchema,
   inviteProblem,
   signInAllowed,
+  sortPeople,
 } from "./rules";
 
 describe("inviteInputSchema", () => {
@@ -54,5 +55,32 @@ describe("householdOf", () => {
   it("AC2: a member's household is their owner's; an owner's is their own", () => {
     expect(householdOf("u2", { ownerId: "u1" })).toEqual({ householdId: "u1", role: "member" });
     expect(householdOf("u1", null)).toEqual({ householdId: "u1", role: "owner" });
+  });
+});
+
+describe("sortPeople", () => {
+  const person = (id: string, role: "owner" | "member", joined: boolean, at: string) => ({
+    memberId: role === "owner" ? null : id,
+    userId: joined ? id : null,
+    name: null,
+    email: `${id}@example.com`,
+    image: null,
+    role,
+    at: new Date(at),
+  });
+
+  it("lists the owner, then members by join date, then invitations", () => {
+    const people = [
+      person("invited", "member", false, "2026-11-01"),
+      person("late", "member", true, "2026-11-03"),
+      person("owner", "owner", true, "2026-10-01"),
+      person("early", "member", true, "2026-11-02"),
+    ];
+    expect(sortPeople(people).map((p) => p.email)).toEqual([
+      "owner@example.com",
+      "early@example.com",
+      "late@example.com",
+      "invited@example.com",
+    ]);
   });
 });

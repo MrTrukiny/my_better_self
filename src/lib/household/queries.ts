@@ -1,8 +1,14 @@
 import "server-only";
 import { and, eq, isNotNull, isNull, sql } from "drizzle-orm";
+import { revalidateTag } from "next/cache";
 import { db } from "@/db";
 import { householdMember } from "@/db/schema";
 import { normalizeEmail } from "./rules";
+
+/** Cache tag for one household's people. */
+export function householdTag(householdId: string): string {
+  return `household:${householdId}`;
+}
 
 /** The household a user joined, or null for an owner (or someone with no household). */
 export async function membershipOf(userId: string): Promise<{ ownerId: string } | null> {
@@ -24,7 +30,7 @@ export async function isInvited(email: string): Promise<boolean> {
 
 /** Links a pending invitation to the account that just signed up with its email. */
 export async function joinInvitation(email: string, userId: string): Promise<void> {
-  await db
+  const joined = await db
     .update(householdMember)
     .set({ userId, joinedAt: new Date() })
     .where(
@@ -32,7 +38,12 @@ export async function joinInvitation(email: string, userId: string): Promise<voi
         eq(sql`lower(${householdMember.email})`, normalizeEmail(email)),
         isNull(householdMember.userId),
       ),
-    );
+    )
+    .returning({ ownerId: householdMember.ownerId });
+  for (const { ownerId } of joined) {
+    // Runs in the auth route handler, where `updateTag` isn't available.
+    revalidateTag(householdTag(ownerId), { expire: 0 });
+  }
 }
 
 /** The household a user belongs to: their owner's id, or their own id (ADR 0011). */

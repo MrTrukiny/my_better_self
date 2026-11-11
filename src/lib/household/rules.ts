@@ -5,6 +5,23 @@ export const HOUSEHOLD_MAX_PEOPLE = 5;
 
 export type HouseholdRole = "owner" | "member";
 
+/** Someone on the household page: the owner, a member who joined, or an invited email. */
+export type HouseholdPerson = {
+  /** The membership row id; null for the owner, who has none. */
+  memberId: string | null;
+  userId: string | null;
+  name: string | null;
+  email: string;
+  image: string | null;
+  role: HouseholdRole;
+};
+
+/** The owner first, then members by join order, then invitations by invite order. */
+export function sortPeople<T extends HouseholdPerson & { at: Date }>(people: readonly T[]): T[] {
+  const rank = (p: HouseholdPerson) => (p.role === "owner" ? 0 : p.userId ? 1 : 2);
+  return [...people].sort((a, b) => rank(a) - rank(b) || a.at.getTime() - b.at.getTime());
+}
+
 export function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
 }
