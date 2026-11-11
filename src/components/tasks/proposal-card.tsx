@@ -18,7 +18,7 @@ import { formatFrequency, formatMinutes, targetLabel } from "@/lib/tasks/format"
 import type { TaskEntry } from "@/lib/tasks/queries";
 import { TaskForm } from "./task-form";
 
-function useEntryAction() {
+export function useEntryAction() {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string>();
   function run(action: () => Promise<ActionState>) {
