@@ -1,6 +1,6 @@
 # 016: Task timer and notes
 
-- **Status**: In progress
+- **Status**: Done
 - **Owner**: @mrtrukiny
 - **Created**: 2026-10-28
 
@@ -19,14 +19,14 @@ Spec 009 lets the owner type how long a done task took, and spec 011 turns those
 
 Each criterion is testable and maps to at least one test.
 
-- [ ] AC1: Given a cleaning task of today is not done or skipped, then its row has a "Start" button. When I start it, then the row shows the running time (mm:ss) with "Pause" and "Stop" buttons, and the other rows' "Start" stays available. Routines have no timer.
-- [ ] AC2: Given a timer is running, when I start another task's timer, then the first one pauses and keeps its time. Only one timer runs at a time.
-- [ ] AC3: Given a timer is running, when I pause it, then the time stops and "Resume" continues from it. Paused time doesn't count.
-- [ ] AC4: When I stop a timer, then the task is checked off as done and its "Took" time is the measured time rounded to whole minutes (at least 1, at most 240), as if I had typed it (spec 009). Given it ran longer than 240 minutes, then it is saved as 240 and the row says "Timer capped at 240 min. Correct it if needed."
-- [ ] AC5: Given a done task, then I can still change or clear its "Took" time as in spec 009, whether it came from the timer or not. Given I uncheck a task, then its time and its timer are cleared.
-- [ ] AC6: Given a done cleaning task, then I can add a note of up to 200 characters ("Add note"), change it, or clear it. The note shows under the task in Today and in earlier days. Over 200 characters shows a field message and isn't saved. Unchecking a task removes its note with its time.
-- [ ] AC7: Given a timer is running or paused, when I reload, close the app, lock the phone, or lose the connection, then the timer keeps its state and the running one keeps counting from when it was started. Given I'm offline, then stopping a timer and saving a note work like other check-offs: "Saved on this device", sent when the connection is back (specs 006 and 009). Given the day changes while a timer runs, then the timer stays on the task of the day it was started.
-- [ ] AC8: The timer and note controls work at 360px and on desktop, in light and dark mode, and with the keyboard only. Buttons have accessible names with the task ("Start timer for Clean the kitchen window"), the running time isn't announced every second but starting, pausing, and stopping are, and touch targets are at least 44px.
+- [x] AC1: Given a cleaning task of today is not done or skipped, then its row has a "Start" button. When I start it, then the row shows the running time (mm:ss) with "Pause" and "Stop" buttons, and the other rows' "Start" stays available. Routines have no timer.
+- [x] AC2: Given a timer is running, when I start another task's timer, then the first one pauses and keeps its time. Only one timer runs at a time.
+- [x] AC3: Given a timer is running, when I pause it, then the time stops and "Resume" continues from it. Paused time doesn't count.
+- [x] AC4: When I stop a timer, then the task is checked off as done and its "Took" time is the measured time rounded to whole minutes (at least 1, at most 240), as if I had typed it (spec 009). Given it ran longer than 240 minutes, then it is saved as 240 and the row says "Timer capped at 240 min. Correct it if needed."
+- [x] AC5: Given a done task, then I can still change or clear its "Took" time as in spec 009, whether it came from the timer or not. Given I uncheck a task, then its time and its timer are cleared.
+- [x] AC6: Given a done cleaning task, then I can add a note of up to 200 characters ("Add note"), change it, or clear it. The note shows under the task in Today and in earlier days. Over 200 characters shows a field message and isn't saved. Unchecking a task removes its note with its time.
+- [x] AC7: Given a timer is running or paused, when I reload, close the app, lock the phone, or lose the connection, then the timer keeps its state and the running one keeps counting from when it was started. Given I'm offline, then stopping a timer and saving a note work like other check-offs: "Saved on this device", sent when the connection is back (specs 006 and 009). Given the day changes while a timer runs, then the timer stays on the task of the day it was started.
+- [x] AC8: The timer and note controls work at 360px and on desktop, in light and dark mode, and with the keyboard only. Buttons have accessible names with the task ("Start timer for Clean the kitchen window"), the running time isn't announced every second but starting, pausing, and stopping are, and touch targets are at least 44px.
 
 ## UX notes
 
@@ -65,7 +65,7 @@ Each criterion is testable and maps to at least one test.
 - [x] T2: Timer rules and storage hook. Files: `src/lib/today/timers.ts`, `timers.test.ts`, `src/components/today/use-timers.ts`. Covers: AC2, AC3, AC4, AC7.
 - [x] T3: Timer controls, banner, announcements, and clearing on uncheck or skip. Files: `src/components/today/{timer-controls,timer-banner,task-row,today-session}.tsx`, `today-session.test.tsx`. Covers: AC1, AC2, AC3, AC4, AC5, AC7, AC8.
 - [x] T4: Note field in Today and Earlier days. Files: `src/components/today/{note-field,task-row,earlier-days,today-session}.tsx` (+ tests). Covers: AC6, AC8.
-- [ ] T5: E2E and docs. Files: `e2e/timer-notes.spec.ts`, `docs/ARCHITECTURE.md`. Covers: AC1 to AC8.
+- [x] T5: E2E and docs. Files: `e2e/timer-notes.spec.ts`, `docs/ARCHITECTURE.md`. Covers: AC1 to AC8.
 
 ### Test plan
 
