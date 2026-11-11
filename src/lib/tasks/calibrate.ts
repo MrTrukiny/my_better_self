@@ -6,13 +6,14 @@ import { CALIBRATION, calibrate } from "./calibration";
 
 /**
  * Recalibrates one task from its recorded times since its baseline (ADR 0009). Returns whether
- * its estimate changed, so the caller can refresh caches and replan.
+ * its estimate changed, so the caller can refresh caches and replan. The task is shared, so every
+ * member's times count (ADR 0011).
  */
-export async function calibrateTask(userId: string, taskId: string): Promise<boolean> {
+export async function calibrateTask(householdId: string, taskId: string): Promise<boolean> {
   const [current] = await db
     .select({ minutes: task.minutes, kind: task.kind, minutesSetAt: task.minutesSetAt })
     .from(task)
-    .where(and(eq(task.id, taskId), eq(task.userId, userId)));
+    .where(and(eq(task.id, taskId), eq(task.userId, householdId)));
   if (current?.kind !== "cleaning") {
     return false;
   }
@@ -22,7 +23,6 @@ export async function calibrateTask(userId: string, taskId: string): Promise<boo
     .where(
       and(
         eq(occurrence.taskId, taskId),
-        eq(occurrence.userId, userId),
         eq(occurrence.status, "done"),
         isNotNull(occurrence.actualMinutes),
         current.minutesSetAt ? gt(occurrence.completedAt, current.minutesSetAt) : undefined,
@@ -46,7 +46,9 @@ export async function calibrateTask(userId: string, taskId: string): Promise<boo
       calibratedSamples: result.samples,
     })
     // Only if nothing changed the minutes meanwhile, such as a manual edit.
-    .where(and(eq(task.id, taskId), eq(task.userId, userId), eq(task.minutes, current.minutes)))
+    .where(
+      and(eq(task.id, taskId), eq(task.userId, householdId), eq(task.minutes, current.minutes)),
+    )
     .returning({ id: task.id });
   return updated.length > 0;
 }

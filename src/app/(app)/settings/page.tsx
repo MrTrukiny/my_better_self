@@ -1,4 +1,12 @@
-import { Bell, CalendarCheck, ChevronRight, Clock, House, type LucideIcon } from "lucide-react";
+import {
+  Bell,
+  CalendarCheck,
+  ChevronRight,
+  Clock,
+  House,
+  type LucideIcon,
+  Users,
+} from "lucide-react";
 import type { Metadata } from "next";
 import { type ReactNode, Suspense } from "react";
 import { OfflineAwareLink } from "@/components/offline-aware-link";
@@ -6,11 +14,13 @@ import { OfflineCacheWarmer } from "@/components/offline-cache-warmer";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cacheVersion } from "@/lib/cache-version";
 import { getCalendarConnection } from "@/lib/calendar/queries";
+import { getHousehold } from "@/lib/household/members";
 import { getNotificationPrefs, isDeviceSubscribed } from "@/lib/notifications/queries";
 import { getScheduleSettings } from "@/lib/scheduler/queries";
 import {
   calendarSummary,
   homeProfileSummary,
+  householdSummary,
   notificationsSummary,
   scheduleSummary,
 } from "@/lib/settings/summary";
@@ -45,6 +55,9 @@ export default function SettingsPage() {
         </SettingsRow>
         <SettingsRow href="/home-profile" icon={House} title="Home profile">
           <HomeProfileLine />
+        </SettingsRow>
+        <SettingsRow href="/household" icon={Users} title="Household">
+          <HouseholdLine />
         </SettingsRow>
       </ul>
       <Suspense>
@@ -98,23 +111,35 @@ async function HomeProfileLine() {
   return homeProfileSummary(await getHomeProfile());
 }
 
+async function HouseholdLine() {
+  return householdSummary(await getHousehold());
+}
+
 async function NotificationsLine() {
   const [prefs, subscribed] = await Promise.all([getNotificationPrefs(), isDeviceSubscribed()]);
   return notificationsSummary(prefs, subscribed);
 }
 
 async function SettingsCacheWarmer() {
-  const [settings, connection, profile, prefs, subscribed] = await Promise.all([
+  const [settings, connection, profile, prefs, subscribed, people] = await Promise.all([
     getScheduleSettings(),
     getCalendarConnection(),
     getHomeProfile(),
     getNotificationPrefs(),
     isDeviceSubscribed(),
+    getHousehold(),
   ]);
   return (
     <OfflineCacheWarmer
       urls={["/settings"]}
-      version={cacheVersion([settings, connection?.status ?? null, profile, prefs, subscribed])}
+      version={cacheVersion([
+        settings,
+        connection?.status ?? null,
+        profile,
+        prefs,
+        subscribed,
+        householdSummary(people),
+      ])}
     />
   );
 }

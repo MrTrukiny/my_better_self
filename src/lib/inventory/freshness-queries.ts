@@ -29,7 +29,9 @@ export async function getRoomFreshness(
     })
     .from(task)
     .leftJoin(occurrence, eq(occurrence.taskId, task.id))
-    .where(and(eq(task.userId, user.id), eq(task.kind, "cleaning"), isNotNull(task.roomId)))
+    .where(
+      and(eq(task.userId, user.householdId), eq(task.kind, "cleaning"), isNotNull(task.roomId)),
+    )
     .groupBy(task.id);
 
   const byRoom = new Map<string, FreshnessTask[]>();

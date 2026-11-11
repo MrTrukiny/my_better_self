@@ -69,3 +69,11 @@ export function notificationsSummary(prefs: NotificationPrefs, deviceOn: boolean
   ];
   return parts.length > 0 ? parts.join(" · ") : "On, no reminders";
 }
+
+/** Who shares the home: "Just you", or the people who joined and the pending invitations. */
+export function householdSummary(people: readonly { userId: string | null }[]): string {
+  const joined = people.filter((p) => p.userId !== null).length;
+  const invited = people.length - joined;
+  const who = joined <= 1 ? "Just you" : `${joined} people`;
+  return invited > 0 ? `${who} · ${invited} invited` : who;
+}

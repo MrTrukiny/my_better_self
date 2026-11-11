@@ -49,7 +49,7 @@ async function AdjustmentsSection() {
   await io();
   const user = await getCurrentUser();
   const [reviewTasks, adjustments, rooms] = await Promise.all([
-    readReviewTasks(user.id),
+    readReviewTasks(user.householdId),
     getAdjustments(),
     getRooms(),
   ]);

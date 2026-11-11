@@ -2,6 +2,7 @@ import "server-only";
 import { inArray } from "drizzle-orm";
 import { db } from "@/db";
 import { notificationLog, pushSubscription } from "@/db/schema";
+import { householdIdOf } from "@/lib/household/queries";
 import { ensurePlan } from "@/lib/scheduler/plan";
 import { sendPush } from "./push";
 import { prefsFor, reminderDay, scheduleFor, subscriptionsOf } from "./queries";
@@ -23,7 +24,7 @@ export async function deliverReminder(
   if (!settings) {
     return "stale";
   }
-  await ensurePlan(userId, now);
+  await ensurePlan(await householdIdOf(userId), now);
   const [prefs, day, subscriptions] = await Promise.all([
     prefsFor(userId),
     reminderDay(userId, message.date),

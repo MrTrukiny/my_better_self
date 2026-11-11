@@ -17,9 +17,9 @@ import {
 } from "@/lib/today/schemas";
 
 /** A failed calibration is logged, not reported: the check-off itself was saved. */
-async function calibrateSafely(userId: string, taskId: string): Promise<boolean> {
+async function calibrateSafely(householdId: string, taskId: string): Promise<boolean> {
   try {
-    return await calibrateTask(userId, taskId);
+    return await calibrateTask(householdId, taskId);
   } catch (error) {
     console.error("calibrateTask failed", error);
     return false;
@@ -73,13 +73,13 @@ export async function setOccurrenceStatus(input: unknown): Promise<CheckOffResul
       })
       .where(and(eq(occurrence.id, occurrenceId), eq(occurrence.userId, user.id)));
     const calibrated =
-      stored?.kind === "cleaning" && (await calibrateSafely(user.id, stored.taskId));
+      stored?.kind === "cleaning" && (await calibrateSafely(user.householdId, stored.taskId));
     if (calibrated) {
-      updateTag(tasksTag(user.id));
+      updateTag(tasksTag(user.householdId));
     }
     // A past day moves the task's last completion, and calibration its minutes.
     if (calibrated || (stored && stored.date < today)) {
-      await replanAfterChange(user.id);
+      await replanAfterChange(user.householdId);
     }
     return "ok";
   } catch (error) {

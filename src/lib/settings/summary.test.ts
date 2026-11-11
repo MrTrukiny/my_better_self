@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   calendarSummary,
   homeProfileSummary,
+  householdSummary,
   notificationsSummary,
   scheduleSummary,
 } from "./summary";
@@ -78,5 +79,13 @@ describe("notificationsSummary", () => {
     expect(
       notificationsSummary({ ...prefs, beforeEnabled: false, eveningEnabled: false }, true),
     ).toBe("On, no reminders");
+  });
+});
+
+describe("householdSummary", () => {
+  it("says who shares the home", () => {
+    expect(householdSummary([{ userId: "a" }])).toBe("Just you");
+    expect(householdSummary([{ userId: "a" }, { userId: "b" }])).toBe("2 people");
+    expect(householdSummary([{ userId: "a" }, { userId: null }])).toBe("Just you · 1 invited");
   });
 });

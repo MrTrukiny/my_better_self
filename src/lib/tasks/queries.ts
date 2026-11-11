@@ -50,35 +50,35 @@ export type PendingAdjustment = {
   roomName: string | null;
 };
 
-/** Cache tag for one user's home profile, tasks, and proposals. */
+/** Cache tag for one household's home profile, tasks, and proposals (ADR 0011). */
 export function tasksTag(userId: string): string {
   return `tasks:${userId}`;
 }
 
 export async function getHomeProfile(): Promise<HomeProfile> {
   const user = await getCurrentUser();
-  return homeProfileForUser(user.id);
+  return homeProfileForUser(user.householdId);
 }
 
 export async function getTasks(): Promise<TaskEntry[]> {
   const user = await getCurrentUser();
-  return tasksForUser(user.id);
+  return tasksForUser(user.householdId);
 }
 
 export async function getProposals(): Promise<TaskEntry[]> {
   const user = await getCurrentUser();
-  return proposalsForUser(user.id);
+  return proposalsForUser(user.householdId);
 }
 
 export async function getAdjustments(): Promise<PendingAdjustment[]> {
   const user = await getCurrentUser();
-  return adjustmentsForUser(user.id);
+  return adjustmentsForUser(user.householdId);
 }
 
 /** Rooms with their item ids and the targets of every task and pending proposal. */
 export async function getProposalTargets(): Promise<Omit<CoverageInput, "scopeRoomId">> {
   const user = await getCurrentUser();
-  return proposalTargetsForUser(user.id);
+  return proposalTargetsForUser(user.householdId);
 }
 
 // Not exported: callers must go through the getters above, which resolve the user first.
@@ -216,6 +216,7 @@ async function readHomeProfile(userId: string): Promise<HomeProfile> {
  * scope, counts as existing: what already has a task or a proposal isn't proposed for again.
  */
 export async function readProposalInput(
+  householdId: string,
   userId: string,
   scopeRoomId: string | null,
   language: string | null,
@@ -224,7 +225,7 @@ export async function readProposalInput(
     db
       .select({ id: room.id, name: room.name })
       .from(room)
-      .where(eq(room.userId, userId))
+      .where(eq(room.userId, householdId))
       .orderBy(asc(room.createdAt), asc(room.id)),
     db
       .select({
@@ -236,17 +237,17 @@ export async function readProposalInput(
         note: item.note,
       })
       .from(item)
-      .where(eq(item.userId, userId))
+      .where(eq(item.userId, householdId))
       .orderBy(asc(item.createdAt), asc(item.id)),
-    readHomeProfile(userId),
+    readHomeProfile(householdId),
     db
       .select({ roomId: task.roomId, itemId: task.itemId, name: task.name })
       .from(task)
-      .where(eq(task.userId, userId)),
+      .where(eq(task.userId, householdId)),
     db
       .select({ roomId: taskProposal.roomId, itemId: taskProposal.itemId, name: taskProposal.name })
       .from(taskProposal)
-      .where(eq(taskProposal.userId, userId)),
+      .where(eq(taskProposal.userId, householdId)),
     db
       .select({ timeZone: scheduleSettings.timeZone })
       .from(scheduleSettings)

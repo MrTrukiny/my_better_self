@@ -15,10 +15,18 @@ type TestFixtures = {
    * Creates an owner in the database with a unique email and returns cookies for its session.
    * Every owner created this way is deleted after the test.
    */
-  createOwner: (name: string) => Promise<{ owner: Owner; cookies: Cookies }>;
+  createOwner: (
+    name: string,
+    options?: { email?: string },
+  ) => Promise<{ owner: Owner; cookies: Cookies }>;
   /** Creates an owner and adds its session cookies to the browser context. */
   signedInUser: Owner;
 };
+
+/** A unique address that matches `E2E_EMAIL_PATTERN`, so stale cleanup can find its owner. */
+export function e2eEmail(): string {
+  return `e2e-${randomUUID()}@example.com`;
+}
 
 /** Cleanup gets its own budget, so a slow database can't push the test past its timeout. */
 const CLEANUP_TIMEOUT = 20_000;
@@ -43,8 +51,8 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
     async ({ testAuth }, use, testInfo) => {
       const { test: helpers } = await testAuth.auth.$context;
       const created: string[] = [];
-      await use(async (name) => {
-        const user = helpers.createUser({ name, email: `e2e-${randomUUID()}@example.com` });
+      await use(async (name, { email = e2eEmail() } = {}) => {
+        const user = helpers.createUser({ name, email });
         await helpers.saveUser(user);
         created.push(user.id);
         const cookies = await helpers.getCookies({ userId: user.id, domain: "localhost" });

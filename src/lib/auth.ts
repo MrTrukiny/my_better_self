@@ -10,6 +10,8 @@ import { isEmailAllowed, parseAllowlist } from "@/lib/allowlist";
 import { SESSION_OPTIONS } from "@/lib/app-config";
 import { EMAIL_NOT_ALLOWED } from "@/lib/auth-errors";
 import { getEnv } from "@/lib/env";
+import { isInvited, joinInvitation, membershipOf } from "@/lib/household/queries";
+import { signInAllowed } from "@/lib/household/rules";
 
 const env = getEnv();
 const allowlist = parseAllowlist(env.ALLOWED_EMAILS);
@@ -36,22 +38,33 @@ export const auth = betterAuth({
   databaseHooks: {
     user: {
       create: {
+        // Owners come from the allowlist; everyone else needs an invitation (ADR 0011).
         before: async (user) => {
-          if (!isEmailAllowed(user.email, allowlist)) {
+          const onAllowlist = isEmailAllowed(user.email, allowlist);
+          if (
+            !signInAllowed({ onAllowlist, invited: !onAllowlist && (await isInvited(user.email)) })
+          ) {
             rejectNotAllowed();
+          }
+        },
+        after: async (user) => {
+          if (!isEmailAllowed(user.email, allowlist)) {
+            await joinInvitation(user.email, user.id);
           }
         },
       },
     },
     session: {
       create: {
-        // Also covers existing users who were removed from the allowlist later.
+        // Also covers owners removed from the allowlist and members removed from a household.
         before: async (session) => {
           const [owner] = await db
             .select({ email: schema.user.email })
             .from(schema.user)
             .where(eq(schema.user.id, session.userId));
-          if (!isEmailAllowed(owner?.email, allowlist)) {
+          const onAllowlist = isEmailAllowed(owner?.email, allowlist);
+          const invited = !onAllowlist && (await membershipOf(session.userId)) !== null;
+          if (!signInAllowed({ onAllowlist, invited })) {
             rejectNotAllowed();
           }
         },

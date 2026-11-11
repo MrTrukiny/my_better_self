@@ -4,12 +4,20 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { SIGN_IN_PATH } from "@/lib/callback-url";
+import { membershipOf } from "@/lib/household/queries";
+import { type HouseholdRole, householdOf } from "@/lib/household/rules";
 
 export type CurrentUser = {
   id: string;
   name: string;
   email: string;
   image: string | null;
+  /**
+   * Whose home this is: shared data (inventory, tasks, home profile) is stored under it, while
+   * personal data (schedule, plan, calendar, notifications) uses `id`. See ADR 0011.
+   */
+  householdId: string;
+  role: HouseholdRole;
 };
 
 async function readCurrentUser(): Promise<CurrentUser | null> {
@@ -21,7 +29,8 @@ async function readCurrentUser(): Promise<CurrentUser | null> {
     return null;
   }
   const { id, name, email, image } = session.user;
-  return { id, name, email, image: image ?? null };
+  const household = householdOf(id, await membershipOf(id));
+  return { id, name, email, image: image ?? null, ...household };
 }
 
 /**

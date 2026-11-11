@@ -46,9 +46,9 @@ export async function saveHomeProfile(
   try {
     await db
       .insert(homeProfile)
-      .values({ userId: user.id, ...parsed.data })
+      .values({ userId: user.householdId, ...parsed.data })
       .onConflictDoUpdate({ target: homeProfile.userId, set: parsed.data });
-    updateTag(tasksTag(user.id));
+    updateTag(tasksTag(user.householdId));
     return { status: "success" };
   } catch (error) {
     console.error("saveHomeProfile failed", error);
@@ -65,7 +65,7 @@ export async function generateProposals(scopeRoomId: string | null): Promise<Gen
   const user = await getCurrentUser();
   try {
     const language = preferredLanguage((await headers()).get("accept-language"));
-    const input = await readProposalInput(user.id, scopeRoomId, language);
+    const input = await readProposalInput(user.householdId, user.id, scopeRoomId, language);
     if (input.rooms.length === 0) {
       return { status: "error", formError: NO_ROOMS };
     }
@@ -86,9 +86,9 @@ export async function generateProposals(scopeRoomId: string | null): Promise<Gen
     if (result.proposals.length > 0) {
       await db
         .insert(taskProposal)
-        .values(result.proposals.map((p) => ({ ...p, userId: user.id, scopeRoomId })));
+        .values(result.proposals.map((p) => ({ ...p, userId: user.householdId, scopeRoomId })));
     }
-    updateTag(tasksTag(user.id));
+    updateTag(tasksTag(user.householdId));
     return { status: "success", count: result.proposals.length };
   } catch (error) {
     console.error("generateProposals failed", error);
@@ -111,12 +111,12 @@ export async function updateProposal(
     const updated = await db
       .update(taskProposal)
       .set(parsed.data)
-      .where(and(eq(taskProposal.id, proposalId), eq(taskProposal.userId, user.id)))
+      .where(and(eq(taskProposal.id, proposalId), eq(taskProposal.userId, user.householdId)))
       .returning({ id: taskProposal.id });
     if (updated.length === 0) {
       return { status: "error", formError: NOT_FOUND, values };
     }
-    updateTag(tasksTag(user.id));
+    updateTag(tasksTag(user.householdId));
     return { status: "success", id: proposalId };
   } catch (error) {
     console.error("updateProposal failed", error);
@@ -127,14 +127,14 @@ export async function updateProposal(
 export async function acceptProposal(proposalId: string): Promise<ActionState> {
   const user = await getCurrentUser();
   return acceptWhere(
-    user.id,
-    and(eq(taskProposal.id, proposalId), eq(taskProposal.userId, user.id)),
+    user.householdId,
+    and(eq(taskProposal.id, proposalId), eq(taskProposal.userId, user.householdId)),
   );
 }
 
 export async function acceptAllProposals(): Promise<ActionState> {
   const user = await getCurrentUser();
-  return acceptWhere(user.id, eq(taskProposal.userId, user.id));
+  return acceptWhere(user.householdId, eq(taskProposal.userId, user.householdId));
 }
 
 /** Moves the matching proposals into tasks, in one transaction. */
@@ -172,8 +172,8 @@ export async function discardProposal(proposalId: string): Promise<ActionState> 
   try {
     await db
       .delete(taskProposal)
-      .where(and(eq(taskProposal.id, proposalId), eq(taskProposal.userId, user.id)));
-    updateTag(tasksTag(user.id));
+      .where(and(eq(taskProposal.id, proposalId), eq(taskProposal.userId, user.householdId)));
+    updateTag(tasksTag(user.householdId));
     return { status: "success" };
   } catch (error) {
     console.error("discardProposal failed", error);
@@ -196,13 +196,13 @@ export async function updateTask(
     const updated = await db
       .update(task)
       .set(manualEditSet(parsed.data))
-      .where(and(eq(task.id, taskId), eq(task.userId, user.id)))
+      .where(and(eq(task.id, taskId), eq(task.userId, user.householdId)))
       .returning({ id: task.id });
     if (updated.length === 0) {
       return { status: "error", formError: NOT_FOUND, values };
     }
-    await replanAfterChange(user.id);
-    updateTag(tasksTag(user.id));
+    await replanAfterChange(user.householdId);
+    updateTag(tasksTag(user.householdId));
     return { status: "success", id: taskId };
   } catch (error) {
     console.error("updateTask failed", error);
@@ -213,9 +213,9 @@ export async function updateTask(
 export async function deleteTask(taskId: string): Promise<ActionState> {
   const user = await getCurrentUser();
   try {
-    await db.delete(task).where(and(eq(task.id, taskId), eq(task.userId, user.id)));
-    await replanAfterChange(user.id);
-    updateTag(tasksTag(user.id));
+    await db.delete(task).where(and(eq(task.id, taskId), eq(task.userId, user.householdId)));
+    await replanAfterChange(user.householdId);
+    updateTag(tasksTag(user.householdId));
     return { status: "success" };
   } catch (error) {
     console.error("deleteTask failed", error);

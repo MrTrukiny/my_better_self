@@ -10,6 +10,8 @@ export type PlanTask = {
   minutes: number;
   roomName: string | null;
   itemName: string | null;
+  /** Who does it, in the household view. */
+  person?: string;
 };
 
 export type PlanOccurrence = { date: string; task: PlanTask };
@@ -64,7 +66,8 @@ export function byPlace(a: PlanTask, b: PlanTask): number {
     (a.roomName ?? "").localeCompare(b.roomName ?? "") ||
     (a.itemName ?? "").localeCompare(b.itemName ?? "") ||
     a.name.localeCompare(b.name) ||
-    a.id.localeCompare(b.id)
+    a.id.localeCompare(b.id) ||
+    (a.person ?? "").localeCompare(b.person ?? "")
   );
 }
 
@@ -88,5 +91,8 @@ export function planTarget(task: PlanTask): string {
 }
 
 export function loadLine(summary: LoadSummary): string {
+  if (summary.shared) {
+    return `The home's tasks need about ${Math.round(summary.neededPerDay)} min a day; together you have about ${Math.round(summary.availablePerDay)}.`;
+  }
   return `Your tasks need about ${Math.round(summary.neededPerDay)} min a day; you have about ${Math.round(summary.availablePerDay)}.`;
 }

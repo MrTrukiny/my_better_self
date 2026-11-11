@@ -15,6 +15,7 @@ import {
 import { authClient } from "@/lib/auth-client";
 import { SIGN_IN_PATH } from "@/lib/callback-url";
 import { clearAppCaches } from "@/lib/clear-app-caches";
+import { initials } from "@/lib/initials";
 import { unsubscribeDevice } from "@/lib/notifications/browser";
 
 type AccountMenuUser = {
@@ -62,10 +63,4 @@ export function AccountMenu({ user }: { user: AccountMenuUser }) {
       </DropdownMenuContent>
     </DropdownMenu>
   );
-}
-
-function initials(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  const letters = parts.length > 1 ? [parts[0], parts.at(-1)] : parts;
-  return letters.map((part) => part?.[0]?.toUpperCase() ?? "").join("") || "?";
 }

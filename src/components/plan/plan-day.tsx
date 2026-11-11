@@ -4,8 +4,21 @@ import { dayLabel, type PlanDayView, planTarget } from "@/lib/scheduler/format";
 import { formatMinutes } from "@/lib/tasks/format";
 import { cn } from "@/lib/utils";
 
-/** `overlap`: the session overlaps a busy time in the owner's other calendars (spec 005). */
-export function PlanDay({ day, overlap = false }: { day: PlanDayView; overlap?: boolean }) {
+/**
+ * `overlap`: the session overlaps a busy time in the owner's other calendars (spec 005).
+ * `household`: everyone's tasks with their person (spec 015), so the viewer's own session and
+ * days off don't apply.
+ */
+export function PlanDay({
+  day: view,
+  overlap = false,
+  household = false,
+}: {
+  day: PlanDayView;
+  overlap?: boolean;
+  household?: boolean;
+}) {
+  const day = household ? { ...view, off: false } : view;
   const headingId = `day-${day.date}`;
   const label = dayLabel(day.date);
   return (
@@ -26,7 +39,9 @@ export function PlanDay({ day, overlap = false }: { day: PlanDayView; overlap?: 
           <p className="text-muted-foreground text-sm">Day off</p>
         ) : day.cleaning.length > 0 ? (
           <p className="text-muted-foreground text-sm tabular-nums">
-            {day.start}–{day.end} · {day.total} of {day.budget} min
+            {household
+              ? `${day.total} min planned`
+              : `${day.start}–${day.end} · ${day.total} of ${day.budget} min`}
           </p>
         ) : null}
       </header>
@@ -37,7 +52,9 @@ export function PlanDay({ day, overlap = false }: { day: PlanDayView; overlap?: 
             <li key={task.id} className="flex items-start justify-between gap-3 py-2">
               <div className="flex min-w-0 flex-col">
                 <span className="text-base">{task.name}</span>
-                <span className="text-muted-foreground text-sm">{planTarget(task)}</span>
+                <span className="text-muted-foreground text-sm">
+                  {task.person ? `${planTarget(task)} · ${task.person}` : planTarget(task)}
+                </span>
               </div>
               <span className="text-muted-foreground shrink-0 text-sm tabular-nums">
                 {formatMinutes(task.minutes)}
@@ -52,7 +69,7 @@ export function PlanDay({ day, overlap = false }: { day: PlanDayView; overlap?: 
         </p>
       )}
 
-      {overlap && !day.off && day.cleaning.length > 0 ? (
+      {overlap && !household && !day.off && day.cleaning.length > 0 ? (
         <p className="flex items-start gap-2 text-sm">
           <TriangleAlert
             aria-hidden
@@ -79,7 +96,7 @@ export function PlanDay({ day, overlap = false }: { day: PlanDayView; overlap?: 
           <ul aria-label={`Routines on ${label}`} className="flex flex-wrap gap-2">
             {day.routines.map((task) => (
               <li key={task.id} className="bg-muted rounded-md px-2 py-1 text-sm">
-                {task.name}
+                {task.person ? `${task.name} · ${task.person}` : task.name}
               </li>
             ))}
           </ul>

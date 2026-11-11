@@ -78,6 +78,13 @@
       "when": 1794380950658,
       "tag": "0010_task_adjustment",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1794431710019,
+      "tag": "0011_household_member",
+      "breakpoints": true
     }
   ]
 }

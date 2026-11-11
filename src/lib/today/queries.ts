@@ -30,7 +30,7 @@ export type TodayData = {
  */
 export async function getToday(settings: ScheduleSettings, now: Date): Promise<TodayData> {
   const user = await getCurrentUser();
-  await ensurePlan(user.id, now);
+  await ensurePlan(user.householdId, now);
   const today = zonedNow(settings.timeZone, now).day;
   const [rows, counts] = await Promise.all([
     occurrenceRows(user.id, toIsoDate(today), toIsoDate(today)),
@@ -72,7 +72,7 @@ export async function getEarlierDays(
   now: Date,
 ): Promise<{ today: DayNumber; days: EarlierDay[] }> {
   const user = await getCurrentUser();
-  await ensurePlan(user.id, now);
+  await ensurePlan(user.householdId, now);
   const today = zonedNow(settings.timeZone, now).day;
   const rows = await occurrenceRows(
     user.id,

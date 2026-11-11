@@ -34,9 +34,9 @@ export async function createRoom(_prev: ActionState, formData: FormData): Promis
   try {
     const [created] = await db
       .insert(room)
-      .values({ userId: user.id, name: parsed.data.name })
+      .values({ userId: user.householdId, name: parsed.data.name })
       .returning({ id: room.id });
-    updateTag(inventoryTag(user.id));
+    updateTag(inventoryTag(user.householdId));
     return { status: "success", id: created?.id };
   } catch (error) {
     return roomWriteError(error, values);
@@ -58,12 +58,12 @@ export async function renameRoom(
     const updated = await db
       .update(room)
       .set({ name: parsed.data.name })
-      .where(and(eq(room.id, roomId), eq(room.userId, user.id)))
+      .where(and(eq(room.id, roomId), eq(room.userId, user.householdId)))
       .returning({ id: room.id });
     if (updated.length === 0) {
       return { status: "error", formError: NOT_FOUND, values };
     }
-    updateTag(inventoryTag(user.id));
+    updateTag(inventoryTag(user.householdId));
     return { status: "success", id: roomId };
   } catch (error) {
     return roomWriteError(error, values);
@@ -73,9 +73,9 @@ export async function renameRoom(
 export async function deleteRoom(roomId: string): Promise<ActionState> {
   const user = await getCurrentUser();
   try {
-    await db.delete(room).where(and(eq(room.id, roomId), eq(room.userId, user.id)));
-    await replanAfterChange(user.id);
-    updateTag(inventoryTag(user.id));
+    await db.delete(room).where(and(eq(room.id, roomId), eq(room.userId, user.householdId)));
+    await replanAfterChange(user.householdId);
+    updateTag(inventoryTag(user.householdId));
     return { status: "success" };
   } catch (error) {
     console.error("deleteRoom failed", error);
@@ -100,15 +100,15 @@ export async function createItem(
     const [owned] = await db
       .select({ id: room.id })
       .from(room)
-      .where(and(eq(room.id, roomId), eq(room.userId, user.id)));
+      .where(and(eq(room.id, roomId), eq(room.userId, user.householdId)));
     if (!owned) {
       return { status: "error", formError: NOT_FOUND, values };
     }
     const [created] = await db
       .insert(item)
-      .values({ ...parsed.data, roomId, userId: user.id })
+      .values({ ...parsed.data, roomId, userId: user.householdId })
       .returning({ id: item.id });
-    updateTag(inventoryTag(user.id));
+    updateTag(inventoryTag(user.householdId));
     return { status: "success", id: created?.id };
   } catch (error) {
     console.error("createItem failed", error);
@@ -131,12 +131,12 @@ export async function updateItem(
     const updated = await db
       .update(item)
       .set(parsed.data)
-      .where(and(eq(item.id, itemId), eq(item.userId, user.id)))
+      .where(and(eq(item.id, itemId), eq(item.userId, user.householdId)))
       .returning({ id: item.id });
     if (updated.length === 0) {
       return { status: "error", formError: NOT_FOUND, values };
     }
-    updateTag(inventoryTag(user.id));
+    updateTag(inventoryTag(user.householdId));
     return { status: "success", id: itemId };
   } catch (error) {
     console.error("updateItem failed", error);
@@ -147,9 +147,9 @@ export async function updateItem(
 export async function deleteItem(itemId: string): Promise<ActionState> {
   const user = await getCurrentUser();
   try {
-    await db.delete(item).where(and(eq(item.id, itemId), eq(item.userId, user.id)));
-    await replanAfterChange(user.id);
-    updateTag(inventoryTag(user.id));
+    await db.delete(item).where(and(eq(item.id, itemId), eq(item.userId, user.householdId)));
+    await replanAfterChange(user.householdId);
+    updateTag(inventoryTag(user.householdId));
     return { status: "success" };
   } catch (error) {
     console.error("deleteItem failed", error);

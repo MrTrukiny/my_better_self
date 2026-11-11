@@ -3,11 +3,10 @@
 import { updateTag } from "next/cache";
 import { db } from "@/db";
 import { scheduleSettings } from "@/db/schema";
-import { scheduleCalendarSync } from "@/lib/calendar/sync";
 import type { ActionState } from "@/lib/inventory/action-state";
 import { parseInput } from "@/lib/inventory/schemas";
 import { rescheduleReminders } from "@/lib/notifications/schedule-reminders";
-import { replan } from "@/lib/scheduler/plan";
+import { replan, syncHouseholdCalendars } from "@/lib/scheduler/plan";
 import { scheduleTag } from "@/lib/scheduler/queries";
 import { scheduleFormValues, scheduleInputSchema } from "@/lib/scheduler/schemas";
 import { getCurrentUser } from "@/lib/session";
@@ -27,8 +26,8 @@ export async function saveSchedule(_prev: ActionState, formData: FormData): Prom
       .values({ userId: user.id, ...parsed.data })
       .onConflictDoUpdate({ target: scheduleSettings.userId, set: parsed.data });
     updateTag(scheduleTag(user.id));
-    await replan(user.id);
-    scheduleCalendarSync(user.id);
+    await replan(user.householdId);
+    await syncHouseholdCalendars(user.householdId);
     rescheduleReminders(user.id);
     return { status: "success" };
   } catch (error) {
