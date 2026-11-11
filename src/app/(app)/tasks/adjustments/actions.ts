@@ -33,7 +33,7 @@ const TASK_FIELDS = ["name", "kind", "minutes", "frequencyDays"] as const;
 export async function suggestTaskAdjustments(): Promise<GenerateState> {
   const user = await getCurrentUser();
   try {
-    const tasks = await readReviewTasks(user.id);
+    const tasks = await readReviewTasks(user.householdId);
     // The page disables the button when nothing qualifies; this covers a stale page.
     if (tasks.length === 0) {
       return { status: "success", count: 0 };
@@ -43,11 +43,11 @@ export async function suggestTaskAdjustments(): Promise<GenerateState> {
       db
         .select({ roomId: task.roomId, itemId: task.itemId, name: task.name })
         .from(task)
-        .where(eq(task.userId, user.id)),
+        .where(eq(task.userId, user.householdId)),
       db
         .select({ note: homeProfile.note })
         .from(homeProfile)
-        .where(eq(homeProfile.userId, user.id)),
+        .where(eq(homeProfile.userId, user.householdId)),
       db
         .select({ timeZone: scheduleSettings.timeZone })
         .from(scheduleSettings)
@@ -67,14 +67,14 @@ export async function suggestTaskAdjustments(): Promise<GenerateState> {
       return { status: "error", formError };
     }
     await db.transaction(async (tx) => {
-      await tx.delete(taskAdjustment).where(eq(taskAdjustment.userId, user.id));
+      await tx.delete(taskAdjustment).where(eq(taskAdjustment.userId, user.householdId));
       if (result.adjustments.length > 0) {
         await tx
           .insert(taskAdjustment)
-          .values(result.adjustments.map((a) => ({ ...a, userId: user.id })));
+          .values(result.adjustments.map((a) => ({ ...a, userId: user.householdId })));
       }
     });
-    updateTag(tasksTag(user.id));
+    updateTag(tasksTag(user.householdId));
     return { status: "success", count: result.adjustments.length };
   } catch (error) {
     console.error("suggestTaskAdjustments failed", error);
@@ -85,7 +85,7 @@ export async function suggestTaskAdjustments(): Promise<GenerateState> {
 /** Applies a suggestion as it is. */
 export async function acceptAdjustment(adjustmentId: string): Promise<ActionState> {
   const user = await getCurrentUser();
-  return applyAdjustment(user.id, adjustmentId, null);
+  return applyAdjustment(user.householdId, adjustmentId, null);
 }
 
 /** Applies a suggestion with the values the owner edited in the task form. */
@@ -102,7 +102,7 @@ export async function acceptEditedAdjustment(
   if (!parsed.ok) {
     return { status: "error", fieldErrors: parsed.fieldErrors, values };
   }
-  const result = await applyAdjustment(user.id, adjustmentId, parsed.data);
+  const result = await applyAdjustment(user.householdId, adjustmentId, parsed.data);
   return result.status === "error" ? { ...result, values } : result;
 }
 
@@ -172,8 +172,8 @@ export async function discardAdjustment(adjustmentId: string): Promise<ActionSta
   try {
     await db
       .delete(taskAdjustment)
-      .where(and(eq(taskAdjustment.id, adjustmentId), eq(taskAdjustment.userId, user.id)));
-    updateTag(tasksTag(user.id));
+      .where(and(eq(taskAdjustment.id, adjustmentId), eq(taskAdjustment.userId, user.householdId)));
+    updateTag(tasksTag(user.householdId));
     return { status: "success" };
   } catch (error) {
     console.error("discardAdjustment failed", error);

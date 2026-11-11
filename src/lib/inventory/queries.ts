@@ -26,7 +26,7 @@ export function inventoryTag(userId: string): string {
 
 export async function getRooms(): Promise<RoomSummary[]> {
   const user = await getCurrentUser();
-  return roomsForUser(user.id);
+  return roomsForUser(user.householdId);
 }
 
 export async function getRoom(roomId: string): Promise<RoomDetail> {
@@ -34,7 +34,7 @@ export async function getRoom(roomId: string): Promise<RoomDetail> {
   if (!z.uuid().safeParse(roomId).success) {
     notFound();
   }
-  const found = await roomForUser(user.id, roomId);
+  const found = await roomForUser(user.householdId, roomId);
   if (!found) {
     notFound();
   }

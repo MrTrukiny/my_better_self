@@ -5,11 +5,11 @@ import { item, occurrence, room, task } from "@/db/schema";
 import { ADJUSTMENTS, qualifies, type ReviewTask } from "./adjustments";
 
 /**
- * The owner's cleaning tasks worth reviewing (spec 017): 3 or more recorded times or a note on
+ * The household's cleaning tasks worth reviewing (spec 017): 3 or more recorded times or a note on
  * done occurrences completed after the minutes were last set by hand, with the most data first.
  * Not cached: it follows check-offs, so call it after `io()` or from a Server Action.
  */
-export async function readReviewTasks(userId: string): Promise<ReviewTask[]> {
+export async function readReviewTasks(householdId: string): Promise<ReviewTask[]> {
   const rows = await db
     .select({
       id: task.id,
@@ -30,7 +30,7 @@ export async function readReviewTasks(userId: string): Promise<ReviewTask[]> {
     .leftJoin(item, eq(item.id, task.itemId))
     .where(
       and(
-        eq(task.userId, userId),
+        eq(task.userId, householdId),
         eq(task.kind, "cleaning"),
         eq(occurrence.status, "done"),
         or(isNotNull(occurrence.actualMinutes), isNotNull(occurrence.note)),
