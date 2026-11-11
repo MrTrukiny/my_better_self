@@ -1,6 +1,6 @@
 # 017: AI time and task adjustments
 
-- **Status**: In progress
+- **Status**: Done
 - **Owner**: @mrtrukiny
 - **Created**: 2026-10-28
 
@@ -18,13 +18,13 @@ Spec 011 adjusts a task's minutes automatically from the median of its recorded 
 
 Each criterion is testable and maps to at least one test.
 
-- [ ] AC1: Given at least one cleaning task has 3 or more recorded times, or at least one note, since its minutes were last set by hand, then the Tasks page offers "Suggest adjustments" with how many tasks it will review ("Reviews 4 tasks with recorded times or notes"). Given none qualifies, then it explains "Record times or add notes to get suggestions." and makes no AI request.
-- [ ] AC2: When I ask for suggestions, then the AI receives each qualifying task with its estimate, frequency, place, its recorded times with dates, and its notes, and returns zero or more suggestions. Each suggestion is one of: change the minutes, change the frequency, or add a new task for the same place (with its name, minutes, and frequency). Suggestions that fail validation (minutes or frequency out of the usual limits, an unknown task) are dropped.
-- [ ] AC3: Then each suggestion shows the task, the change ("10 → 15 min", "Every 7 → 14 days", or "New: Deep clean the oven, 30 min, every 30 days"), and a one or two sentence reason that refers to the times or notes it came from.
-- [ ] AC4: Given a suggestion, when I accept it, then the change is applied: new minutes count as set by hand (spec 011 starts calibrating that task again from there), a new frequency applies from the next replan, and a new task joins the plan like an accepted proposal. I can edit the values before accepting, and discard a suggestion instead. Accepting or discarding one leaves the others.
-- [ ] AC5: Given the AI finds nothing to change, then the page says "Your tasks match your times. Nothing to adjust." Given the request fails, then I see "Try again", and nothing changes.
-- [ ] AC6: Given there are pending suggestions, when I ask again, then they are replaced by the new ones; accepted changes stay. Pending suggestions survive reloads until I accept or discard them.
-- [ ] AC7: The review works at 360px and on desktop, in light and dark mode, and with the keyboard only; the busy state is announced, each action button names its task, and asking for suggestions is disabled offline.
+- [x] AC1: Given at least one cleaning task has 3 or more recorded times, or at least one note, since its minutes were last set by hand, then the Tasks page offers "Suggest adjustments" with how many tasks it will review ("Reviews 4 tasks with recorded times or notes"). Given none qualifies, then it explains "Record times or add notes to get suggestions." and makes no AI request.
+- [x] AC2: When I ask for suggestions, then the AI receives each qualifying task with its estimate, frequency, place, its recorded times with dates, and its notes, and returns zero or more suggestions. Each suggestion is one of: change the minutes, change the frequency, or add a new task for the same place (with its name, minutes, and frequency). Suggestions that fail validation (minutes or frequency out of the usual limits, an unknown task) are dropped.
+- [x] AC3: Then each suggestion shows the task, the change ("10 → 15 min", "Every 7 → 14 days", or "New: Deep clean the oven, 30 min, every 30 days"), and a one or two sentence reason that refers to the times or notes it came from.
+- [x] AC4: Given a suggestion, when I accept it, then the change is applied: new minutes count as set by hand (spec 011 starts calibrating that task again from there), a new frequency applies from the next replan, and a new task joins the plan like an accepted proposal. I can edit the values before accepting, and discard a suggestion instead. Accepting or discarding one leaves the others.
+- [x] AC5: Given the AI finds nothing to change, then the page says "Your tasks match your times. Nothing to adjust." Given the request fails, then I see "Try again", and nothing changes.
+- [x] AC6: Given there are pending suggestions, when I ask again, then they are replaced by the new ones; accepted changes stay. Pending suggestions survive reloads until I accept or discard them.
+- [x] AC7: The review works at 360px and on desktop, in light and dark mode, and with the keyboard only; the busy state is announced, each action button names its task, and asking for suggestions is disabled offline.
 
 ## UX notes
 
@@ -63,7 +63,7 @@ Each criterion is testable and maps to at least one test.
 - [x] T2: AI request, validation, and fake. Files: `src/lib/ai/task-adjustments.ts` (+ test), `src/lib/ai/fake-adjustments.ts`. Covers: AC2, AC3.
 - [x] T3: Server Actions and pending suggestions read. Files: `src/app/(app)/tasks/adjustments/actions.ts`, `src/lib/tasks/queries.ts` (`getAdjustments`). Covers: AC4, AC5, AC6.
 - [x] T4: UI: the Adjustments page, a configurable `GenerateButton`, adjustment cards with accept, edit (task form in a dialog), and discard, links on the Tasks page, and the offline warmer. Files: `src/app/(app)/tasks/adjustments/page.tsx`, `src/app/(app)/tasks/page.tsx`, `src/components/tasks/{generate-button,adjustment-list,adjustment-card,tasks-cache-warmer}.tsx` (+ tests). Covers: AC1, AC3, AC4, AC5, AC7.
-- [ ] T5: E2E and docs. Files: `e2e/adjustments.spec.ts`, `e2e/support/auth.ts` (record notes), `docs/ARCHITECTURE.md`. Covers: AC1 to AC7.
+- [x] T5: E2E and docs. Files: `e2e/adjustments.spec.ts`, `e2e/support/auth.ts` (record notes), `docs/ARCHITECTURE.md`. Covers: AC1 to AC7.
 
 ### Test plan
 

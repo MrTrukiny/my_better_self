@@ -73,6 +73,18 @@ export function createTestAuth({ baseURL }: { baseURL: string }) {
         where t.user_id = ${userId} and t.name = ${taskName}
       `);
     },
+    /** Adds a note to the latest recorded time of a task, as if written when checking it off. */
+    noteLatestTime: async (userId: string, taskName: string, note: string) => {
+      await db.execute(sql`
+        update ${schema.occurrence} set note = ${note}
+        where id = (
+          select o.id from ${schema.occurrence} o
+          join ${schema.task} t on t.id = o.task_id
+          where t.user_id = ${userId} and t.name = ${taskName} and o.status = 'done'
+          order by o.date desc limit 1
+        )
+      `);
+    },
     /** Moves when the owner's tasks were added `days` back, as if they had been added then. */
     ageTasks: async (userId: string, days: number) => {
       await db.execute(sql`
