@@ -7,9 +7,9 @@ import type { OccurrenceStatus } from "@/db/schema/schedule";
 import type { TodayTask } from "@/lib/today/progress";
 import type { FlushResult, QueuedChange } from "@/lib/today/queue";
 import { type CheckOffResult, EDITABLE_PAST_DAYS } from "@/lib/today/schemas";
-import { useCheckOffQueue } from "./use-check-off-queue";
+import { type CheckOffDetails, useCheckOffQueue } from "./use-check-off-queue";
 
-type Change = { status: OccurrenceStatus; actualMinutes: number | null };
+type Change = { status: OccurrenceStatus } & CheckOffDetails;
 
 /**
  * Check-offs as the owner sees them: the server's tasks with this device's changes on top,
@@ -50,19 +50,41 @@ export function useCheckOffs({
       const status = changed?.status ?? t.status;
       const minutes =
         changed?.actualMinutes === undefined ? t.actualMinutes : changed.actualMinutes;
-      return { ...t, status, actualMinutes: status === "done" ? minutes : null };
+      const note = changed?.note === undefined ? t.note : changed.note;
+      const done = status === "done";
+      return { ...t, status, actualMinutes: done ? minutes : null, note: done ? note : null };
     });
   }
 
-  // Checking a task starts it without minutes; any other status clears them on the server.
-  function update(task: TodayTask, status: OccurrenceStatus, actualMinutes: number | null) {
-    setLocal((prev) => ({ ...prev, [task.occurrenceId]: { status, actualMinutes } }));
-    change(task.occurrenceId, status, status === "done" ? actualMinutes : undefined);
+  // Details go only with a done status; any other status clears them on the server. A done
+  // change on top of a done one keeps the details it leaves out, as the queue does.
+  function update(task: TodayTask, status: OccurrenceStatus, details: CheckOffDetails = {}) {
+    record(task.occurrenceId, status, details);
+  }
+
+  /** Like `update`, for an occurrence the page doesn't list (a timer left on an earlier day). */
+  function record(occurrenceId: string, status: OccurrenceStatus, details: CheckOffDetails = {}) {
+    const sent = status === "done" ? details : {};
+    setLocal((prev) => {
+      const previous = prev[occurrenceId];
+      const next: Change =
+        previous?.status === "done" && status === "done"
+          ? {
+              status,
+              actualMinutes:
+                sent.actualMinutes ?? (sent.actualMinutes === null ? null : previous.actualMinutes),
+              note: sent.note ?? (sent.note === null ? null : previous.note),
+            }
+          : { status, ...sent };
+      return { ...prev, [occurrenceId]: next };
+    });
+    change(occurrenceId, status, sent);
   }
 
   return {
     withChanges,
     update,
+    record,
     isQueued: (occurrenceId: string) => queued.has(occurrenceId),
     failing,
     /** Counts emptied queues, so offline copies can be refreshed. */

@@ -11,6 +11,9 @@ import {
 } from "@/lib/today/queue";
 import type { CheckOffResult } from "@/lib/today/schemas";
 
+/** A done task's minutes and note: a value sets it, null clears it, and leaving it out keeps it. */
+export type CheckOffDetails = Pick<QueuedChange, "actualMinutes" | "note">;
+
 /** Waits before retrying after a failure; the last value repeats. */
 const RETRY_DELAYS_MS = [2_000, 10_000, 30_000];
 /** A notice appears only once this many tries in a row have failed. */
@@ -105,12 +108,13 @@ export function useCheckOffQueue({ userId, send, onDropped, onSynced }: Options)
   }, [userId, flush]);
 
   const change = useCallback(
-    (occurrenceId: string, status: OccurrenceStatus, actualMinutes?: number | null) => {
+    (occurrenceId: string, status: OccurrenceStatus, details: CheckOffDetails = {}) => {
       setQueue(
         enqueue(localStorage, userId, {
           occurrenceId,
           status,
-          ...(actualMinutes === undefined ? {} : { actualMinutes }),
+          ...(details.actualMinutes === undefined ? {} : { actualMinutes: details.actualMinutes }),
+          ...(details.note === undefined ? {} : { note: details.note }),
           queuedAt: Date.now(),
         }),
       );

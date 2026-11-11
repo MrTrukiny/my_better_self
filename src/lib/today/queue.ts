@@ -10,6 +10,8 @@ export type QueuedChange = {
   status: OccurrenceStatus;
   /** As in `CheckOffInput`: a number sets the minutes, null clears them, absent keeps them. */
   actualMinutes?: number | null;
+  /** Same meaning as `actualMinutes` (spec 016). */
+  note?: string | null;
   queuedAt: number;
 };
 
@@ -28,15 +30,26 @@ export function readQueue(storage: QueueStorage, userId: string): QueuedChange[]
   }
 }
 
+/**
+ * A later done change to a task that already has a queued done change merges into it, so a note
+ * saved after a time keeps the time. Any other change replaces the queued one.
+ */
 export function enqueue(
   storage: QueueStorage,
   userId: string,
   change: QueuedChange,
 ): QueuedChange[] {
-  const queue = [
-    ...readQueue(storage, userId).filter((c) => c.occurrenceId !== change.occurrenceId),
-    change,
-  ];
+  const current = readQueue(storage, userId);
+  const previous = current.find((c) => c.occurrenceId === change.occurrenceId);
+  const merged =
+    previous?.status === "done" && change.status === "done"
+      ? {
+          ...change,
+          ...keep("actualMinutes", change, previous),
+          ...keep("note", change, previous),
+        }
+      : change;
+  const queue = [...current.filter((c) => c.occurrenceId !== change.occurrenceId), merged];
   write(storage, userId, queue);
   return queue;
 }
@@ -86,6 +99,15 @@ export async function flushQueue(
   return { dropped, failed: false };
 }
 
+function keep<K extends "actualMinutes" | "note">(
+  key: K,
+  change: QueuedChange,
+  previous: QueuedChange,
+): Pick<QueuedChange, K> | Record<string, never> {
+  const value = change[key] !== undefined ? change[key] : previous[key];
+  return value === undefined ? {} : ({ [key]: value } as Pick<QueuedChange, K>);
+}
+
 function write(storage: QueueStorage, userId: string, queue: QueuedChange[]): void {
   if (queue.length === 0) {
     storage.removeItem(queueKey(userId));
@@ -98,11 +120,12 @@ function isQueuedChange(value: unknown): value is QueuedChange {
   if (typeof value !== "object" || value === null) {
     return false;
   }
-  const { occurrenceId, status, actualMinutes, queuedAt } = value as Record<string, unknown>;
+  const { occurrenceId, status, actualMinutes, note, queuedAt } = value as Record<string, unknown>;
   return (
     typeof occurrenceId === "string" &&
     (status === "scheduled" || status === "done" || status === "skipped") &&
     (actualMinutes === undefined || actualMinutes === null || Number.isInteger(actualMinutes)) &&
+    (note === undefined || note === null || typeof note === "string") &&
     typeof queuedAt === "number"
   );
 }

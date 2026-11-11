@@ -12,7 +12,7 @@ Step 4 of the workflow: write-spec -> plan-feature -> implement-feature -> **rev
 
 1. **Collect the diff**: `git diff main...HEAD` and `git log main..HEAD --oneline`. Identify the spec from the branch name or the commits.
 2. **Review against the checklist below.** Fix issues directly when they are clear. List anything that needs a decision for the user.
-3. **Run the gate**: `pnpm check`. It must pass.
+3. **Run the gate**: `pnpm check:fast` must pass, plus a live browser QA session on the changed flows. Don't run e2e locally; CI runs it on the PR and must be green before merging.
 4. **Check in a browser** (Playwright MCP against `pnpm build && pnpm start`) for UI changes: 360px and desktop, light and dark, keyboard-only navigation, no console errors.
 5. **Update docs**: mark the spec `Done` and tick its acceptance criteria. Update `docs/ARCHITECTURE.md` if the structure changed, and add an ADR if a decision was made during implementation.
 6. **Open the PR** with `gh pr create`, titled with a Conventional Commit and using the body template below.
@@ -38,7 +38,7 @@ Step 4 of the workflow: write-spec -> plan-feature -> implement-feature -> **rev
 
 **PWA**
 - [ ] New pages behave sensibly offline (cached shell, fallback, or a clear message).
-- [ ] The service worker and manifest still pass the e2e tests.
+- [ ] The service worker and manifest still work (checked against a production build; CI e2e covers them).
 
 ## PR body template
 
@@ -53,7 +53,7 @@ What changed and why, in 2-4 sentences. Spec: docs/specs/NNN-slug.md
 
 ## Verification
 
-- `pnpm check` passes
+- `pnpm check:fast` passes, browser QA done, CI green
 - Manually checked: 360px / desktop, light / dark, keyboard, offline
 
 ## Notes

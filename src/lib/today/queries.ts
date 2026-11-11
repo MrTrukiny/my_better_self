@@ -97,6 +97,7 @@ async function occurrenceRows(
       name: task.name,
       minutes: plannedMinutes,
       actualMinutes: occurrence.actualMinutes,
+      note: occurrence.note,
       roomId: room.id,
       roomName: room.name,
       roomCreatedAt: room.createdAt,

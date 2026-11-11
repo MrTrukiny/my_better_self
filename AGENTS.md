@@ -30,7 +30,7 @@ The user talks in **Spanish**; reply in chat in Spanish. Everything written to t
 | `pnpm test`                 | Vitest unit tests                                                                            |
 | `pnpm test:e2e`             | Playwright against a prod build, desktop + mobile viewports                                  |
 | `pnpm check:fast`           | typecheck + lint + unit tests (run often)                                                    |
-| `pnpm check`                | `check:fast` + e2e (run before declaring a task done; needs `DATABASE_URL`)                  |
+| `pnpm check`                | `check:fast` + e2e (slow; CI runs it on every PR, don't run it locally)                      |
 | `pnpm db:generate`          | Generate a SQL migration in `drizzle/` from `src/db/schema/`                                 |
 | `pnpm db:migrate`           | Apply pending migrations to `DATABASE_URL`                                                   |
 
@@ -73,12 +73,14 @@ Non-trivial work follows spec-driven development, with a human checkpoint after 
 3. **implement-feature**: task by task, test first, `pnpm check:fast` after each task, small commits.
 4. **review-changes**: verify against the spec, accessibility, responsive layout, PWA behavior; then open a PR.
 
+Locally, the gate is `pnpm check:fast` plus a live QA session in a real browser (360px and desktop, light and dark, keyboard only, console clean). Don't run the e2e suite locally: it is slow. Keep writing e2e specs for new flows; CI runs them on the PR, and a failing e2e check there must be fixed before merging.
+
 Skills live in `.cursor/skills/<name>/SKILL.md`. Small fixes can skip straight to implementation.
 
 ## Definition of done
 
 - Acceptance criteria in the spec are met and covered by tests.
-- `pnpm check` passes (typecheck, lint, unit, e2e).
+- `pnpm check:fast` passes locally, a live browser QA session covers the changed flows, and CI (including e2e) is green on the PR.
 - UI works at 360px wide and on desktop, in light and dark mode, with keyboard only.
 - No new console errors or hydration warnings.
 

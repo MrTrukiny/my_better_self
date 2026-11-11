@@ -25,7 +25,7 @@ Step 3 of the workflow: write-spec -> plan-feature -> **implement-feature** -> r
 
 ## Finishing
 
-1. Run the full gate: `pnpm check` (includes e2e against a production build).
+1. Run `pnpm check:fast` and do a live QA session in a real browser on the changed flows (360px and desktop, light and dark, keyboard only, no console errors). Don't run e2e locally; CI runs it on the PR.
 2. Hand off to `review-changes`.
 
 ## When things go wrong

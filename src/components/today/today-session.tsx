@@ -4,16 +4,21 @@ import { Coffee, Flame, PartyPopper, Repeat, WifiOff } from "lucide-react";
 import { useEffect, useState } from "react";
 import { OfflineCacheWarmer } from "@/components/offline-cache-warmer";
 import { Progress } from "@/components/ui/progress";
+import type { OccurrenceStatus } from "@/db/schema/schedule";
 import { useIsOffline } from "@/hooks/use-is-offline";
 import { formatTime, parseTime, toIsoDate, zonedNow } from "@/lib/scheduler/dates";
 import { dayLabel } from "@/lib/scheduler/format";
 import { progressOf, type TodayTask } from "@/lib/today/progress";
 import type { QueuedChange } from "@/lib/today/queue";
-import type { CheckOffResult } from "@/lib/today/schemas";
+import { type CheckOffResult, isEditableDay } from "@/lib/today/schemas";
 import { sessionSlots } from "@/lib/today/slots";
 import { streakLine } from "@/lib/today/streak";
+import { elapsedMs } from "@/lib/today/timers";
 import { TaskRow } from "./task-row";
+import { TimerBanner } from "./timer-banner";
+import type { CheckOffDetails } from "./use-check-off-queue";
 import { useCheckOffs } from "./use-check-offs";
+import { useTimers } from "./use-timers";
 
 /** Pages whose offline copies show today's check-offs. */
 const TODAY_PAGES = ["/", "/plan", "/earlier-days"];
@@ -48,7 +53,14 @@ export function TodaySession({
   const isOffline = useIsOffline();
   const [deviceDate, setDeviceDate] = useState<string | null>(null);
 
-  const { withChanges, update, isQueued, failing, synced } = useCheckOffs({ userId, tasks, send });
+  const { withChanges, update, record, isQueued, failing, synced } = useCheckOffs({
+    userId,
+    tasks,
+    send,
+  });
+  const timers = useTimers(userId);
+  const [capped, setCapped] = useState<ReadonlySet<string>>(new Set());
+  const [announcement, setAnnouncement] = useState("");
 
   useEffect(() => {
     setDeviceDate(toIsoDate(zonedNow(timeZone, new Date()).day));
@@ -64,6 +76,54 @@ export function TodaySession({
   const streak = pastStreak + (progress.complete ? 1 : 0);
   const startMinutes = start === null ? null : parseTime(start);
 
+  function save(task: TodayTask, status: OccurrenceStatus, details: CheckOffDetails) {
+    if (status !== "done" || details.actualMinutes !== undefined) {
+      setCapped((current) => without(current, task.occurrenceId));
+    }
+    update(task, status, details);
+  }
+
+  // Checking a timed task off is the same as stopping its timer; any other status drops it.
+  function changeStatus(task: TodayTask, status: OccurrenceStatus) {
+    if (status === "done" && timers.timers[task.occurrenceId]) {
+      stopTimer(task);
+      return;
+    }
+    if (timers.timers[task.occurrenceId]) {
+      timers.clear(task.occurrenceId);
+    }
+    save(task, status, { actualMinutes: null, note: null });
+  }
+
+  function stopTimer(task: TodayTask) {
+    const stopped = timers.stop(task.occurrenceId);
+    if (!stopped) {
+      return;
+    }
+    save(task, "done", { actualMinutes: stopped.minutes, note: null });
+    if (stopped.capped) {
+      setCapped((current) => new Set(current).add(task.occurrenceId));
+    }
+    setAnnouncement(`Timer stopped. ${task.name} took ${stopped.minutes} min.`);
+  }
+
+  const timerFor = (task: TodayTask) => {
+    const entry = timers.timers[task.occurrenceId];
+    return {
+      elapsedMs: entry ? elapsedMs(entry, timers.now) : null,
+      running: entry?.startedAt != null,
+      onStart: () => {
+        timers.start(task.occurrenceId, date);
+        setAnnouncement(`Timer ${entry ? "resumed" : "started"} for ${task.name}.`);
+      },
+      onPause: () => {
+        timers.pause(task.occurrenceId);
+        setAnnouncement(`Timer paused for ${task.name}.`);
+      },
+      onStop: () => stopTimer(task),
+    };
+  };
+
   const row = (task: TodayTask, index?: number) => (
     <TaskRow
       key={task.occurrenceId}
@@ -72,10 +132,47 @@ export function TodaySession({
       slot={index === undefined ? undefined : slots[index]}
       pending={isQueued(task.occurrenceId) && (isOffline || failing)}
       disabled={stale}
-      onChange={(status) => update(task, status, null)}
-      onMinutes={task.kind === "cleaning" ? (minutes) => update(task, "done", minutes) : undefined}
+      onChange={(status) => changeStatus(task, status)}
+      onMinutes={
+        task.kind === "cleaning"
+          ? (minutes) => save(task, "done", { actualMinutes: minutes })
+          : undefined
+      }
+      onNote={task.kind === "cleaning" ? (note) => save(task, "done", { note }) : undefined}
+      timer={task.kind === "cleaning" && !stale ? timerFor(task) : undefined}
+      capped={capped.has(task.occurrenceId)}
     />
   );
+
+  const activeId = timers.running ?? Object.keys(timers.timers)[0] ?? null;
+  const active = activeId === null ? undefined : timers.timers[activeId];
+  const activeTask = cleaning.find((t) => t.occurrenceId === activeId) ?? null;
+  const banner =
+    activeId !== null && active && !stale ? (
+      <TimerBanner
+        occurrenceId={activeId}
+        taskName={activeTask?.name ?? null}
+        date={active.date}
+        elapsedMs={elapsedMs(active, timers.now)}
+        running={active.startedAt !== null}
+        disabled={stale}
+        onStop={
+          !activeTask && active.date < date && isEditableDay(active.date, date)
+            ? () => {
+                const stopped = timers.stop(activeId);
+                if (stopped) {
+                  record(activeId, "done", { actualMinutes: stopped.minutes, note: null });
+                  setAnnouncement(`Timer stopped. Saved ${stopped.minutes} min.`);
+                }
+              }
+            : undefined
+        }
+        onDiscard={() => {
+          timers.clear(activeId);
+          setAnnouncement("Timer discarded.");
+        }}
+      />
+    ) : null;
 
   return (
     <div className="flex flex-col gap-5">
@@ -133,6 +230,7 @@ export function TodaySession({
           <h2 id="session-heading" className="sr-only">
             Today's session
           </h2>
+          {banner}
           <div aria-live="polite">
             {progress.complete ? (
               <p className="flex items-center gap-2 text-base font-medium">
@@ -179,7 +277,19 @@ export function TodaySession({
         </section>
       ) : null}
 
+      <p aria-live="polite" className="sr-only">
+        {announcement}
+      </p>
       <OfflineCacheWarmer urls={TODAY_PAGES} version={`${version}-${synced}`} />
     </div>
   );
+}
+
+function without(set: ReadonlySet<string>, id: string): ReadonlySet<string> {
+  if (!set.has(id)) {
+    return set;
+  }
+  const next = new Set(set);
+  next.delete(id);
+  return next;
 }

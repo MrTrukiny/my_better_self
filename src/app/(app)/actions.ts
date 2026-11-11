@@ -10,10 +10,10 @@ import { getCurrentUser } from "@/lib/session";
 import { calibrateTask } from "@/lib/tasks/calibrate";
 import { tasksTag } from "@/lib/tasks/queries";
 import {
-  actualMinutesUpdate,
   type CheckOffResult,
   checkOffDecision,
   checkOffInputSchema,
+  completionUpdate,
 } from "@/lib/today/schemas";
 
 /** A failed calibration is logged, not reported: the check-off itself was saved. */
@@ -38,7 +38,7 @@ export async function setOccurrenceStatus(input: unknown): Promise<CheckOffResul
   if (!parsed.success) {
     return "invalid";
   }
-  const { occurrenceId, status, actualMinutes } = parsed.data;
+  const { occurrenceId, status, actualMinutes, note } = parsed.data;
   try {
     const [stored] = await db
       .select({
@@ -59,6 +59,7 @@ export async function setOccurrenceStatus(input: unknown): Promise<CheckOffResul
       today,
       status,
       actualMinutes,
+      note,
     );
     if (decision !== "apply") {
       return decision;
@@ -68,7 +69,7 @@ export async function setOccurrenceStatus(input: unknown): Promise<CheckOffResul
       .set({
         status,
         completedAt: status === "scheduled" ? null : new Date(),
-        ...actualMinutesUpdate(status, actualMinutes),
+        ...completionUpdate(status, actualMinutes, note),
       })
       .where(and(eq(occurrence.id, occurrenceId), eq(occurrence.userId, user.id)));
     const calibrated =

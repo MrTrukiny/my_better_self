@@ -24,5 +24,5 @@ alwaysApply: false
 ## Workflow
 
 - Write or update the failing test first, then the implementation.
-- Run `pnpm test` (or `pnpm test:watch`) while iterating, `pnpm check:fast` after each task, and `pnpm check` before declaring done.
+- Run `pnpm test` (or `pnpm test:watch`) while iterating, `pnpm check:fast` after each task, and a live browser QA session before declaring done. Don't run e2e locally (slow); CI runs the full suite on every PR. When an e2e check fails in CI, reproduce only that spec locally (`pnpm exec playwright test e2e/<file> --workers=2`).
 - Never delete or weaken a test to make it pass. If a test is wrong, explain why in the commit message.

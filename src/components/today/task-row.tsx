@@ -9,6 +9,8 @@ import { formatMinutes } from "@/lib/tasks/format";
 import type { TodayTask } from "@/lib/today/progress";
 import type { Slot } from "@/lib/today/slots";
 import { cn } from "@/lib/utils";
+import { NoteField } from "./note-field";
+import { type RowTimer, TimerControls } from "./timer-controls";
 import { TookField } from "./took-field";
 
 export function TaskRow({
@@ -20,6 +22,9 @@ export function TaskRow({
   disabled,
   onChange,
   onMinutes,
+  onNote,
+  timer,
+  capped,
 }: {
   task: TodayTask;
   /** Added to the controls' accessible names when the day isn't today, such as "Monday, Oct 26". */
@@ -33,13 +38,26 @@ export function TaskRow({
   onChange: (status: OccurrenceStatus) => void;
   /** Saves the minutes a done cleaning task took; routines don't take them. */
   onMinutes?: (minutes: number | null) => void;
+  /** Saves a done cleaning task's note (spec 016). */
+  onNote?: (note: string | null) => void;
+  /** Today's open cleaning tasks only (spec 016). */
+  timer?: RowTimer;
+  /** The last stop hit the 240-minute cap. */
+  capped?: boolean;
 }) {
   const done = task.status === "done";
   const skipped = task.status === "skipped";
   const cleaning = task.kind === "cleaning";
   const name = context ? `${task.name}, ${context}` : task.name;
+  const timing = timer !== undefined && timer.elapsedMs !== null;
   return (
-    <li className="flex flex-col gap-1 py-2">
+    <li
+      id={`task-${task.occurrenceId}`}
+      className={cn(
+        "flex scroll-mt-24 flex-col gap-1 py-2",
+        timer?.running && "bg-muted/60 -mx-2 rounded-lg px-2",
+      )}
+    >
       {position === undefined ? null : (
         <p className="text-muted-foreground text-xs font-medium tabular-nums">
           {position}
@@ -78,7 +96,10 @@ export function TaskRow({
                 {skipped ? "Skipped" : formatMinutes(task.minutes)}
               </span>
             ) : null}
-            {cleaning ? (
+            {timer && !done && !skipped ? (
+              <TimerControls timer={timer} taskName={name} disabled={disabled} />
+            ) : null}
+            {cleaning && !timing ? (
               <Button
                 type="button"
                 variant="ghost"
@@ -108,6 +129,14 @@ export function TaskRow({
             disabled={disabled}
             onSave={onMinutes}
           />
+          {capped ? (
+            <p className="text-muted-foreground text-sm">
+              Timer capped at 240 min. Correct it if needed.
+            </p>
+          ) : null}
+          {onNote ? (
+            <NoteField taskName={name} value={task.note} disabled={disabled} onSave={onNote} />
+          ) : null}
         </div>
       ) : null}
     </li>
