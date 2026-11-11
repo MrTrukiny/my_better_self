@@ -153,7 +153,7 @@ async function planRange(
   );
   const { days, firstDues } = schedule({
     tasks: tasks.map((t) => ({ ...t, kind: t.kind === "routine" ? "routine" : "cleaning" })),
-    settings,
+    people: [{ id: userId, budgets: settings, start: from }],
     lastDone,
     from,
     to,

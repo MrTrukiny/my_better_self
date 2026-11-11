@@ -93,7 +93,13 @@ function simulate(days: number, works: (day: DayNumber) => boolean, settings: Bu
       HOME.map((t) => ({ ...t, firstDue: firstDues.get(t.id) ?? null })),
       past,
     );
-    const result = schedule({ tasks: HOME, settings, lastDone, from: day, to: day + 6 });
+    const result = schedule({
+      tasks: HOME,
+      people: [{ id: "owner", budgets: settings, start: day }],
+      lastDone,
+      from: day,
+      to: day + 6,
+    });
     for (const [id, due] of result.firstDues) firstDues.set(id, due);
     const future = result.days.flatMap((d) =>
       d.taskIds.map((taskId) => ({ taskId, day: d.day, status: "scheduled" as const })),

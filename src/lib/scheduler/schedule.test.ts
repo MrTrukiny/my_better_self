@@ -49,7 +49,13 @@ function averageLoad(tasks: SchedulerTask[]): number {
 }
 
 function run(tasks: SchedulerTask[], budgets: Budgets, days: number, lastDone = new Map()) {
-  return schedule({ tasks, settings: budgets, lastDone, from: MONDAY, to: MONDAY + days - 1 }).days;
+  return schedule({
+    tasks,
+    people: [{ id: "owner", budgets, start: MONDAY }],
+    lastDone,
+    from: MONDAY,
+    to: MONDAY + days - 1,
+  }).days;
 }
 
 function sessionsOf(plan: ReturnType<typeof run>, id: string): DayNumber[] {
@@ -235,7 +241,7 @@ describe("schedule", () => {
     ];
     const { firstDues } = schedule({
       tasks,
-      settings: EVERY_DAY,
+      people: [{ id: "owner", budgets: EVERY_DAY, start: MONDAY }],
       lastDone: new Map([["weekly", MONDAY - 3]]),
       from: MONDAY,
       to: MONDAY + 6,
@@ -243,5 +249,166 @@ describe("schedule", () => {
     expect([...firstDues.keys()]).toEqual(["monthly"]);
     expect(firstDues.get("monthly")).toBeGreaterThanOrEqual(MONDAY);
     expect(firstDues.get("monthly")).toBeLessThan(MONDAY + 30);
+  });
+});
+
+describe("schedule for a household", () => {
+  const SHORT: Budgets = { ...EVERY_DAY, weekdayMinutes: 30, weekendMinutes: 30 };
+  const LONG: Budgets = { ...EVERY_DAY, weekdayMinutes: 90, weekendMinutes: 90 };
+
+  function household(
+    people: { id: string; budgets: Budgets; start?: DayNumber }[],
+    days: number,
+    options: {
+      tasks?: SchedulerTask[];
+      kept?: { personId: string; taskId: string; day: DayNumber }[];
+    } = {},
+  ) {
+    return schedule({
+      tasks: options.tasks ?? HOME,
+      people: people.map((p) => ({ ...p, start: p.start ?? MONDAY })),
+      kept: options.kept,
+      lastDone: new Map(),
+      from: MONDAY,
+      to: MONDAY + days - 1,
+    }).days;
+  }
+
+  function minutesBy(plan: ReturnType<typeof household>, tasks: SchedulerTask[] = HOME) {
+    const totals = new Map<string, number>();
+    for (const day of plan) {
+      for (const [person, ids] of day.byPerson) {
+        totals.set(person, (totals.get(person) ?? 0) + minutesOn(tasks, ids));
+      }
+    }
+    return totals;
+  }
+
+  it("AC5: gives every task to one person and never exceeds anyone's budget", () => {
+    const people = [
+      { id: "a", budgets: EVERY_DAY },
+      { id: "b", budgets: WEDNESDAY_OFF },
+    ];
+    const plan = household(people, 60);
+    for (const day of plan) {
+      const given = [...day.byPerson.values()].flat();
+      expect(given.toSorted()).toEqual(day.taskIds.toSorted());
+      for (const person of people) {
+        const minutes = minutesOn(HOME, day.byPerson.get(person.id) ?? []);
+        expect(minutes).toBeLessThanOrEqual(budgetFor(person.budgets, day.day));
+      }
+    }
+  });
+
+  it("AC5: splits the minutes in proportion to each person's available time", () => {
+    const even = minutesBy(
+      household(
+        [
+          { id: "a", budgets: EVERY_DAY },
+          { id: "b", budgets: EVERY_DAY },
+        ],
+        28,
+      ),
+    );
+    const a = even.get("a") ?? 0;
+    const b = even.get("b") ?? 0;
+    expect(Math.abs(a - b) / (a + b)).toBeLessThan(0.1);
+
+    const uneven = minutesBy(
+      household(
+        [
+          { id: "a", budgets: SHORT },
+          { id: "b", budgets: LONG },
+        ],
+        28,
+      ),
+    );
+    const short = uneven.get("a") ?? 0;
+    const long = uneven.get("b") ?? 0;
+    expect(short / (short + long)).toBeGreaterThan(0.25 * 0.8);
+    expect(short / (short + long)).toBeLessThan(0.25 * 1.2);
+  });
+
+  it("AC5: plans the whole home with two people as with one person with both budgets", () => {
+    const plan = household(
+      [
+        { id: "a", budgets: SHORT },
+        { id: "b", budgets: SHORT },
+      ],
+      90,
+    );
+    for (const task of HOME) {
+      const sessions = sessionsOf(plan, task.id);
+      for (let i = 1; i < sessions.length; i++) {
+        expect((sessions[i] ?? 0) - (sessions[i - 1] ?? 0), task.id).toBeLessThanOrEqual(
+          task.frequencyDays + 1,
+        );
+      }
+    }
+  });
+
+  it("AC5: gives nothing to a person on a day off", () => {
+    const plan = household(
+      [
+        { id: "a", budgets: EVERY_DAY },
+        { id: "b", budgets: WEDNESDAY_OFF },
+      ],
+      14,
+    );
+    for (const day of plan.filter((d) => weekdayIndex(d.day) === 2)) {
+      expect(day.byPerson.get("b") ?? []).toEqual([]);
+    }
+  });
+
+  it("keeps a person's tasks before their start and counts them as handled", () => {
+    const tasks = [cleaning("counters", 5, 2), cleaning("sink", 10, 7)];
+    const plan = household(
+      [
+        { id: "a", budgets: EVERY_DAY },
+        { id: "b", budgets: EVERY_DAY, start: MONDAY + 1 },
+      ],
+      7,
+      { tasks, kept: [{ personId: "b", taskId: "counters", day: MONDAY }] },
+    );
+    expect(plan[0]?.byPerson.get("b")).toBeUndefined();
+    expect(plan[0]?.taskIds).not.toContain("counters");
+    expect(sessionsOf(plan, "counters")[0]).toBeGreaterThanOrEqual(MONDAY + 1);
+  });
+
+  it("shares routines, preferring people with a session that day", () => {
+    const tasks: SchedulerTask[] = [
+      { id: "bed", name: "Make the bed", kind: "routine", minutes: 2, frequencyDays: 1 },
+      { id: "dishes", name: "Dishes", kind: "routine", minutes: 15, frequencyDays: 1 },
+    ];
+    const plan = household(
+      [
+        { id: "a", budgets: EVERY_DAY },
+        { id: "b", budgets: WEDNESDAY_OFF },
+      ],
+      14,
+      {
+        tasks,
+      },
+    );
+    const routineMinutes = minutesBy(plan, tasks);
+    expect(routineMinutes.get("a")).toBeGreaterThan(0);
+    expect(routineMinutes.get("b")).toBeGreaterThan(0);
+    for (const day of plan.filter((d) => weekdayIndex(d.day) === 2)) {
+      expect(day.byPerson.get("b") ?? []).toEqual([]);
+      expect(day.byPerson.get("a")).toHaveLength(2);
+    }
+  });
+
+  it("plans nothing without people", () => {
+    const plan = household([], 7);
+    expect(plan.every((day) => day.taskIds.length === 0)).toBe(true);
+  });
+
+  it("gives the same plan whatever the order of people", () => {
+    const people = [
+      { id: "a", budgets: EVERY_DAY },
+      { id: "b", budgets: WEDNESDAY_OFF },
+    ];
+    expect(household([...people].reverse(), 30)).toEqual(household(people, 30));
   });
 });
