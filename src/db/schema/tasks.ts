@@ -83,6 +83,36 @@ export const taskProposal = pgTable(
   ],
 );
 
+export const ADJUSTMENT_CHANGES = ["minutes", "frequency", "new_task"] as const;
+export type AdjustmentChange = (typeof ADJUSTMENT_CHANGES)[number];
+
+/**
+ * A pending AI suggestion for one cleaning task (spec 017): new minutes, a new frequency, or a
+ * new task for the same place. Values the change doesn't use are null.
+ */
+export const taskAdjustment = pgTable(
+  "task_adjustment",
+  {
+    id: id(),
+    userId: owner(),
+    taskId: text("task_id")
+      .notNull()
+      .references(() => task.id, { onDelete: "cascade" }),
+    change: text("change").notNull(),
+    name: text("name"),
+    minutes: integer("minutes"),
+    frequencyDays: integer("frequency_days"),
+    reason: text("reason").notNull(),
+    /** The times and notes the AI saw, written by code when it was asked. */
+    evidence: text("evidence").notNull(),
+    ...timestamps,
+  },
+  (table) => [
+    index("task_adjustment_user_id_idx").on(table.userId),
+    check("task_adjustment_change", sql`${table.change} in ('minutes', 'frequency', 'new_task')`),
+  ],
+);
+
 export const taskRelations = relations(task, ({ one }) => ({
   room: one(room, { fields: [task.roomId], references: [room.id] }),
   item: one(item, { fields: [task.itemId], references: [item.id] }),

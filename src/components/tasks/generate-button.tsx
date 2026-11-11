@@ -6,30 +6,40 @@ import { useEditsDisabled } from "@/components/inventory/edit-guard";
 import { Button } from "@/components/ui/button";
 import { GENERATE_IDLE, type GenerateState } from "@/lib/tasks/generate-state";
 
-const PROGRESS = [
-  { after: 0, text: "Reading your inventory..." },
-  { after: 2_000, text: "Proposing tasks..." },
-  { after: 20_000, text: "Still working. This can take up to a minute..." },
-];
+/** What the button says while idle, busy, and done. */
+export type GenerateCopy = {
+  label: string;
+  /** Busy text, by milliseconds since the request started. */
+  progress: { after: number; text: string }[];
+  result: (count: number) => string;
+};
 
-function resultMessage(state: GenerateState, scopeLabel: string): string {
-  if (state.status !== "success") {
-    return "";
-  }
-  if (state.count === 0) {
-    return `No new tasks to propose for ${scopeLabel}.`;
-  }
-  return `${state.count} ${state.count === 1 ? "task" : "tasks"} proposed for ${scopeLabel}.`;
+function proposalCopy(scopeLabel: string): GenerateCopy {
+  return {
+    label: "Propose tasks",
+    progress: [
+      { after: 0, text: "Reading your inventory..." },
+      { after: 2_000, text: "Proposing tasks..." },
+      { after: 20_000, text: "Still working. This can take up to a minute..." },
+    ],
+    result: (count) =>
+      count === 0
+        ? `No new tasks to propose for ${scopeLabel}.`
+        : `${count} ${count === 1 ? "task" : "tasks"} proposed for ${scopeLabel}.`,
+  };
 }
 
 export function GenerateButton({
   action,
-  scopeLabel,
+  scopeLabel = "the whole home",
+  copy = proposalCopy(scopeLabel),
   unavailableReason,
 }: {
   action: () => Promise<GenerateState>;
-  /** How the scope reads in a sentence: "the whole home" or a room name. */
-  scopeLabel: string;
+  /** How the scope of task proposals reads in a sentence: "the whole home" or a room name. */
+  scopeLabel?: string;
+  /** Replaces the task proposal wording, for other AI requests. */
+  copy?: GenerateCopy;
   unavailableReason?: string;
 }) {
   const [state, setState] = useState<GenerateState>(GENERATE_IDLE);
@@ -61,7 +71,7 @@ export function GenerateButton({
     });
   }
 
-  const progress = PROGRESS.findLast((step) => elapsed >= step.after) ?? PROGRESS[0];
+  const progress = copy.progress.findLast((step) => elapsed >= step.after) ?? copy.progress[0];
 
   return (
     <div className="flex flex-col gap-3">
@@ -80,7 +90,7 @@ export function GenerateButton({
         ) : (
           <>
             <Sparkles aria-hidden />
-            Propose tasks
+            {copy.label}
           </>
         )}
       </Button>
@@ -90,7 +100,7 @@ export function GenerateButton({
         </p>
       ) : null}
       <p role="status" className="text-sm">
-        {resultMessage(state, scopeLabel)}
+        {state.status === "success" ? copy.result(state.count) : ""}
       </p>
       {state.status === "error" ? (
         <div

@@ -2,7 +2,16 @@ import "server-only";
 import { asc, eq } from "drizzle-orm";
 import { cacheTag } from "next/cache";
 import { db } from "@/db";
-import { homeProfile, item, room, scheduleSettings, task, taskProposal } from "@/db/schema";
+import {
+  type AdjustmentChange,
+  homeProfile,
+  item,
+  room,
+  scheduleSettings,
+  task,
+  taskAdjustment,
+  taskProposal,
+} from "@/db/schema";
 import type { ProposalInput } from "@/lib/ai/task-proposals";
 import { inventoryTag } from "@/lib/inventory/queries";
 import { getCurrentUser } from "@/lib/session";
@@ -27,6 +36,20 @@ export type TaskEntry = {
   calibration?: { from: number; samples: number } | null;
 };
 
+/** A pending AI suggestion with the task it is for (spec 017). */
+export type PendingAdjustment = {
+  id: string;
+  change: AdjustmentChange;
+  name: string | null;
+  minutes: number | null;
+  frequencyDays: number | null;
+  reason: string;
+  evidence: string;
+  task: TaskEntry;
+  roomId: string | null;
+  roomName: string | null;
+};
+
 /** Cache tag for one user's home profile, tasks, and proposals. */
 export function tasksTag(userId: string): string {
   return `tasks:${userId}`;
@@ -45,6 +68,11 @@ export async function getTasks(): Promise<TaskEntry[]> {
 export async function getProposals(): Promise<TaskEntry[]> {
   const user = await getCurrentUser();
   return proposalsForUser(user.id);
+}
+
+export async function getAdjustments(): Promise<PendingAdjustment[]> {
+  const user = await getCurrentUser();
+  return adjustmentsForUser(user.id);
 }
 
 /** Rooms with their item ids and the targets of every task and pending proposal. */
@@ -108,6 +136,36 @@ async function tasksForUser(userId: string): Promise<TaskEntry[]> {
       calibratedFrom === null || calibratedSamples === null
         ? null
         : { from: calibratedFrom, samples: calibratedSamples },
+  }));
+}
+
+async function adjustmentsForUser(userId: string): Promise<PendingAdjustment[]> {
+  "use cache";
+  cacheTag(tasksTag(userId), inventoryTag(userId));
+
+  const rows = await db
+    .select({
+      id: taskAdjustment.id,
+      change: taskAdjustment.change,
+      name: taskAdjustment.name,
+      minutes: taskAdjustment.minutes,
+      frequencyDays: taskAdjustment.frequencyDays,
+      reason: taskAdjustment.reason,
+      evidence: taskAdjustment.evidence,
+      task: { ...entryColumns(task), roomName: room.name, itemName: item.name },
+    })
+    .from(taskAdjustment)
+    .innerJoin(task, eq(task.id, taskAdjustment.taskId))
+    .leftJoin(room, eq(room.id, task.roomId))
+    .leftJoin(item, eq(item.id, task.itemId))
+    .where(eq(taskAdjustment.userId, userId))
+    .orderBy(asc(taskAdjustment.createdAt), asc(taskAdjustment.id));
+  return rows.map(({ change, task: entry, ...row }) => ({
+    ...row,
+    change: change as AdjustmentChange,
+    task: toEntry(entry),
+    roomId: entry.roomId,
+    roomName: entry.roomName,
   }));
 }
 
