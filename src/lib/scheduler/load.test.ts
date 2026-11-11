@@ -34,4 +34,11 @@ describe("loadSummary", () => {
     expect(summary.availablePerDay).toBeCloseTo(120 / 7);
     expect(summary.overloaded).toBe(true);
   });
+
+  it("spec 015: adds up everyone's schedules in a household", () => {
+    const summary = loadSummary([task("cleaning", 60, 1)], [EVERY_DAY, EVERY_DAY]);
+    expect(summary.availablePerDay).toBeCloseTo((2 * (5 * 45 + 2 * 60)) / 7);
+    expect(summary.overloaded).toBe(false);
+    expect(summary.shared).toBe(true);
+  });
 });

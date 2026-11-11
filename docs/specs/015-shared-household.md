@@ -65,7 +65,7 @@ Decisions in [ADR 0011](../decisions/0011-shared-household.md).
 - [x] T3: Planner for several people: per-person bins, balancing by available minutes, per-person start day, and routines. Files: `src/lib/scheduler/schedule.ts` (+ test). Covers: AC5.
 - [x] T4: Household replanning, with every member's settings locked, frozen days kept, rows per person, every member's calendar synced, and the daily job. Files: `src/lib/scheduler/plan.ts`, `src/lib/scheduler/household-range.ts` (+ test), `src/app/api/cron/daily/route.ts`, the callers of `replan` and `replanAfterChange`. Covers: AC4, AC5, AC6.
 - [x] T5: Household page and actions: invite, cancel, remove, and leave (removing or leaving deletes the person and replans), plus the Settings row. Files: `src/app/(app)/household/{page,actions}.ts(x)`, `src/components/household/*` (+ tests), `src/app/(app)/settings/page.tsx`. Covers: AC1, AC3, AC7, AC8.
-- [ ] T6: Plan household view with person labels. Files: `src/lib/scheduler/queries.ts`, `src/app/(app)/plan/page.tsx`, `src/components/plan/*` (+ tests). Covers: AC6.
+- [x] T6: Plan household view with person labels. Files: `src/lib/scheduler/queries.ts`, `src/app/(app)/plan/page.tsx`, `src/components/plan/*` (+ tests). Covers: AC6.
 - [ ] T7: E2E and docs. Files: `e2e/household.spec.ts`, `e2e/support/auth.ts` (add a member), `docs/ARCHITECTURE.md`, `docs/DEPLOYMENT.md`. Covers: AC1 to AC8.
 
 ### Test plan

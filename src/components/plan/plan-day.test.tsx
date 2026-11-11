@@ -43,6 +43,31 @@ describe("PlanDay", () => {
     );
   });
 
+  it("spec 015 AC6: labels each task with its person in the household view", () => {
+    const shared: PlanDayView = {
+      ...day,
+      off: true,
+      cleaning: day.cleaning.map((task) => ({ ...task, person: "Sam" })),
+      routines: [
+        {
+          id: "r",
+          kind: "routine",
+          name: "Make the bed",
+          minutes: 2,
+          roomName: null,
+          itemName: null,
+          person: "Ana",
+        },
+      ],
+    };
+    render(<PlanDay day={shared} household overlap />);
+    expect(screen.getByText("Kitchen · Sam")).toBeInTheDocument();
+    expect(screen.getByText("Make the bed · Ana")).toBeInTheDocument();
+    expect(screen.getByText("38 min planned")).toBeInTheDocument();
+    expect(screen.queryByText("Day off")).toBeNull();
+    expect(screen.queryByText(/Overlaps another event/)).toBeNull();
+  });
+
   it("AC4: says nothing without an overlap, or on a day without cleaning", () => {
     const { unmount } = render(<PlanDay day={day} />);
     expect(screen.queryByText(/Overlaps another event/)).toBeNull();

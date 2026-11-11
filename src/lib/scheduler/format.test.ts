@@ -88,8 +88,8 @@ describe("format helpers", () => {
   });
 
   it("AC5: rounds the load summary to whole minutes", () => {
-    expect(loadLine({ neededPerDay: 40.6, availablePerDay: 47.9, overloaded: false })).toBe(
-      "Your tasks need about 41 min a day; you have about 48.",
-    );
+    expect(
+      loadLine({ neededPerDay: 40.6, availablePerDay: 47.9, overloaded: false, shared: false }),
+    ).toBe("Your tasks need about 41 min a day; you have about 48.");
   });
 });
