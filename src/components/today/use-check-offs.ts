@@ -59,9 +59,14 @@ export function useCheckOffs({
   // Details go only with a done status; any other status clears them on the server. A done
   // change on top of a done one keeps the details it leaves out, as the queue does.
   function update(task: TodayTask, status: OccurrenceStatus, details: CheckOffDetails = {}) {
+    record(task.occurrenceId, status, details);
+  }
+
+  /** Like `update`, for an occurrence the page doesn't list (a timer left on an earlier day). */
+  function record(occurrenceId: string, status: OccurrenceStatus, details: CheckOffDetails = {}) {
     const sent = status === "done" ? details : {};
     setLocal((prev) => {
-      const previous = prev[task.occurrenceId];
+      const previous = prev[occurrenceId];
       const next: Change =
         previous?.status === "done" && status === "done"
           ? {
@@ -71,14 +76,15 @@ export function useCheckOffs({
               note: sent.note ?? (sent.note === null ? null : previous.note),
             }
           : { status, ...sent };
-      return { ...prev, [task.occurrenceId]: next };
+      return { ...prev, [occurrenceId]: next };
     });
-    change(task.occurrenceId, status, sent);
+    change(occurrenceId, status, sent);
   }
 
   return {
     withChanges,
     update,
+    record,
     isQueued: (occurrenceId: string) => queued.has(occurrenceId),
     failing,
     /** Counts emptied queues, so offline copies can be refreshed. */

@@ -1,6 +1,7 @@
 import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { dayLabel } from "@/lib/scheduler/format";
 import type { TodayTask } from "@/lib/today/progress";
 import { queueKey, readQueue } from "@/lib/today/queue";
 import type { CheckOffResult } from "@/lib/today/schemas";
@@ -261,5 +262,182 @@ describe("TodaySession", () => {
       "aria-disabled",
       "true",
     );
+  });
+});
+
+describe("TodaySession timers (spec 016)", () => {
+  const MINUTE = 60_000;
+  const timerKey = `mbs:timer:${USER}`;
+
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true, now: new Date("2026-11-10T08:00:00Z") });
+    return () => vi.useRealTimers();
+  });
+
+  const setup = () => userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+  const today = () => new Intl.DateTimeFormat("en-CA", { timeZone: "UTC" }).format(new Date());
+  const startButton = (name: string) =>
+    screen.getByRole("button", { name: `Start timer for ${name}` });
+
+  it("AC1, AC8: starting shows the running time with pause and stop, and announces it", async () => {
+    const user = setup();
+    renderSession({ date: today() });
+    await user.click(startButton("Wipe counters"));
+    await act(() => vi.advanceTimersByTimeAsync(65_000));
+
+    const row = screen.getByRole("checkbox", { name: /Wipe counters/ }).closest("li");
+    expect(row).toHaveTextContent("01:05");
+    expect(screen.getByRole("button", { name: "Pause timer for Wipe counters" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Stop timer for Wipe counters" })).toBeVisible();
+    expect(screen.queryByRole("button", { name: "Skip Wipe counters" })).not.toBeInTheDocument();
+    expect(startButton("Sweep floor")).toBeVisible();
+    expect(screen.getByText("Timer started for Wipe counters.")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Wipe counters" })).toHaveAttribute(
+      "href",
+      "#task-o-counters",
+    );
+  });
+
+  it("AC2: starting another timer pauses the first and keeps its time", async () => {
+    const user = setup();
+    renderSession({ date: today() });
+    await user.click(startButton("Wipe counters"));
+    await act(() => vi.advanceTimersByTimeAsync(2 * MINUTE));
+    await user.click(startButton("Sweep floor"));
+
+    expect(screen.getByRole("button", { name: "Resume timer for Wipe counters" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Pause timer for Sweep floor" })).toBeVisible();
+    await act(() => vi.advanceTimersByTimeAsync(5 * MINUTE));
+    const first = screen.getByRole("checkbox", { name: /Wipe counters/ }).closest("li");
+    expect(first).toHaveTextContent("02:00");
+  });
+
+  it("AC3: pausing stops the time, and resuming continues from it", async () => {
+    const user = setup();
+    renderSession({ date: today() });
+    await user.click(startButton("Wipe counters"));
+    await act(() => vi.advanceTimersByTimeAsync(3 * MINUTE));
+    await user.click(screen.getByRole("button", { name: "Pause timer for Wipe counters" }));
+    expect(screen.getByText("Timer paused for Wipe counters.")).toBeInTheDocument();
+    await act(() => vi.advanceTimersByTimeAsync(10 * MINUTE));
+    const row = () => screen.getByRole("checkbox", { name: /Wipe counters/ }).closest("li");
+    expect(row()).toHaveTextContent("03:00");
+    await user.click(screen.getByRole("button", { name: "Resume timer for Wipe counters" }));
+    await act(() => vi.advanceTimersByTimeAsync(MINUTE));
+    expect(row()).toHaveTextContent("04:00");
+  });
+
+  it("AC4, AC5: stopping checks the task off with the measured minutes, which stay editable", async () => {
+    const user = setup();
+    const { send } = renderSession({ date: today() });
+    await user.click(startButton("Wipe counters"));
+    await act(() => vi.advanceTimersByTimeAsync(12 * MINUTE + 30_000));
+    await user.click(screen.getByRole("button", { name: "Stop timer for Wipe counters" }));
+
+    expect(screen.getByRole("checkbox", { name: /Wipe counters/ })).toBeChecked();
+    const took = screen.getByRole("textbox", { name: "Minutes taken for Wipe counters" });
+    expect(took).toHaveValue("13");
+    expect(screen.getByText("Timer stopped. Wipe counters took 13 min.")).toBeInTheDocument();
+    await waitFor(() =>
+      expect(send).toHaveBeenCalledWith(
+        expect.objectContaining({ occurrenceId: "o-counters", status: "done", actualMinutes: 13 }),
+      ),
+    );
+    expect(localStorage.getItem(timerKey)).toBeNull();
+
+    await user.clear(took);
+    await user.type(took, "10{Enter}");
+    await waitFor(() =>
+      expect(send).toHaveBeenLastCalledWith(
+        expect.objectContaining({ occurrenceId: "o-counters", actualMinutes: 10 }),
+      ),
+    );
+  });
+
+  it("AC4: a timer left running is capped at 240 minutes, with a notice", async () => {
+    const user = setup();
+    localStorage.setItem(
+      timerKey,
+      JSON.stringify({
+        "o-counters": { date: today(), elapsedMs: 0, startedAt: Date.now() - 300 * MINUTE },
+      }),
+    );
+    renderSession({ date: today() });
+    await user.click(screen.getByRole("button", { name: "Stop timer for Wipe counters" }));
+    expect(screen.getByRole("textbox", { name: "Minutes taken for Wipe counters" })).toHaveValue(
+      "240",
+    );
+    expect(screen.getByText("Timer capped at 240 min. Correct it if needed.")).toBeInTheDocument();
+  });
+
+  it("AC5: checking a timed task stops its timer; unchecking clears it", async () => {
+    const user = setup();
+    renderSession({ date: today() });
+    await user.click(startButton("Sweep floor"));
+    await act(() => vi.advanceTimersByTimeAsync(4 * MINUTE));
+    await user.click(screen.getByRole("checkbox", { name: /Sweep floor/ }));
+    expect(screen.getByRole("textbox", { name: "Minutes taken for Sweep floor" })).toHaveValue("4");
+
+    await user.click(screen.getByRole("checkbox", { name: /Sweep floor/ }));
+    expect(startButton("Sweep floor")).toBeVisible();
+    expect(localStorage.getItem(timerKey)).toBeNull();
+  });
+
+  it("AC7: a timer survives a reload and keeps counting from its start", () => {
+    localStorage.setItem(
+      timerKey,
+      JSON.stringify({
+        "o-floor": { date: today(), elapsedMs: 2 * MINUTE, startedAt: Date.now() - 3 * MINUTE },
+        "o-stove": { date: today(), elapsedMs: 90_000, startedAt: null },
+      }),
+    );
+    renderSession({ date: today() });
+    act(() => vi.advanceTimersByTime(1000));
+    expect(screen.getByRole("checkbox", { name: /Sweep floor/ }).closest("li")).toHaveTextContent(
+      "05:01",
+    );
+    expect(screen.getByRole("button", { name: "Resume timer for Clean stove" })).toBeVisible();
+    expect(screen.getByText(/^Timing:/)).toHaveTextContent("Timing: Sweep floor, 05:01");
+  });
+
+  it("AC7: a timer left on an earlier day can be stopped and saved", async () => {
+    const user = setup();
+    const yesterday = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
+    localStorage.setItem(
+      timerKey,
+      JSON.stringify({ "o-old": { date: yesterday, elapsedMs: 20 * MINUTE, startedAt: null } }),
+    );
+    const { send } = renderSession({ date: today() });
+    expect(screen.getByText(/A timer from/)).toHaveTextContent(
+      `A timer from ${dayLabel(yesterday)} is paused, 20:00.`,
+    );
+    await user.click(screen.getByRole("button", { name: "Stop and save" }));
+    await waitFor(() =>
+      expect(send).toHaveBeenCalledWith(
+        expect.objectContaining({ occurrenceId: "o-old", status: "done", actualMinutes: 20 }),
+      ),
+    );
+    expect(screen.queryByText(/A timer from/)).not.toBeInTheDocument();
+  });
+
+  it("AC7: a timer whose task is gone can be discarded", async () => {
+    const user = setup();
+    localStorage.setItem(
+      timerKey,
+      JSON.stringify({ "o-gone": { date: today(), elapsedMs: MINUTE, startedAt: null } }),
+    );
+    const { send } = renderSession({ date: today() });
+    expect(screen.queryByRole("button", { name: "Stop and save" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Discard" }));
+    expect(screen.queryByText(/A timer from/)).not.toBeInTheDocument();
+    expect(localStorage.getItem(timerKey)).toBeNull();
+    expect(send).not.toHaveBeenCalled();
+  });
+
+  it("routines have no timer", () => {
+    renderSession({ date: today() });
+    expect(
+      screen.queryByRole("button", { name: "Start timer for Make the bed" }),
+    ).not.toBeInTheDocument();
   });
 });
