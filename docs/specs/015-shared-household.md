@@ -1,6 +1,6 @@
 # 015: Shared household
 
-- **Status**: In progress
+- **Status**: Done
 - **Owner**: @mrtrukiny
 - **Created**: 2026-10-28
 
@@ -16,14 +16,14 @@ The app is for a single owner today, but people who live together clean the same
 
 ## Acceptance criteria
 
-- [ ] AC1: Given I'm the owner, then Settings has a Household entry where I can invite someone by email, see who is a member or invited, cancel an invitation, and remove a member. A household has at most 5 people.
-- [ ] AC2: Given I was invited, when I sign in with Google using that email, then I join the household and see its rooms, items, and tasks. People who aren't invited still can't sign in.
-- [ ] AC3: Members can add and edit rooms, items, and tasks, review proposals, and edit the home profile. Only the owner can invite, cancel invitations, and remove members.
-- [ ] AC4: Each member has their own schedule (start times and budgets), Today page, streak, recorded times, and Google Calendar connection, and sets them up as the owner does today.
-- [ ] AC5: The plan gives each task occurrence to one member, balancing each person's share of the planned minutes over the week to their share of the available minutes, and never exceeding anyone's daily budget. A member without a schedule gets no tasks.
-- [ ] AC6: Today, the plan, and each member's calendar show only that member's tasks. The plan page can also show the whole household's week, with each task labeled with its person.
-- [ ] AC7: Given a member leaves or is removed, then their future tasks are replanned among the others, their own data (schedule, calendar connection, history) is deleted, and the shared home stays.
-- [ ] AC8: The household page works at 360px and on desktop, in light and dark mode, and with the keyboard only; removing a member asks for confirmation.
+- [x] AC1: Given I'm the owner, then Settings has a Household entry where I can invite someone by email, see who is a member or invited, cancel an invitation, and remove a member. A household has at most 5 people.
+- [x] AC2: Given I was invited, when I sign in with Google using that email, then I join the household and see its rooms, items, and tasks. People who aren't invited still can't sign in.
+- [x] AC3: Members can add and edit rooms, items, and tasks, review proposals, and edit the home profile. Only the owner can invite, cancel invitations, and remove members.
+- [x] AC4: Each member has their own schedule (start times and budgets), Today page, streak, recorded times, and Google Calendar connection, and sets them up as the owner does today.
+- [x] AC5: The plan gives each task occurrence to one member, balancing each person's share of the planned minutes over the week to their share of the available minutes, and never exceeding anyone's daily budget. A member without a schedule gets no tasks.
+- [x] AC6: Today, the plan, and each member's calendar show only that member's tasks. The plan page can also show the whole household's week, with each task labeled with its person.
+- [x] AC7: Given a member leaves or is removed, then their future tasks are replanned among the others, their own data (schedule, calendar connection, history) is deleted, and the shared home stays.
+- [x] AC8: The household page works at 360px and on desktop, in light and dark mode, and with the keyboard only; removing a member asks for confirmation.
 
 ## UX notes
 
@@ -66,7 +66,7 @@ Decisions in [ADR 0011](../decisions/0011-shared-household.md).
 - [x] T4: Household replanning, with every member's settings locked, frozen days kept, rows per person, every member's calendar synced, and the daily job. Files: `src/lib/scheduler/plan.ts`, `src/lib/scheduler/household-range.ts` (+ test), `src/app/api/cron/daily/route.ts`, the callers of `replan` and `replanAfterChange`. Covers: AC4, AC5, AC6.
 - [x] T5: Household page and actions: invite, cancel, remove, and leave (removing or leaving deletes the person and replans), plus the Settings row. Files: `src/app/(app)/household/{page,actions}.ts(x)`, `src/components/household/*` (+ tests), `src/app/(app)/settings/page.tsx`. Covers: AC1, AC3, AC7, AC8.
 - [x] T6: Plan household view with person labels. Files: `src/lib/scheduler/queries.ts`, `src/app/(app)/plan/page.tsx`, `src/components/plan/*` (+ tests). Covers: AC6.
-- [ ] T7: E2E and docs. Files: `e2e/household.spec.ts`, `e2e/support/auth.ts` (add a member), `docs/ARCHITECTURE.md`, `docs/DEPLOYMENT.md`. Covers: AC1 to AC8.
+- [x] T7: E2E and docs. Files: `e2e/household.spec.ts`, `e2e/support/auth.ts` (add a member), `docs/ARCHITECTURE.md`, `docs/DEPLOYMENT.md`. Covers: AC1 to AC8.
 
 ### Test plan
 

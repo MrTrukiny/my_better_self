@@ -48,9 +48,11 @@ In the project that holds the OAuth client used for sign-in ([Google Cloud Conso
    | `BETTER_AUTH_URL`              | `https://<your-domain>`                                             |
    | `GOOGLE_CLIENT_ID`             | The OAuth client ID                                                 |
    | `GOOGLE_CLIENT_SECRET`         | The OAuth client secret                                             |
-   | `ALLOWED_EMAILS`               | Comma-separated emails allowed to sign in                           |
+   | `ALLOWED_EMAILS`               | Comma-separated emails of owners allowed to sign in                 |
    | `GOOGLE_GENERATIVE_AI_API_KEY` | Gemini key from Google AI Studio                                    |
    | `CRON_SECRET`                  | A new secret of at least 32 characters: `openssl rand -base64 32`   |
+
+   People an owner invites from Settings > Household (spec 015, [ADR 0011](decisions/0011-shared-household.md)) sign in without being on `ALLOWED_EMAILS`. They see the same "unverified app" warning when they connect their own calendar.
 
    For push notifications (spec 012, [ADR 0010](decisions/0010-push-notifications.md)), also set these. Without all six, the Notifications page says they aren't set up, and nothing else changes.
 

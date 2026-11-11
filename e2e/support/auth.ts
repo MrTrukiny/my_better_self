@@ -93,6 +93,16 @@ export function createTestAuth({ baseURL }: { baseURL: string }) {
         where user_id = ${userId}
       `);
     },
+    /**
+     * Links an invitation to an account, as the sign-in hook does when an invited person first
+     * signs in with Google (spec 015).
+     */
+    joinHousehold: async (email: string, userId: string) => {
+      await db
+        .update(schema.householdMember)
+        .set({ userId, joinedAt: new Date() })
+        .where(eq(schema.householdMember.email, email));
+    },
     /** How many devices of the owner have a push subscription. */
     pushSubscriptionCount: async (userId: string) => {
       const rows = await db
