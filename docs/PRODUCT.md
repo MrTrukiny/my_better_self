@@ -8,13 +8,13 @@ It starts as a cleaning planner and is meant to grow into a broader personal tim
 
 ## Target user
 
-A single person (the owner) managing their own home:
+A person (the owner) managing their own home, alone or with up to 4 people they live with:
 
 - Uses Google Calendar as the source of truth for their time.
 - Plans on desktop, executes on the phone (installed PWA).
 - Wants a routine without having to think about what to clean next.
 
-The app is single-user for now. The data model keeps an owner on every record so that sharing with household members can be added later.
+The owner can invite the people they live with ([spec 015](specs/015-shared-household.md), [ADR 0011](decisions/0011-shared-household.md)). Everyone shares the home and its tasks; each person keeps their own schedule, calendar, and Today, and the app splits the work by the time each person has.
 
 ## Core problems
 
@@ -39,7 +39,7 @@ See [`ROADMAP.md`](ROADMAP.md): richer item attributes (size, material), time ca
 
 ## Non-goals (for now)
 
-- Multi-user households, task assignment between people, or social features.
+- Assigning or rotating tasks between people by hand, or social features (shared households with automatic balancing are [spec 015](specs/015-shared-household.md)).
 - Calendars other than Google Calendar.
 - AI deciding and scheduling without review.
 - Native mobile apps; the PWA is the mobile experience.
