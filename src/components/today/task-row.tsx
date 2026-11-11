@@ -9,6 +9,7 @@ import { formatMinutes } from "@/lib/tasks/format";
 import type { TodayTask } from "@/lib/today/progress";
 import type { Slot } from "@/lib/today/slots";
 import { cn } from "@/lib/utils";
+import { NoteField } from "./note-field";
 import { type RowTimer, TimerControls } from "./timer-controls";
 import { TookField } from "./took-field";
 
@@ -21,6 +22,7 @@ export function TaskRow({
   disabled,
   onChange,
   onMinutes,
+  onNote,
   timer,
   capped,
 }: {
@@ -36,6 +38,8 @@ export function TaskRow({
   onChange: (status: OccurrenceStatus) => void;
   /** Saves the minutes a done cleaning task took; routines don't take them. */
   onMinutes?: (minutes: number | null) => void;
+  /** Saves a done cleaning task's note (spec 016). */
+  onNote?: (note: string | null) => void;
   /** Today's open cleaning tasks only (spec 016). */
   timer?: RowTimer;
   /** The last stop hit the 240-minute cap. */
@@ -129,6 +133,9 @@ export function TaskRow({
             <p className="text-muted-foreground text-sm">
               Timer capped at 240 min. Correct it if needed.
             </p>
+          ) : null}
+          {onNote ? (
+            <NoteField taskName={name} value={task.note} disabled={disabled} onSave={onNote} />
           ) : null}
         </div>
       ) : null}

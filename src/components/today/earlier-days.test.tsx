@@ -155,6 +155,28 @@ describe("EarlierDays", () => {
     renderDays({ days: [] });
     expect(screen.getByText(/No earlier days yet/)).toBeInTheDocument();
   });
+
+  it("016 AC6: notes show and can be edited on earlier days", async () => {
+    const user = userEvent.setup();
+    const noted = { ...task("dust", "Dust shelves", "done"), note: "Moved the books" };
+    const { send } = renderDays({
+      days: [{ date: daysAgo(3), dayOff: false, tasks: [noted, task("floor", "Sweep floor")] }],
+    });
+    expect(screen.getByText("Moved the books")).toBeVisible();
+    await user.click(screen.getByRole("button", { name: /^Edit note for Dust shelves, / }));
+    const field = screen.getByRole("textbox", { name: /^Note for Dust shelves, / });
+    await user.clear(field);
+    await user.type(field, "Moved all the books{Enter}");
+    await waitFor(() =>
+      expect(send).toHaveBeenCalledWith(
+        expect.objectContaining({
+          occurrenceId: "o-dust",
+          status: "done",
+          note: "Moved all the books",
+        }),
+      ),
+    );
+  });
 });
 
 function dayName(n: number): string {

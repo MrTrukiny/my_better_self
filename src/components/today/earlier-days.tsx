@@ -86,6 +86,7 @@ export function EarlierDays({ userId, timeZone, days, version, send }: EarlierDa
                 ? (minutes) => update(task, "done", { actualMinutes: minutes })
                 : undefined
             }
+            onNote={task.kind === "cleaning" ? (note) => update(task, "done", { note }) : undefined}
           />
         );
         return (

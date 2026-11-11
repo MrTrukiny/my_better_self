@@ -138,6 +138,7 @@ export function TodaySession({
           ? (minutes) => save(task, "done", { actualMinutes: minutes })
           : undefined
       }
+      onNote={task.kind === "cleaning" ? (note) => save(task, "done", { note }) : undefined}
       timer={task.kind === "cleaning" && !stale ? timerFor(task) : undefined}
       capped={capped.has(task.occurrenceId)}
     />

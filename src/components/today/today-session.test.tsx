@@ -434,6 +434,30 @@ describe("TodaySession timers (spec 016)", () => {
     expect(send).not.toHaveBeenCalled();
   });
 
+  it("AC6: a done task's note is saved and removed when unchecked", async () => {
+    const user = setup();
+    const { send } = renderSession({ date: today() });
+    expect(screen.queryByRole("button", { name: "Add note for Wipe counters" })).toBeNull();
+    await user.click(screen.getByRole("checkbox", { name: /Wipe counters/ }));
+    await user.click(screen.getByRole("button", { name: "Add note for Wipe counters" }));
+    await user.keyboard("Full deep clean{Enter}");
+    expect(screen.getByText("Full deep clean")).toBeVisible();
+    await waitFor(() =>
+      expect(send).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          occurrenceId: "o-counters",
+          status: "done",
+          note: "Full deep clean",
+        }),
+      ),
+    );
+
+    await user.click(screen.getByRole("checkbox", { name: /Wipe counters/ }));
+    await user.click(screen.getByRole("checkbox", { name: /Wipe counters/ }));
+    expect(screen.queryByText("Full deep clean")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Add note for Wipe counters" })).toBeVisible();
+  });
+
   it("routines have no timer", () => {
     renderSession({ date: today() });
     expect(
