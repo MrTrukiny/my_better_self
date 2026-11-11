@@ -71,6 +71,13 @@
       "when": 1794373153035,
       "tag": "0009_occurrence_note",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1794380950658,
+      "tag": "0010_task_adjustment",
+      "breakpoints": true
     }
   ]
 }
