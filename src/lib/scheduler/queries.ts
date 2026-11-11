@@ -30,7 +30,7 @@ export async function getPlanWeek(
   now: Date,
 ): Promise<{ today: DayNumber; occurrences: PlanOccurrence[] }> {
   const user = await getCurrentUser();
-  await ensurePlan(user.id, now);
+  await ensurePlan(user.householdId, now);
   const today = zonedNow(settings.timeZone, now).day;
   const rows = await db
     .select({

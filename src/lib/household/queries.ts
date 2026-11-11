@@ -1,5 +1,5 @@
 import "server-only";
-import { and, eq, isNull, sql } from "drizzle-orm";
+import { and, eq, isNotNull, isNull, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { householdMember } from "@/db/schema";
 import { normalizeEmail } from "./rules";
@@ -33,4 +33,18 @@ export async function joinInvitation(email: string, userId: string): Promise<voi
         isNull(householdMember.userId),
       ),
     );
+}
+
+/** The household a user belongs to: their owner's id, or their own id (ADR 0011). */
+export async function householdIdOf(userId: string): Promise<string> {
+  return (await membershipOf(userId))?.ownerId ?? userId;
+}
+
+/** Everyone in the household who has an account: the owner and the members who joined. */
+export async function peopleOf(householdId: string): Promise<string[]> {
+  const members = await db
+    .select({ userId: householdMember.userId })
+    .from(householdMember)
+    .where(and(eq(householdMember.ownerId, householdId), isNotNull(householdMember.userId)));
+  return [householdId, ...members.flatMap((m) => (m.userId ? [m.userId] : []))].sort();
 }

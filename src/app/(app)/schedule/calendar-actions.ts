@@ -9,7 +9,7 @@ import { CalendarError } from "@/lib/calendar/google";
 import { withoutCalendarScopes } from "@/lib/calendar/scopes";
 import { syncCalendar } from "@/lib/calendar/sync";
 import type { ActionState } from "@/lib/inventory/action-state";
-import { replan } from "@/lib/scheduler/plan";
+import { replan, syncHouseholdCalendars } from "@/lib/scheduler/plan";
 import { getCurrentUser } from "@/lib/session";
 
 const DISCONNECT_FAILED = "Couldn't disconnect your calendar. Try again.";
@@ -22,7 +22,8 @@ const REPLAN_FAILED = "Couldn't update your plan. Try again.";
 export async function syncCalendarNow(): Promise<ActionState> {
   const user = await getCurrentUser();
   try {
-    await replan(user.id);
+    await replan(user.householdId);
+    await syncHouseholdCalendars(user.householdId, { except: user.id });
   } catch (error) {
     console.error("syncCalendarNow replan failed", error);
     return { status: "error", formError: REPLAN_FAILED };
